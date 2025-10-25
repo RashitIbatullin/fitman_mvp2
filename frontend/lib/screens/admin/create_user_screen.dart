@@ -133,7 +133,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               const SizedBox(height: 20),
               
               // Дополнительные поля для клиента
-              if (_selectedRole == 'client') _buildClientFieldsSection(),
+              if (_selectedRole == 'client') _buildClientSpecificSection(),
               
               // Настройки уведомлений
               _buildNotificationSection(),
@@ -163,14 +163,16 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             
             // Роль пользователя
             DropdownButtonFormField<String>(
-              initialValue: _selectedRole,
+              value: _selectedRole,
               decoration: const InputDecoration(
                 labelText: 'Роль *',
                 border: OutlineInputBorder(),
               ),
               items: const [
                 DropdownMenuItem(value: 'client', child: Text('Клиент')),
+                DropdownMenuItem(value: 'instructor', child: Text('Инструктор')),
                 DropdownMenuItem(value: 'trainer', child: Text('Тренер')),
+                DropdownMenuItem(value: 'manager', child: Text('Менеджер')),
                 DropdownMenuItem(value: 'admin', child: Text('Администратор')),
               ],
               onChanged: (value) {
@@ -282,6 +284,37 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               onChanged: (_) => _calculateNames(),
             ),
             const SizedBox(height: 16),
+
+            // Пол
+            DropdownButtonFormField<String>(
+              value: _selectedGender,
+              decoration: const InputDecoration(
+                labelText: 'Пол',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'male', child: Text('Мужской')),
+                DropdownMenuItem(value: 'female', child: Text('Женский')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedGender = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Возраст
+            TextFormField(
+              controller: _ageController,
+              decoration: const InputDecoration(
+                labelText: 'Возраст',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.cake),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
             
             // Телефон
             TextFormField(
@@ -299,7 +332,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
     );
   }
 
-  Widget _buildClientFieldsSection() {
+  Widget _buildClientSpecificSection() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -309,37 +342,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             const Text(
               'Данные клиента',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            
-            // Пол
-            DropdownButtonFormField<String>(
-              initialValue: _selectedGender,
-              decoration: const InputDecoration(
-                labelText: 'Пол',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'male', child: Text('Мужской')),
-                DropdownMenuItem(value: 'female', child: Text('Женский')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedGender = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            
-            // Возраст
-            TextFormField(
-              controller: _ageController,
-              decoration: const InputDecoration(
-                labelText: 'Возраст',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.cake),
-              ),
-              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             
@@ -485,6 +487,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
     switch (role) {
       case 'client':
         return 'Клиент';
+      case 'instructor':
+        return 'Инструктор';
       case 'trainer':
         return 'Тренер';
       case 'manager':

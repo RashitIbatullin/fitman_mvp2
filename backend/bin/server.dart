@@ -30,19 +30,19 @@ void main(List<String> args) async {
   // Инициализация базы данных
   await Database().initializeDatabase();
 
-  print('🚀 FitMan Dart backend MVP1 running on http://${server.address.host}:${server.port}');
-  print('📝 API Health: http://localhost:${AppConfig.serverPort}/api/health');
-  print('🔐 Auth endpoints:');
-  print('   POST http://localhost:${AppConfig.serverPort}/api/auth/login');
-  print('   POST http://localhost:${AppConfig.serverPort}/api/auth/register');
-  print('   GET  http://localhost:${AppConfig.serverPort}/api/auth/check');
-  print('👥 User management (Admin only):');
-  print('   GET  http://localhost:${AppConfig.serverPort}/api/users');
-  print('   POST http://localhost:${AppConfig.serverPort}/api/users');
-  print('📊 Training endpoints:');
-  print('   GET http://localhost:${AppConfig.serverPort}/api/training/plans');
-  print('📅 Schedule endpoints:');
-  print('   GET http://localhost:${AppConfig.serverPort}/api/schedule');
+  print('🚀 FitMan Dart backend MVP2 running on http://${server.address.host}:${server.port}');
+//  print('📝 API Health: http://localhost:${AppConfig.serverPort}/api/health');
+//  print('🔐 Auth endpoints:');
+//  print('   POST http://localhost:${AppConfig.serverPort}/api/auth/login');
+//  print('   POST http://localhost:${AppConfig.serverPort}/api/auth/register');
+//  print('   GET  http://localhost:${AppConfig.serverPort}/api/auth/check');
+//  print('👥 User management (Admin only):');
+//  print('   GET  http://localhost:${AppConfig.serverPort}/api/users');
+//  print('   POST http://localhost:${AppConfig.serverPort}/api/users');
+//  print('📊 Training endpoints:');
+//  print('   GET http://localhost:${AppConfig.serverPort}/api/training/plans');
+//  print('📅 Schedule endpoints:');
+//  print('   GET http://localhost:${AppConfig.serverPort}/api/schedule');
 
   // Обработка graceful shutdown
   ProcessSignal.sigint.watch().listen((_) async {

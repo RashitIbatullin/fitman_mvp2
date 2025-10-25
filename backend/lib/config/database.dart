@@ -1046,7 +1046,7 @@ class Database {
         )
       ''');
 
-      print('✅ Database tables initialized');
+      //print('✅ Database tables initialized');
     } catch (e) {
       print('❌ Database initialization error: $e');
       rethrow;

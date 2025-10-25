@@ -99,21 +99,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   factory CustomAppBar.admin({
     String title = 'Администрирование',
-    List<Widget>? additionalActions,
     required Function(int) onTabSelected,
   }) {
     final defaultActions = [
-      AppBarAction(icon: Icons.folder_open, label: 'Каталоги', onPressed: () => onTabSelected(0)),
+      AppBarAction(icon: Icons.people, label: 'Пользователи', onPressed: () => onTabSelected(0)),
       AppBarAction(icon: Icons.settings, label: 'Настройки', onPressed: () => onTabSelected(1)),
       AppBarAction(icon: Icons.analytics, label: 'Аналитика', onPressed: () => onTabSelected(2)),
+      AppBarAction(icon: Icons.folder_open, label: 'Каталоги', onPressed: () => onTabSelected(3)),
     ];
 
     return CustomAppBar(
       title: title,
-      actions: [
-        ...?additionalActions,
-        ...defaultActions,
-      ],
+      actions: defaultActions,
     );
   }
 
