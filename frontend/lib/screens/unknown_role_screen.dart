@@ -43,7 +43,7 @@ class UnknownRoleScreen extends ConsumerWidget {
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  'Роль: ${user.role}',
+                  'Роли: ${user.roles.map((r) => r.title).join(', ')}',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),

@@ -39,27 +39,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         final user = authState.value!;
         Widget targetScreen;
 
-        switch (user.role) {
-          case 'admin':
-            targetScreen = const AdminDashboard();
-            break;
-          case 'trainer':
-            targetScreen = const TrainerDashboard();
-            break;
-          case 'instructor':
-            targetScreen = const InstructorDashboard();
-            break;
-          case 'client':
-            targetScreen = const ClientDashboard();
-            break;
-          case 'manager':
-            targetScreen = const ManagerDashboard();
-            break;
-          default:
-            targetScreen = const UnknownRoleScreen();
+        // Prioritize roles for navigation
+        if (user.roles.any((role) => role.name == 'admin')) {
+          targetScreen = const AdminDashboard();
+        } else if (user.roles.any((role) => role.name == 'manager')) {
+          targetScreen = const ManagerDashboard();
+        } else if (user.roles.any((role) => role.name == 'trainer')) {
+          targetScreen = const TrainerDashboard();
+        } else if (user.roles.any((role) => role.name == 'instructor')) {
+          targetScreen = const InstructorDashboard();
+        } else if (user.roles.any((role) => role.name == 'client')) {
+          targetScreen = const ClientDashboard();
+        } else {
+          targetScreen = const UnknownRoleScreen();
         }
 
-        print('Redirecting to: ${user.role} dashboard');
+        print('Redirecting to: ${user.roles.map((r) => r.name).join(', ')} dashboard');
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => targetScreen),

@@ -217,7 +217,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         _passwordController.text,
         _firstNameController.text.trim(),
         _lastNameController.text.trim(),
-        _selectedRole,
+        [_selectedRole],
       );
     }
   }

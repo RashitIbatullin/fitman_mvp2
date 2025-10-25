@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_front.dart';
+import '../models/role.dart'; // Import Role model
 import '../services/api_service.dart';
 
 class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
@@ -46,7 +47,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         firstName: userData['firstName']?.toString() ?? '',
         lastName: userData['lastName']?.toString() ?? '',
         middleName: userData['middleName']?.toString(),
-        role: userData['role']?.toString() ?? 'client',
+        roles: (userData['roles'] as List<dynamic>?)
+                ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+                .toList() ??
+            [],
         phone: userData['phone']?.toString(),
         gender: userData['gender']?.toString(),
         age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
@@ -80,48 +84,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         'firstName': authResponse.user.firstName,
         'lastName': authResponse.user.lastName,
         'middleName': authResponse.user.middleName,
-        'role': authResponse.user.role,
-        'phone': authResponse.user.phone,
-        'gender': authResponse.user.gender,
-        'age': authResponse.user.age,
-        'sendNotification': authResponse.user.sendNotification,
-        'hourNotification': authResponse.user.hourNotification,
-        'trackCalories': authResponse.user.trackCalories,
-        'coeffActivity': authResponse.user.coeffActivity,
-        'createdAt': authResponse.user.createdAt.toIso8601String(),
-        'updatedAt': authResponse.user.updatedAt.toIso8601String(),
-      }));
-
-      state = AsyncValue.data(authResponse.user);
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-    }
-  }
-
-  Future<void> register(
-      String email,
-      String password,
-      String firstName,
-      String lastName,
-      String role,
-      ) async {
-    state = const AsyncValue.loading();
-    try {
-      final authResponse = await ApiService.register(
-        email, password, firstName, lastName, role,
-      );
-      await ApiService.saveToken(authResponse.token);
-
-      // Сохраняем данные пользователя с ВСЕМИ полями
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_data', jsonEncode({
-        'id': authResponse.user.id,
-        'email': authResponse.user.email,
-        'passwordHash': authResponse.user.passwordHash,
-        'firstName': authResponse.user.firstName,
-        'lastName': authResponse.user.lastName,
-        'middleName': authResponse.user.middleName,
-        'role': authResponse.user.role,
+        'roles': authResponse.user.roles.map((r) => r.toJson()).toList(), // Save roles as list of maps
         'phone': authResponse.user.phone,
         'gender': authResponse.user.gender,
         'age': authResponse.user.age,
@@ -147,6 +110,47 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     await prefs.remove('user_data');
 
     state = const AsyncValue.data(null);
+  }
+
+  Future<void> register(
+      String email,
+      String password,
+      String firstName,
+      String lastName,
+      List<String> roles, // Changed to List<String>
+      ) async {
+    state = const AsyncValue.loading();
+    try {
+      final authResponse = await ApiService.register(
+        email, password, firstName, lastName, roles,
+      );
+      await ApiService.saveToken(authResponse.token);
+
+      // Сохраняем данные пользователя с ВСЕМИ полями
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_data', jsonEncode({
+        'id': authResponse.user.id,
+        'email': authResponse.user.email,
+        'passwordHash': authResponse.user.passwordHash,
+        'firstName': authResponse.user.firstName,
+        'lastName': authResponse.user.lastName,
+        'middleName': authResponse.user.middleName,
+        'roles': authResponse.user.roles.map((r) => r.toJson()).toList(), // Save roles as list of maps
+        'phone': authResponse.user.phone,
+        'gender': authResponse.user.gender,
+        'age': authResponse.user.age,
+        'sendNotification': authResponse.user.sendNotification,
+        'hourNotification': authResponse.user.hourNotification,
+        'trackCalories': authResponse.user.trackCalories,
+        'coeffActivity': authResponse.user.coeffActivity,
+        'createdAt': authResponse.user.createdAt.toIso8601String(),
+        'updatedAt': authResponse.user.updatedAt.toIso8601String(),
+      }));
+
+      state = AsyncValue.data(authResponse.user);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+    }
   }
 }
 

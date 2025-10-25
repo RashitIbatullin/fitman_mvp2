@@ -1,9 +1,8 @@
 import 'dart:async';
-
 import 'package:postgres/postgres.dart';
 import 'package:dotenv/dotenv.dart';
-
 import '../models/user_back.dart';
+import '../models/role.dart';
 
 class Database {
   static final Database _instance = Database._internal();
@@ -82,28 +81,73 @@ class Database {
 
   // === USER METHODS ===
 
+  // Получить все роли
+  Future<List<Role>> getAllRoles() async {
+    try {
+      final conn = await connection;
+      final results = await conn.execute('''
+        SELECT id, name, title, icon FROM roles
+      ''');
+      return results.map((row) => Role.fromMap(row.toColumnMap())).toList();
+    } catch (e) {
+      print('❌ getAllRoles error: $e');
+      rethrow;
+    }
+  }
+
+  // Получить роль по имени
+  Future<Role?> getRoleByName(String roleName) async {
+    try {
+      final conn = await connection;
+      final results = await conn.execute(
+        Sql.named('SELECT id, name, title, icon FROM roles WHERE name = @roleName'),
+        parameters: {'roleName': roleName},
+      );
+      if (results.isEmpty) return null;
+      return Role.fromMap(results.first.toColumnMap());
+    } catch (e) {
+      print('❌ getRoleByName error: $e');
+      rethrow;
+    }
+  }
+
+  // Получить роли для пользователя
+  Future<List<Role>> getRolesForUser(int userId) async {
+    try {
+      final conn = await connection;
+      final results = await conn.execute(
+        Sql.named('''
+          SELECT r.id, r.name, r.title, r.icon
+          FROM roles r
+          INNER JOIN user_roles ur ON r.id = ur.role_id
+          WHERE ur.user_id = @userId
+        '''),
+        parameters: {'userId': userId},
+      );
+      return results.map((row) => Role.fromMap(row.toColumnMap())).toList();
+    } catch (e) {
+      print('❌ getRolesForUser error: $e');
+      rethrow;
+    }
+  }
+
   // Получить всех пользователей
   Future<List<User>> getAllUsers() async {
     try {
       final conn = await connection;
       final results = await conn.execute('''
-        SELECT DISTINCT ON (u.id)
-          u.id, 
-          u.email, 
-          u.password_hash, 
-          u.first_name, 
-          u.last_name, 
-          r.name as role, 
-          u.phone, 
-          u.created_at, 
-          u.updated_at 
-        FROM users u
-        LEFT JOIN user_roles ur ON u.id = ur.user_id
-        LEFT JOIN roles r ON ur.role_id = r.id
-        ORDER BY u.id, r.id
+        SELECT id, email, password_hash, first_name, last_name, phone, created_at, updated_at
+        FROM users
       ''');
 
-      return results.map((row) => User.fromMap(row.toColumnMap())).toList();
+      final users = <User>[];
+      for (final row in results) {
+        final userMap = row.toColumnMap();
+        final user = User.fromMap(userMap);
+        final roles = await getRolesForUser(user.id);
+        users.add(user.copyWith(roles: roles));
+      }
+      return users;
     } catch (e) {
       print('❌ getAllUsers error: $e');
       rethrow;
@@ -116,20 +160,9 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT 
-          u.id, 
-          u.email, 
-          u.password_hash, 
-          u.first_name, 
-          u.last_name, 
-          r.name as role, 
-          u.phone, 
-          u.created_at, 
-          u.updated_at 
-        FROM users u
-        LEFT JOIN user_roles ur ON u.id = ur.user_id
-        LEFT JOIN roles r ON ur.role_id = r.id
-        WHERE u.email = @email
+        SELECT id, email, password_hash, first_name, last_name, phone, created_at, updated_at
+        FROM users
+        WHERE email = @email
         LIMIT 1
       ''';
 
@@ -142,8 +175,10 @@ class Database {
 
       if (results.isEmpty) return null;
 
-      final row = results.first.toColumnMap();
-      return User.fromMap(row);
+      final userMap = results.first.toColumnMap();
+      final user = User.fromMap(userMap);
+      final roles = await getRolesForUser(user.id);
+      return user.copyWith(roles: roles);
     } catch (e) {
       print('❌ getUserByEmail error: $e');
       rethrow;
@@ -156,20 +191,9 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT 
-          u.id, 
-          u.email, 
-          u.password_hash, 
-          u.first_name, 
-          u.last_name, 
-          r.name as role, 
-          u.phone, 
-          u.created_at, 
-          u.updated_at 
-        FROM users u
-        LEFT JOIN user_roles ur ON u.id = ur.user_id
-        LEFT JOIN roles r ON ur.role_id = r.id
-        WHERE u.id = @id
+        SELECT id, email, password_hash, first_name, last_name, phone, created_at, updated_at
+        FROM users
+        WHERE id = @id
         LIMIT 1
       ''';
 
@@ -182,8 +206,10 @@ class Database {
 
       if (results.isEmpty) return null;
 
-      final row = results.first.toColumnMap();
-      return User.fromMap(row);
+      final userMap = results.first.toColumnMap();
+      final user = User.fromMap(userMap);
+      final roles = await getRolesForUser(user.id);
+      return user.copyWith(roles: roles);
     } catch (e) {
       print('❌ getUserById error: $e');
       rethrow;
@@ -191,7 +217,7 @@ class Database {
   }
 
   // Создать пользователя
-  Future<User> createUser(User user) async {
+  Future<User> createUser(User user, List<String> roleNames) async {
     final conn = await connection;
     return await conn.runTx((ctx) async {
       // 1. Вставить пользователя в таблицу users и получить его ID
@@ -217,32 +243,53 @@ class Database {
 
       final newUserId = userResult.first[0] as int;
 
-      // 2. Найти ID роли
-      final roleResult = await ctx.execute(
-        Sql.named('SELECT id FROM roles WHERE name = @roleName'),
-        parameters: {'roleName': user.role},
-      );
+      // 2. Связать пользователя с ролями
+      for (final roleName in roleNames) {
+        final roleResult = await ctx.execute(
+          Sql.named('SELECT id FROM roles WHERE name = @roleName'),
+          parameters: {'roleName': roleName},
+        );
 
-      if (roleResult.isEmpty) {
-        throw Exception('Role not found: ${user.role}');
+        if (roleResult.isEmpty) {
+          throw Exception('Role not found: $roleName');
+        }
+        final roleId = roleResult.first[0] as int;
+
+        await ctx.execute(
+          Sql.named('INSERT INTO user_roles (user_id, role_id) VALUES (@userId, @roleId)'),
+          parameters: {
+            'userId': newUserId,
+            'roleId': roleId,
+          },
+        );
       }
-      final roleId = roleResult.first[0] as int;
 
-      // 3. Связать пользователя и роль в user_roles
-      await ctx.execute(
-        Sql.named('INSERT INTO user_roles (user_id, role_id) VALUES (@userId, @roleId)'),
-        parameters: {
-          'userId': newUserId,
-          'roleId': roleId,
-        },
-      );
-
-      // 4. Вернуть созданного пользователя со всей информацией
+      // 3. Вернуть созданного пользователя со всей информацией
       final newUser = await getUserById(newUserId);
       if (newUser == null) {
         throw Exception('Failed to fetch newly created user.');
       }
       return newUser;
+    });
+  }
+
+  // Обновить роли пользователя
+  Future<void> updateUserRoles(int userId, List<int> newRoleIds) async {
+    final conn = await connection;
+    await conn.runTx((ctx) async {
+      // Удаляем все текущие роли пользователя
+      await ctx.execute(
+        Sql.named('DELETE FROM user_roles WHERE user_id = @userId'),
+        parameters: {'userId': userId},
+      );
+
+      // Добавляем новые роли
+      for (final roleId in newRoleIds) {
+        await ctx.execute(
+          Sql.named('INSERT INTO user_roles (user_id, role_id) VALUES (@userId, @roleId)'),
+          parameters: {'userId': userId, 'roleId': roleId},
+        );
+      }
     });
   }
 
@@ -673,7 +720,7 @@ class Database {
       passwordHash: '',
       firstName: 'Иван',
       lastName: 'Петров',
-      role: 'trainer',
+      roles: [], // Added roles
       phone: '+7 999 123-45-67',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -691,7 +738,7 @@ class Database {
       passwordHash: '',
       firstName: 'Анна',
       lastName: 'Сидорова',
-      role: 'instructor',
+      roles: [], // Added roles
       phone: '+7 999 765-43-21',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -709,7 +756,7 @@ class Database {
       passwordHash: '',
       firstName: 'Елена',
       lastName: 'Иванова',
-      role: 'manager',
+      roles: [], // Added roles
       phone: '+7 999 111-22-33',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

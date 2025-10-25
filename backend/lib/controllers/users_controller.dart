@@ -32,7 +32,7 @@ class UsersController {
       final password = data['password'] as String;
       final firstName = data['firstName'] as String;
       final lastName = data['lastName'] as String;
-      final role = data['role'] as String;
+      final List<String> roles = List<String>.from(data['roles'] as List<dynamic>); // Changed to list of roles
       final phone = data['phone'] as String?;
 
       // Проверяем существует ли пользователь
@@ -51,13 +51,13 @@ class UsersController {
         passwordHash: passwordHash,
         firstName: firstName,
         lastName: lastName,
-        role: role,
+        roles: [], // Roles will be populated by the database method
         phone: phone,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      final createdUser = await Database().createUser(newUser);
+      final createdUser = await Database().createUser(newUser, roles); // Pass roles to createUser
 
       return Response(201, body: jsonEncode({
         'message': 'User created successfully',
@@ -222,6 +222,85 @@ class UsersController {
     }
   }
 
+  // Получить роли пользователя по ID
+  static Future<Response> getUserRoles(Request request, String id) async {
+    try {
+      final userId = int.tryParse(id);
+      if (userId == null) {
+        return Response(400, body: jsonEncode({'error': 'Invalid user ID'}));
+      }
+
+      final requestingUser = request.context['user'] as Map<String, dynamic>?;
+      if (requestingUser?['role'] != 'admin') { // Only admin can view all user roles
+        return Response(403, body: jsonEncode({'error': 'Access denied'}));
+      }
+
+      final user = await Database().getUserById(userId);
+      if (user == null) {
+        return Response(404, body: jsonEncode({'error': 'User not found'}));
+      }
+
+      return Response.ok(jsonEncode({'roles': user.roles.map((r) => r.toJson()).toList()}));
+    } catch (e) {
+      print('Get user roles error: $e');
+      return Response(500, body: jsonEncode({'error': 'Internal server error'}));
+    }
+  }
+
+  // Обновить роли пользователя (только для админа)
+  static Future<Response> updateUserRoles(Request request, String id) async {
+    try {
+      final userId = int.tryParse(id);
+      if (userId == null) {
+        return Response(400, body: jsonEncode({'error': 'Invalid user ID'}));
+      }
+
+      final requestingUser = request.context['user'] as Map<String, dynamic>?;
+      final userRoles = requestingUser?['roles'] as List<dynamic>?;
+      if (requestingUser == null || userRoles == null || !userRoles.contains('admin')) {
+        return Response(403, body: jsonEncode({'error': 'Access denied'}));
+      }
+
+      final body = await request.readAsString();
+      final data = jsonDecode(body) as Map<String, dynamic>;
+      final List<String> newRoleNames = List<String>.from(data['roles'] as List<dynamic>);
+
+      final user = await Database().getUserById(userId);
+      if (user == null) {
+        return Response(404, body: jsonEncode({'error': 'User not found'}));
+      }
+
+      // Validation: Client users can only have one role
+      if (user.roles.any((r) => r.name == 'client') && newRoleNames.length > 1) {
+        return Response(400, body: jsonEncode({'error': 'Client users can only have one role'}));
+      }
+
+      // Validation: Cannot remove the initial role if it's the only one
+      if (user.roles.length == 1 && !newRoleNames.contains(user.roles.first.name)) {
+        return Response(400, body: jsonEncode({'error': 'Cannot remove the initial role if it is the only one'}));
+      }
+
+      final allRoles = await Database().getAllRoles();
+      final List<int> newRoleIds = [];
+      for (final roleName in newRoleNames) {
+        final role = allRoles.firstWhere((r) => r.name == roleName, orElse: () => throw Exception('Role $roleName not found'));
+        newRoleIds.add(role.id);
+      }
+
+      await Database().updateUserRoles(userId, newRoleIds);
+
+      final updatedUser = await Database().getUserById(userId);
+
+      return Response.ok(jsonEncode({
+        'message': 'User roles updated successfully',
+        'user': updatedUser?.toSafeJson()
+      }));
+    } catch (e) {
+      print('Update user roles error: $e');
+      return Response(500, body: jsonEncode({'error': 'Internal server error: $e'}));
+    }
+  }
+
   // Получить менеджера для клиента
   static Future<Response> getManagerForClient(Request request) async {
     try {
@@ -240,6 +319,18 @@ class UsersController {
       return Response.ok(jsonEncode({'manager': manager.toSafeJson()}));
     } catch (e) {
       print('Get manager for client error: $e');
+      return Response(500, body: jsonEncode({'error': 'Internal server error'}));
+    }
+  }
+
+  // Получить все роли
+  static Future<Response> getRoles(Request request) async {
+    try {
+      final roles = await Database().getAllRoles();
+      final rolesJson = roles.map((role) => role.toJson()).toList();
+      return Response.ok(jsonEncode({'roles': rolesJson}));
+    } catch (e) {
+      print('Get roles error: $e');
       return Response(500, body: jsonEncode({'error': 'Internal server error'}));
     }
   }

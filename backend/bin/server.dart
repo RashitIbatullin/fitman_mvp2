@@ -15,7 +15,10 @@ void main(List<String> args) async {
       .addMiddleware(corsHeaders())
       .addMiddleware(corsMiddleware())
       .addMiddleware(logRequests())
-      .addHandler(router.call);
+      .addHandler((Request request) {
+        print('Request reaching router: ${request.method} ${request.url}'); // Debug print
+        return router.call(request);
+      });
 
   // Запускаем сервер
   final server = await io.serve(

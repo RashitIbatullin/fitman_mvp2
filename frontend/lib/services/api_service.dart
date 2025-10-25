@@ -1,3 +1,4 @@
+import '../models/role.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,8 @@ class ApiService {
   static const String baseUrl = 'http://localhost:8080';
   static String? _token;
 
+  static String? get currentToken => _token; // Public getter for debugging
+
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token');
@@ -17,6 +20,7 @@ class ApiService {
 
   static Future<void> saveToken(String token) async {
     _token = token;
+    print('Inside saveToken: _token set to $_token'); // Debug print
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
   }
@@ -32,8 +36,8 @@ class ApiService {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    if (_token != null) {
-      headers['Authorization'] = 'Bearer $_token';
+    if (currentToken != null) {
+      headers['Authorization'] = 'Bearer ${currentToken}';
     }
     return headers;
   }
@@ -70,7 +74,10 @@ class ApiService {
           firstName: userData['firstName']?.toString() ?? userData['first_name']?.toString() ?? 'User',
           lastName: userData['lastName']?.toString() ?? userData['last_name']?.toString() ?? '',
           middleName: userData['middleName']?.toString(),
-          role: userData['role']?.toString() ?? 'client',
+          roles: (userData['roles'] as List<dynamic>?)
+                  ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+                  .toList() ??
+              [],
           phone: userData['phone']?.toString(),
           gender: userData['gender']?.toString(),
           age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
@@ -102,7 +109,7 @@ class ApiService {
       String password,
       String firstName,
       String lastName,
-      String role,
+      List<String> roles, // Changed to List<String>
       ) async {
     try {
       final response = await http.post(
@@ -113,7 +120,7 @@ class ApiService {
           'password': password,
           'firstName': firstName,
           'lastName': lastName,
-          'role': role,
+          'roles': roles, // Send as list
         }),
       );
 
@@ -137,7 +144,10 @@ class ApiService {
           firstName: userData['firstName']?.toString() ?? userData['first_name']?.toString() ?? firstName,
           lastName: userData['lastName']?.toString() ?? userData['last_name']?.toString() ?? lastName,
           middleName: userData['middleName']?.toString(),
-          role: userData['role']?.toString() ?? role,
+          roles: (userData['roles'] as List<dynamic>?)
+                  ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+                  .toList() ??
+              [],
           phone: userData['phone']?.toString(),
           gender: userData['gender']?.toString(),
           age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
@@ -202,7 +212,10 @@ class ApiService {
             firstName: userData['firstName']?.toString() ?? '',
             lastName: userData['lastName']?.toString() ?? '',
             middleName: userData['middleName']?.toString(),
-            role: userData['role']?.toString() ?? 'client',
+            roles: (userData['roles'] as List<dynamic>?)
+                    ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+                    .toList() ??
+                [],
             phone: userData['phone']?.toString(),
             gender: userData['gender']?.toString(),
             age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
@@ -219,6 +232,67 @@ class ApiService {
       }
     } catch (e) {
       print('Get users error: $e');
+      rethrow;
+    }
+  }
+
+  // Получение всех ролей
+  static Future<List<Role>> getAllRoles() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/roles'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final roles = data['roles'] as List;
+        return roles.map((roleData) => Role.fromJson(roleData)).toList();
+      } else {
+        throw Exception('Failed to load roles with status ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Get all roles error: $e');
+      rethrow;
+    }
+  }
+
+  // Получение ролей пользователя по ID
+  static Future<List<Role>> getUserRoles(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/users/$userId/roles'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final roles = data['roles'] as List;
+        return roles.map((roleData) => Role.fromJson(roleData)).toList();
+      } else {
+        throw Exception('Failed to load user roles with status ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Get user roles error: $e');
+      rethrow;
+    }
+  }
+
+  // Обновление ролей пользователя
+  static Future<void> updateUserRoles(int userId, List<String> roleNames) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/users/$userId/roles'),
+        headers: _headers,
+        body: jsonEncode({'roles': roleNames}),
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to update user roles with status ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Update user roles error: $e');
       rethrow;
     }
   }

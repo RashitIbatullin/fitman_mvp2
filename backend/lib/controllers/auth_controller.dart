@@ -77,7 +77,7 @@ class AuthController {
       final password = data['password'] as String;
       final firstName = data['firstName'] as String;
       final lastName = data['lastName'] as String;
-      final role = data['role'] as String? ?? 'client';
+      final List<String> roles = (data['roles'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['client']; // Changed to list of roles
 
       // Валидация данных
       if (!AppConfig.isValidEmail(email)) {
@@ -88,8 +88,11 @@ class AuthController {
         return Response(400, body: jsonEncode({'error': 'Password must be at least ${AppConfig.minPasswordLength} characters'}));
       }
 
-      if (!AppConfig.isValidRole(role)) {
-        return Response(400, body: jsonEncode({'error': 'Invalid role. Allowed roles: ${AppConfig.allowedRoles.join(', ')}'}));
+      // Validate each role
+      for (final roleName in roles) {
+        if (!AppConfig.isValidRole(roleName)) {
+          return Response(400, body: jsonEncode({'error': 'Invalid role: $roleName. Allowed roles: ${AppConfig.allowedRoles.join(', ')}'}));
+        }
       }
 
       final existingUser = await Database().getUserByEmail(email);
@@ -106,13 +109,13 @@ class AuthController {
         passwordHash: passwordHash,
         firstName: firstName,
         lastName: lastName,
-        role: role,
+        roles: [], // Roles will be populated by the database method
         phone: data['phone'] as String?,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      final createdUser = await Database().createUser(newUser);
+      final createdUser = await Database().createUser(newUser, roles); // Pass roles to createUser
       final token = _generateJwtToken(createdUser);
 
       final response = {
@@ -130,7 +133,7 @@ class AuthController {
     final jwt = JWT({
       'userId': user.id,
       'email': user.email,
-      'role': user.role,
+      'roles': user.roles.map((r) => r.name).toList(), // Changed to list of role names
       'firstName': user.firstName,
       'lastName': user.lastName,
       'exp': (DateTime.now().add(Duration(hours: AppConfig.jwtExpiryHours)).millisecondsSinceEpoch / 1000).round(),

@@ -99,6 +99,9 @@ final Router router = Router()
   ..get('/api/users/<id>', (Request request, String id) => _protectedHandler((Request req) => UsersController.getUserById(req, id))(request))
   ..put('/api/users/<id>', (Request request, String id) => _protectedHandler((Request req) => UsersController.updateUser(req, id))(request))
   ..delete('/api/users/<id>', (Request request, String id) => _adminHandler((Request req) => UsersController.deleteUser(req, id))(request))
+  ..get('/api/users/<id>/roles', (Request request, String id) => _adminHandler((Request req) => UsersController.getUserRoles(req, id))(request))
+  ..put('/api/users/<id>/roles', (Request request, String id) => requireAuth()(requireRole('admin')((Request req) => UsersController.updateUserRoles(req, id)))(request))
+  ..get('/api/roles', (Request request) => _adminHandler(UsersController.getRoles)(request))
 
 // Training routes
   ..get('/api/training/plans', (Request request) => _protectedHandler(TrainingController.getTrainingPlans)(request))

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_front.dart';
+import '../../models/role.dart'; // Import Role model
 import '../../services/api_service.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'create_user_screen.dart';
@@ -12,6 +13,7 @@ import '../instructor_dashboard.dart';
 import '../manager_dashboard.dart';
 import '../trainer_dashboard.dart';
 import '../unknown_role_screen.dart';
+import 'manage_user_roles_screen.dart'; // Import the new screen
 
 class UsersListScreen extends ConsumerStatefulWidget {
   final String? initialFilter;
@@ -54,45 +56,34 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   List<User> get _filteredUsers {
     switch (_selectedFilter) {
       case 'admin':
-        return _users.where((user) => user.role == 'admin').toList();
+        return _users.where((user) => user.roles.any((role) => role.name == 'admin')).toList();
       case 'manager':
-        return _users.where((user) => user.role == 'manager').toList();
+        return _users.where((user) => user.roles.any((role) => role.name == 'manager')).toList();
       case 'trainer':
-        return _users.where((user) => user.role == 'trainer').toList();
+        return _users.where((user) => user.roles.any((role) => role.name == 'trainer')).toList();
       case 'instructor':
-        return _users.where((user) => user.role == 'instructor').toList();
+        return _users.where((user) => user.roles.any((role) => role.name == 'instructor')).toList();
       case 'client':
-        return _users.where((user) => user.role == 'client').toList();
+        return _users.where((user) => user.roles.any((role) => role.name == 'client')).toList();
       default:
         return _users;
     }
   }
 
-  String _getRoleDisplayName(String role) {
-    switch (role) {
-      case 'admin':
-        return 'Администратор';
-      case 'manager':
-        return 'Менеджер';
-      case 'trainer':
-        return 'Тренер';
-      case 'instructor':
-        return 'Инструктор';
-      case 'client':
-        return 'Клиент';
-      default:
-        return role;
-    }
+  String _getRoleDisplayName(Role role) {
+    return role.title;
   }
 
-  Color _getRoleColor(String role) {
-    switch (role) {
+  Color _getRoleColor(String roleName) {
+    switch (roleName) {
       case 'admin':
         return Colors.purple;
       case 'manager':
         return Colors.orange;
       case 'trainer':
         return Colors.green;
+      case 'instructor':
+        return Colors.teal;
       case 'client':
         return Colors.blue;
       default:
@@ -102,6 +93,10 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Assuming the current user's role is available via a provider or similar mechanism
+    // For demonstration, let's assume the current user is an admin.
+    final currentUserIsAdmin = true; // TODO: Replace with actual auth check
+
     return Column(
         children: [
           // Фильтры
@@ -113,6 +108,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                 ButtonSegment(value: 'admin', label: Text('Админы')),
                 ButtonSegment(value: 'manager', label: Text('Менеджеры')),
                 ButtonSegment(value: 'trainer', label: Text('Тренеры')),
+                ButtonSegment(value: 'instructor', label: Text('Инструкторы')),
                 ButtonSegment(value: 'client', label: Text('Клиенты')),
               ],
               selected: {_selectedFilter},
@@ -141,25 +137,49 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                                     horizontal: 16, vertical: 4),
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: _getRoleColor(user.role),
+                                    backgroundColor: _getRoleColor(user.roles.first.name), // Use first role for avatar color
                                     child: Text(
                                       user.firstName[0],
                                       style: const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                   title: Text(user.fullName),
-                                  subtitle: Text(user.email),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(user.email),
+                                      if (user.roles.length > 1) // Display roles if more than one
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 4.0),
+                                          child: Wrap(
+                                            spacing: 4.0,
+                                            runSpacing: 2.0,
+                                            children: user.roles
+                                                .map((role) => Chip(
+                                                      label: Text(
+                                                        _getRoleDisplayName(role),
+                                                        style: const TextStyle(fontSize: 10),
+                                                      ),
+                                                      backgroundColor: _getRoleColor(role.name),
+                                                      labelStyle: const TextStyle(color: Colors.white),
+                                                    ))
+                                                .toList(),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Chip(
-                                        label: Text(
-                                          _getRoleDisplayName(user.role),
-                                          style: const TextStyle(color: Colors.white),
+                                      if (user.roles.length == 1) // Display single role chip if only one role
+                                        Chip(
+                                          label: Text(
+                                            _getRoleDisplayName(user.roles.first),
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                          backgroundColor: _getRoleColor(user.roles.first.name),
                                         ),
-                                        backgroundColor: _getRoleColor(user.role),
-                                      ),
-                                      if (user.role == 'manager') ...[
+                                      if (user.roles.any((role) => role.name == 'manager')) ...[
                                         const SizedBox(width: 8),
                                         IconButton(
                                           icon: const Icon(Icons.group_add),
@@ -198,26 +218,38 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                                           },
                                         ),
                                       ],
+                                      if (currentUserIsAdmin && !user.roles.any((role) => role.name == 'client') && !user.roles.any((role) => role.name == 'admin')) // Only show for admin and non-client, non-admin users
+                                        IconButton(
+                                          icon: const Icon(Icons.manage_accounts),
+                                          tooltip: 'Управление ролями',
+                                          onPressed: () async {
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ManageUserRolesScreen(user: user),
+                                              ),
+                                            );
+                                            _loadUsers(); // Reload users after returning from role management
+                                          },
+                                        ),
                                     ],
                                   ),
                                   onTap: () {
                                     Widget page;
-                                    switch (user.role) {
-                                      case 'manager':
-                                        page = ManagerDashboard(manager: user);
-                                        break;
-                                      case 'trainer':
-                                        page = TrainerDashboard(trainer: user);
-                                        break;
-                                      case 'instructor':
-                                        page = InstructorDashboard(instructor: user);
-                                        break;
-                                      case 'client':
-                                        page = ClientDashboard(client: user);
-                                        break;
-                                      default:
-                                        // Для админа или других ролей можно открыть экран редактирования или ничего не делать
-                                        return; 
+                                    // Prioritize roles for navigation
+                                    if (user.roles.any((role) => role.name == 'admin')) {
+                                      // Admins don't have a specific dashboard to navigate to from here
+                                      return;
+                                    } else if (user.roles.any((role) => role.name == 'manager')) {
+                                      page = ManagerDashboard(manager: user);
+                                    } else if (user.roles.any((role) => role.name == 'trainer')) {
+                                      page = TrainerDashboard(trainer: user);
+                                    } else if (user.roles.any((role) => role.name == 'instructor')) {
+                                      page = InstructorDashboard(instructor: user);
+                                    } else if (user.roles.any((role) => role.name == 'client')) {
+                                      page = ClientDashboard(client: user);
+                                    } else {
+                                      page = UnknownRoleScreen(); // Fallback for unknown roles
                                     }
                                     Navigator.push(
                                       context,

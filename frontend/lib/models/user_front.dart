@@ -1,3 +1,5 @@
+import 'role.dart';
+
 class User {
   final int id;
   final String email;
@@ -5,7 +7,7 @@ class User {
   final String firstName;
   final String lastName;
   final String? middleName;
-  final String role;
+  final List<Role> roles; // Changed from single role string to list of Role objects
   final String? phone;
   final String? gender;
   final int? age;
@@ -23,7 +25,7 @@ class User {
     required this.firstName,
     required this.lastName,
     this.middleName,
-    required this.role,
+    required this.roles, // Updated constructor
     this.phone,
     this.gender,
     this.age,
@@ -43,7 +45,10 @@ class User {
       firstName: map['first_name'].toString(),
       lastName: map['last_name'].toString(),
       middleName: map['middle_name']?.toString(),
-      role: map['role'].toString(),
+      roles: (map['roles'] as List<dynamic>?)
+              ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+              .toList() ??
+          [],
       phone: map['phone']?.toString(),
       gender: map['gender']?.toString(),
       age: map['age'] != null ? int.tryParse(map['age'].toString()) : null,
@@ -67,7 +72,7 @@ class User {
       'firstName': firstName,
       'lastName': lastName,
       'middleName': middleName,
-      'role': role,
+      'roles': roles.map((r) => r.toJson()).toList(), // Serialize roles
       'phone': phone,
       'gender': gender,
       'age': age,
@@ -108,7 +113,10 @@ class User {
       firstName: json['firstName'],
       lastName: json['lastName'],
       middleName: json['middleName'],
-      role: json['role'],
+      roles: (json['roles'] as List<dynamic>?)
+              ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+              .toList() ??
+          [],
       phone: json['phone'],
       gender: json['gender'],
       age: json['age'],
@@ -140,7 +148,10 @@ class AuthResponse {
         firstName: userData['firstName']?.toString() ?? userData['first_name']?.toString() ?? '',
         lastName: userData['lastName']?.toString() ?? userData['last_name']?.toString() ?? '',
         middleName: userData['middleName']?.toString(),
-        role: userData['role']?.toString() ?? 'client',
+        roles: (userData['roles'] as List<dynamic>?)
+                ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+                .toList() ??
+            [],
         phone: userData['phone']?.toString(),
         gender: userData['gender']?.toString(),
         age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
@@ -165,7 +176,7 @@ class CreateUserRequest {
   final String firstName;
   final String lastName;
   final String? middleName;
-  final String role;
+  final List<String> roles; // Changed from single role string to list of role names
   final String? phone;
   final String? gender;
   final int? age;
@@ -180,7 +191,7 @@ class CreateUserRequest {
     required this.firstName,
     required this.lastName,
     this.middleName,
-    required this.role,
+    required this.roles, // Updated constructor
     this.phone,
     this.gender,
     this.age,
@@ -197,7 +208,7 @@ class CreateUserRequest {
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
       middleName: json['middleName'] as String?,
-      role: json['role'] as String,
+      roles: List<String>.from(json['roles'] as List), // Deserialize roles
       phone: json['phone'] as String?,
       gender: json['gender'] as String?,
       age: json['age'] != null ? int.tryParse(json['age'].toString()) : null,
@@ -215,7 +226,7 @@ class CreateUserRequest {
       'firstName': firstName,
       'lastName': lastName,
       'middleName': middleName,
-      'role': role,
+      'roles': roles, // Serialize roles
       'phone': phone,
       'gender': gender,
       'age': age,

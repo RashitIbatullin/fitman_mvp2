@@ -1,10 +1,12 @@
+import 'role.dart';
+
 class User {
   final int id;
   final String email;
   final String passwordHash;
   final String firstName;
   final String lastName;
-  final String role;
+  final List<Role> roles; // Changed from single role string to list of Role objects
   final String? phone;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -15,7 +17,7 @@ class User {
     required this.passwordHash,
     required this.firstName,
     required this.lastName,
-    required this.role,
+    required this.roles, // Updated constructor
     this.phone,
     required this.createdAt,
     required this.updatedAt,
@@ -28,7 +30,7 @@ class User {
       passwordHash: map['password_hash'].toString(),
       firstName: map['first_name'].toString(),
       lastName: map['last_name'].toString(),
-      role: map['role'].toString(),
+      roles: [], // Roles will be fetched separately and populated
       phone: map['phone']?.toString(),
       createdAt: map['created_at'] is DateTime
           ? map['created_at']
@@ -45,7 +47,7 @@ class User {
       'email': email,
       'firstName': firstName,
       'lastName': lastName,
-      'role': role,
+      'roles': roles.map((r) => r.toJson()).toList(), // Serialize roles
       'phone': phone,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
@@ -53,13 +55,23 @@ class User {
   }
 
   Map<String, dynamic> toSafeJson() {
-    return toJson();
+    return {
+      'id': id,
+      'email': email,
+      'firstName': firstName,
+      'lastName': lastName,
+      'roles': roles.map((r) => r.toJson()).toList(), // Serialize roles
+      'phone': phone,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
   }
 
   User copyWith({
     String? firstName,
     String? lastName,
     String? phone,
+    List<Role>? roles, // Added roles to copyWith
   }) {
     return User(
       id: id,
@@ -67,7 +79,7 @@ class User {
       passwordHash: passwordHash,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
-      role: role,
+      roles: roles ?? this.roles, // Updated roles in copyWith
       phone: phone ?? this.phone,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
@@ -80,7 +92,7 @@ class CreateUserRequest {
   final String password;
   final String firstName;
   final String lastName;
-  final String role;
+  final List<String> roles; // Changed from single role string to list of role names
   final String? phone;
 
   CreateUserRequest({
@@ -88,7 +100,7 @@ class CreateUserRequest {
     required this.password,
     required this.firstName,
     required this.lastName,
-    required this.role,
+    required this.roles, // Updated constructor
     this.phone,
   });
 
@@ -98,7 +110,7 @@ class CreateUserRequest {
       password: json['password'] as String,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
-      role: json['role'] as String,
+      roles: List<String>.from(json['roles'] as List), // Deserialize roles
       phone: json['phone'] as String?,
     );
   }

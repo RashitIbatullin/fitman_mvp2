@@ -28,6 +28,7 @@ void main() async {
 
   // Инициализация API service
   await ApiService.init();
+  print('ApiService._token after init: ${ApiService.currentToken}'); // Debug print
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -40,7 +41,7 @@ class MyApp extends ConsumerWidget  {
     final authState = ref.watch(authProvider);
 
     return MaterialApp(
-      title: 'Fitman MVP1',
+      title: 'Fitman MVP2',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -51,18 +52,18 @@ class MyApp extends ConsumerWidget  {
             return const LoginScreen();
           }
           // Автоматическая навигация по ролям
-          switch (user.role) {
-            case 'admin':
-              return const AdminDashboard();
-            case 'manager':
-              return const ManagerDashboard();
-            case 'trainer':
-              return const TrainerDashboard();
-            case 'instructor':
-              return const InstructorDashboard();
-            case 'client':
-              return const ClientDashboard();
-            default:              return const UnknownRoleScreen();
+          if (user.roles.any((role) => role.name == 'admin')) {
+            return const AdminDashboard();
+          } else if (user.roles.any((role) => role.name == 'manager')) {
+            return const ManagerDashboard();
+          } else if (user.roles.any((role) => role.name == 'trainer')) {
+            return const TrainerDashboard();
+          } else if (user.roles.any((role) => role.name == 'instructor')) {
+            return const InstructorDashboard();
+          } else if (user.roles.any((role) => role.name == 'client')) {
+            return const ClientDashboard();
+          } else {
+            return const UnknownRoleScreen();
           }
         },
         loading: () => const Scaffold(

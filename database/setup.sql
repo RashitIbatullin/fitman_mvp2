@@ -302,4 +302,51 @@ BEGIN
     -- Назначаем клиента инструктору
     INSERT INTO instructor_clients (instructor_id, client_id) VALUES (instructor_id, client_id);
 
+-- Создание таблицы work_schedules
+CREATE TABLE work_schedules (
+    id BIGSERIAL PRIMARY KEY,
+    day_of_week INT NOT NULL UNIQUE,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    is_day_off BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by BIGINT,
+    updated_by BIGINT,
+    archived_at TIMESTAMP WITH TIME ZONE,
+    archived_by BIGINT,
+    company_id BIGINT DEFAULT -1
+);
+
+COMMENT ON TABLE work_schedules IS 'Расписание работы центра';
+
+-- Вставка начальных данных в work_schedules
+INSERT INTO work_schedules (day_of_week, start_time, end_time, is_day_off) VALUES
+(1, '09:00', '21:00', false),
+(2, '09:00', '21:00', false),
+(3, '09:00', '21:00', false),
+(4, '09:00', '21:00', false),
+(5, '09:00', '21:00', false),
+(6, '09:00', '21:00', false),
+(7, '09:00', '21:00', false);
+
+-- Создание таблицы client_schedule_preferences
+CREATE TABLE client_schedule_preferences (
+    id BIGSERIAL PRIMARY KEY,
+    client_id BIGINT NOT NULL REFERENCES users(id),
+    day_of_week INT NOT NULL,
+    preferred_start_time TIME NOT NULL,
+    preferred_end_time TIME NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by BIGINT,
+    updated_by BIGINT,
+    archived_at TIMESTAMP WITH TIME ZONE,
+    archived_by BIGINT,
+    company_id BIGINT DEFAULT -1,
+    UNIQUE (client_id, day_of_week) -- A client can only have one preference per day
+);
+
+COMMENT ON TABLE client_schedule_preferences IS 'Предпочтения клиента по расписанию';
+
 END $$;

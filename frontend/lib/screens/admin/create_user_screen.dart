@@ -76,7 +76,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
         middleName: _middleNameController.text.trim().isNotEmpty 
             ? _middleNameController.text.trim() 
             : null,
-        role: _selectedRole,
+        roles: [_selectedRole], // Changed to list of roles
         phone: _phoneController.text.trim().isNotEmpty 
             ? _phoneController.text.trim() 
             : null,
