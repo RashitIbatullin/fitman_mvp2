@@ -156,7 +156,8 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       users = users.where((user) {
 
         return user.fullName.toLowerCase().contains(searchQuery) ||
-            (user.phone?.toLowerCase().contains(searchQuery) ?? false);
+            (user.phone?.toLowerCase().contains(searchQuery) ?? false) ||
+            user.email.toLowerCase().contains(searchQuery);
 
       }).toList();
 
@@ -445,51 +446,42 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                                 title: Text(user.fullName),
 
                                 subtitle: Column(
-
                                   crossAxisAlignment: CrossAxisAlignment.start,
-
                                   children: [
-
-                                    Text(user.email),
-
-                                    if (user.roles.length > 1)
-
-                                      Padding(
-
-                                        padding: const EdgeInsets.only(top: 4.0),
-
-                                        child: Wrap(
-
-                                          spacing: 4.0,
-
-                                          runSpacing: 2.0,
-
-                                          children: user.roles
-
-                                              .map((role) => Chip(
-
-                                                    label: Text(
-
-                                                      _getRoleDisplayName(role),
-
-                                                      style: const TextStyle(fontSize: 10),
-
-                                                    ),
-
-                                                    backgroundColor: _getRoleColor(role.name),
-
-                                                    labelStyle: const TextStyle(color: Colors.white),
-
-                                                  ))
-
-                                              .toList(),
-
-                                        ),
-
+                                    IntrinsicHeight(
+                                      child: Row(
+                                        children: [
+                                          Text(user.email),
+                                          const VerticalDivider(width: 10, thickness: 1, color: Colors.grey),
+                                          Text(user.phone ?? 'Нет телефона'),
+                                          if (user.roles.any((role) => role.name == 'client')) ...[
+                                            const VerticalDivider(width: 10, thickness: 1, color: Colors.grey),
+                                            Text('Пол: ${user.gender ?? 'Н/Д'}'),
+                                            const VerticalDivider(width: 10, thickness: 1, color: Colors.grey),
+                                            Text('Возраст: ${user.age?.toString() ?? 'Н/Д'}'),
+                                          ],
+                                        ],
                                       ),
-
+                                    ),
+                                    if (user.roles.length > 1)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4.0),
+                                        child: Wrap(
+                                          spacing: 4.0,
+                                          runSpacing: 2.0,
+                                          children: user.roles
+                                              .map((role) => Chip(
+                                                    label: Text(
+                                                      _getRoleDisplayName(role),
+                                                      style: const TextStyle(fontSize: 10),
+                                                    ),
+                                                    backgroundColor: _getRoleColor(role.name),
+                                                    labelStyle: const TextStyle(color: Colors.white),
+                                                  ))
+                                              .toList(),
+                                        ),
+                                      ),
                                   ],
-
                                 ),
 
                                 trailing: Row(
@@ -618,61 +610,34 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                                 ),
 
                                 onTap: () {
-
-                                  setState(() {
-
-                                    if (isSelected) {
-
-                                      _selectedUser = null;
-
+                                   Widget page;
+                                    if (user.roles.any((role) => role.name == 'admin')) {
+                                      return;
+                                    } else if (user.roles.any((role) => role.name == 'manager')) {
+                                      page = ManagerDashboard(manager: user);
+                                    } else if (user.roles.any((role) => role.name == 'trainer')) {
+                                      page = TrainerDashboard(trainer: user);
+                                    } else if (user.roles.any((role) => role.name == 'instructor')) {
+                                      page = InstructorDashboard(instructor: user);
+                                    } else if (user.roles.any((role) => role.name == 'client')) {
+                                      page = ClientDashboard(client: user);
                                     } else {
-
-                                      _selectedUser = user;
-
+                                      page = UnknownRoleScreen();
                                     }
-
-                                  });
-
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => page),
+                                    );
                                 },
 
                                 onLongPress: () {
-
-                                   Widget page;
-
-                                    if (user.roles.any((role) => role.name == 'admin')) {
-
-                                      return;
-
-                                    } else if (user.roles.any((role) => role.name == 'manager')) {
-
-                                      page = ManagerDashboard(manager: user);
-
-                                    } else if (user.roles.any((role) => role.name == 'trainer')) {
-
-                                      page = TrainerDashboard(trainer: user);
-
-                                    } else if (user.roles.any((role) => role.name == 'instructor')) {
-
-                                      page = InstructorDashboard(instructor: user);
-
-                                    } else if (user.roles.any((role) => role.name == 'client')) {
-
-                                      page = ClientDashboard(client: user);
-
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedUser = null;
                                     } else {
-
-                                      page = UnknownRoleScreen();
-
+                                      _selectedUser = user;
                                     }
-
-                                    Navigator.push(
-
-                                      context,
-
-                                      MaterialPageRoute(builder: (context) => page),
-
-                                    );
-
+                                  });
                                 },
 
                               ),
@@ -807,7 +772,7 @@ class _UsersToolbar extends StatelessWidget {
 
                   decoration: InputDecoration(
 
-                    hintText: 'Поиск по ФИО/телефону',
+                    hintText: 'Поиск по ФИО/телефону/почте',
 
                     prefixIcon: const Icon(Icons.search),
 
