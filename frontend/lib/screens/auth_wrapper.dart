@@ -1,9 +1,9 @@
+import 'package:fitman_app/widgets/role_dialog_manager.dart';
 import 'package:fitman_app/screens/admin_dashboard.dart';
 import 'package:fitman_app/screens/client_dashboard.dart';
 import 'package:fitman_app/screens/instructor_dashboard.dart';
 import 'package:fitman_app/screens/login_screen.dart';
 import 'package:fitman_app/screens/manager_dashboard.dart';
-import 'package:fitman_app/screens/role_selection_screen.dart';
 import 'package:fitman_app/screens/trainer_dashboard.dart';
 import 'package:fitman_app/screens/unknown_role_screen.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,6 @@ class AuthWrapper extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authStateAsync = ref.watch(authProvider);
-    print('[AuthWrapper] Building with authState: ${authStateAsync.value?.user?.email}, selectedRole: ${authStateAsync.value?.selectedRole?.name}');
 
     return authStateAsync.when(
       data: (authState) {
@@ -30,7 +29,7 @@ class AuthWrapper extends ConsumerWidget {
 
         // Если у пользователя несколько ролей, но ни одна не выбрана -> экран выбора
         if (user.roles.length > 1 && selectedRole == null) {
-          return RoleSelectionScreen(user: user);
+          return RoleDialogManager(user: user); // Используем новый менеджер диалога
         }
         
         // Если роль выбрана (или она всего одна), показываем соответствующий дашборд
