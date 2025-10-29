@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_provider.dart';
-import '../admin/assign_clients_screen.dart';
 
 // Провайдер для получения клиентов для конкретного менеджера
 final assignedClientsProvider = FutureProvider.family<List<User>, int>((ref, managerId) async {

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import '../config/database.dart';
-import '../models/user_back.dart';
 
 class ManagerController {
   static Future<Response> getAssignedClients(Request request) async {

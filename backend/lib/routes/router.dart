@@ -101,6 +101,7 @@ final Router router = Router()
   ..delete('/api/users/<id>', (Request request, String id) => _adminHandler((Request req) => UsersController.deleteUser(req, id))(request))
   ..get('/api/users/<id>/roles', (Request request, String id) => _adminHandler((Request req) => UsersController.getUserRoles(req, id))(request))
   ..put('/api/users/<id>/roles', (Request request, String id) => requireAuth()(requireRole('admin')((Request req) => UsersController.updateUserRoles(req, id)))(request))
+  ..post('/api/users/reset-password', (Request request) => _adminHandler(UsersController.resetPassword)(request))
   ..get('/api/roles', (Request request) => _adminHandler(UsersController.getRoles)(request))
 
 // Training routes

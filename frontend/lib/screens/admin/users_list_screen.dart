@@ -14,6 +14,8 @@ import '../trainer_dashboard.dart';
 import '../unknown_role_screen.dart';
 import 'manage_user_roles_screen.dart'; // Import the new screen
 import '../../widgets/role_dialog_manager.dart';
+import '../../widgets/reset_password_dialog.dart';
+
 
 class UsersListScreen extends ConsumerStatefulWidget {
   final String? initialFilter;
@@ -362,6 +364,15 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
   }
 
+  void _showResetPasswordDialog(BuildContext context) {
+    if (_selectedUser == null) return;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ResetPasswordDialog(userLogin: _selectedUser!.email);
+      },
+    );
+  }
 
 
   @override
@@ -416,13 +427,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
           },
 
-          onResetPassword: _selectedUser == null ? null : () {
-
-            // TODO: Implement Reset Password
-
-            print('Reset password for: ${_selectedUser!.fullName}');
-
-          },
+          onResetPassword: _selectedUser == null ? null : () => _showResetPasswordDialog(context),
 
         ),
 

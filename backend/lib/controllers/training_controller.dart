@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'package:shelf/shelf.dart';
-import '../config/database.dart';
-import '../models/training_plan.dart';
 
 class TrainingController {
   static Future<Response> getTrainingPlans(Request request) async {

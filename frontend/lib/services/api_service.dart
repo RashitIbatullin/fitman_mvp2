@@ -827,4 +827,26 @@ class ApiService {
       rethrow;
     }
   }
+
+  // Сброс пароля пользователя (для админа)
+  static Future<void> resetUserPassword(String email, String newPassword) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/users/reset-password'),
+        headers: _headers,
+        body: jsonEncode({
+          'email': email,
+          'newPassword': newPassword,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to reset password with status ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Reset user password error: $e');
+      rethrow;
+    }
+  }
 }

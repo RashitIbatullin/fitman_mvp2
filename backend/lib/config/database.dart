@@ -763,6 +763,28 @@ class Database {
     );
   }
 
+  // Обновить пароль пользователя
+  Future<void> updateUserPassword(int userId, String newPasswordHash) async {
+    try {
+      final conn = await connection;
+      await conn.execute(
+        Sql.named('''
+          UPDATE users
+          SET password_hash = @passwordHash, updated_at = @updatedAt
+          WHERE id = @userId
+        '''),
+        parameters: {
+          'passwordHash': newPasswordHash,
+          'updatedAt': DateTime.now(),
+          'userId': userId,
+        },
+      );
+    } catch (e) {
+      print('❌ updateUserPassword error: $e');
+      rethrow;
+    }
+  }
+
   // Получить данные антропометрии для клиента
   Future<Map<String, dynamic>> getAnthropometryData(int clientId) async {
     // TODO: Implement actual database query

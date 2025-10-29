@@ -297,13 +297,41 @@ class UsersController {
     }
   }
 
-   static Future<Response> getRoles(Request request) async {
+  static Future<Response> getRoles(Request request) async {
     try {
       final roles = await Database().getAllRoles();
       final rolesJson = roles.map((role) => role.toJson()).toList();
       return Response.ok(jsonEncode({'roles': rolesJson}));
     } catch (e) {
       print('Get roles error: $e');
+      return Response(500, body: jsonEncode({'error': 'Internal server error'}));
+    }
+  }
+
+  static Future<Response> resetPassword(Request request) async {
+    try {
+      final body = await request.readAsString();
+      final data = jsonDecode(body) as Map<String, dynamic>;
+
+      final email = data['email'] as String?;
+      final newPassword = data['newPassword'] as String?;
+
+      if (email == null || newPassword == null) {
+        return Response(400, body: jsonEncode({'error': 'Email and newPassword are required'}));
+      }
+
+      final user = await Database().getUserByEmail(email);
+      if (user == null) {
+        return Response(404, body: jsonEncode({'error': 'User not found'}));
+      }
+
+      final passwordHash = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+
+      await Database().updateUserPassword(user.id, passwordHash);
+
+      return Response.ok(jsonEncode({'message': 'Password reset successfully'}));
+    } catch (e) {
+      print('Reset password error: $e');
       return Response(500, body: jsonEncode({'error': 'Internal server error'}));
     }
   }
