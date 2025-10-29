@@ -28,11 +28,7 @@ class DialogUtils {
 
     if (shouldLogout == true) {
       ref.read(authProvider.notifier).logout();
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
-      );
+      // Навигация будет обработана автоматически через AuthWrapper
     }
   }
 }

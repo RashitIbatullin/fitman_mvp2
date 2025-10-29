@@ -10,7 +10,7 @@ class TrainerDashboard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = trainer ?? ref.watch(authProvider).value;
+    final user = trainer ?? ref.watch(authProvider).value?.user;
 
     return Scaffold(
       appBar: CustomAppBar.trainer(

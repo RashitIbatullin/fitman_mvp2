@@ -21,12 +21,12 @@ class ClientDashboard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = client ?? ref.watch(authProvider).value;
+    final user = client ?? ref.watch(authProvider).value?.user;
     final dashboardData = ref.watch(dashboardDataProvider);
 
     if (user == null) {
       return const Scaffold(
-        body: Center(child: Text('Пользователь не найден')),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -36,9 +36,7 @@ class ClientDashboard extends ConsumerWidget {
         additionalActions: [
           IconButton(
             icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // Навигация к уведомлениям
-            },
+            onPressed: () {},
           ),
         ],
         showBackButton: client != null,
@@ -47,7 +45,7 @@ class ClientDashboard extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            const DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
@@ -60,50 +58,50 @@ class ClientDashboard extends ConsumerWidget {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Мой тренер'),
+              leading: const Icon(Icons.person),
+              title: const Text('Мой тренер'),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const MyTrainerScreen()));
               },
             ),
             ListTile(
-              leading: Icon(Icons.person_outline),
-              title: Text('Мой инструктор'),
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Мой инструктор'),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const MyInstructorScreen()));
               },
             ),
             ListTile(
-              leading: Icon(Icons.business_center),
-              title: Text('Мой менеджер'),
+              leading: const Icon(Icons.business_center),
+              title: const Text('Мой менеджер'),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const MyManagerScreen()));
               },
             ),
             ListTile(
-              leading: Icon(Icons.accessibility),
-              title: Text('Антропометрия'),
+              leading: const Icon(Icons.accessibility),
+              title: const Text('Антропометрия'),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const AnthropometryScreen()));
               },
             ),
             ListTile(
-              leading: Icon(Icons.fitness_center),
-              title: Text('Занятия'),
+              leading: const Icon(Icons.fitness_center),
+              title: const Text('Занятия'),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const SessionsScreen()));
               },
             ),
             ListTile(
-              leading: Icon(Icons.track_changes),
-              title: Text('Учет калорий'),
+              leading: const Icon(Icons.track_changes),
+              title: const Text('Учет калорий'),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const CalorieTrackingScreen()));
               },
             ),
             ListTile(
-              leading: Icon(Icons.show_chart),
-              title: Text('Прогресс'),
+              leading: const Icon(Icons.show_chart),
+              title: const Text('Прогресс'),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressScreen()));
               },
@@ -138,10 +136,10 @@ class ClientDashboard extends ConsumerWidget {
 
     return Card(
       child: ListTile(
-        leading: Icon(Icons.watch_later_outlined, color: Colors.orange, size: 40),
+        leading: const Icon(Icons.watch_later_outlined, color: Colors.orange, size: 40),
         title: Text(data.title),
         subtitle: Text('${DateFormat('d MMM y, HH:mm', 'ru').format(data.time)}\nДо начала: $formattedDuration'),
-        trailing: Icon(Icons.arrow_forward_ios),
+        trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {},
       ),
     );
@@ -241,7 +239,7 @@ class ClientDashboard extends ConsumerWidget {
                   children: [
                     Icon(Icons.fitness_center, size: 40, color: Theme.of(context).primaryColor),
                     const SizedBox(height: 8),
-                    Text('Занятия'),
+                    const Text('Занятия'),
                   ],
                 ),
               ),
@@ -258,7 +256,7 @@ class ClientDashboard extends ConsumerWidget {
                   children: [
                     Icon(Icons.track_changes, size: 40, color: Theme.of(context).primaryColor),
                     const SizedBox(height: 8),
-                    Text('Учет калорий'),
+                    const Text('Учет калорий'),
                   ],
                 ),
               ),

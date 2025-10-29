@@ -20,21 +20,6 @@ class InstructorDashboard extends ConsumerStatefulWidget {
 class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
   int _selectedIndex = 0;
 
-  late final List<Widget> _views;
-
-  @override
-  void initState() {
-    super.initState();
-    final user = widget.instructor ?? ref.read(authProvider).value;
-    _views = [
-      ClientsView(instructorId: user!.id),
-      MyTrainerView(instructorId: user.id),
-      MyManagerView(instructorId: user.id),
-      const ScheduleView(),
-      const TimesheetView(),
-    ];
-  }
-
   void _onTabSelected(int index) {
     setState(() {
       _selectedIndex = index;
@@ -43,11 +28,20 @@ class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.instructor ?? ref.watch(authProvider).value;
+    final user = widget.instructor ?? ref.watch(authProvider).value?.user;
 
     if (user == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
+    // Инициализация перенесена в build, чтобы избежать проблем с initState
+    final List<Widget> views = [
+      ClientsView(instructorId: user.id),
+      MyTrainerView(instructorId: user.id),
+      MyManagerView(instructorId: user.id),
+      const ScheduleView(),
+      const TimesheetView(),
+    ];
 
     return Scaffold(
       appBar: CustomAppBar.instructor(
@@ -56,7 +50,7 @@ class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: _views,
+        children: views,
       ),
     );
   }

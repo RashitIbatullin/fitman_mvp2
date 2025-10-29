@@ -8,7 +8,8 @@ class UnknownRoleScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider).value;
+    final authState = ref.watch(authProvider).value;
+    final user = authState?.user;
 
     return Scaffold(
       appBar: CustomAppBar(

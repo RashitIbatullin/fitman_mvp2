@@ -30,7 +30,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authProvider).value;
+    final user = ref.watch(authProvider).value?.user;
 
     return Scaffold(
       appBar: CustomAppBar.admin(

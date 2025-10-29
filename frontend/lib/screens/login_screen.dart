@@ -1,13 +1,7 @@
-import 'package:fitman_app/screens/instructor_dashboard.dart';
-import 'package:fitman_app/screens/trainer_dashboard.dart';
-import 'package:fitman_app/screens/unknown_role_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
-import 'admin_dashboard.dart';
 import 'register_screen.dart';
-import 'client_dashboard.dart';
-import 'manager_dashboard.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -24,44 +18,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Тестовые данные для быстрого входа
-    _emailController.text = 'client@fitman.ru';
-    _passwordController.text = 'client123';
+    _emailController.text = 'admin@fitman.ru'; // Тестовые данные
+    _passwordController.text = 'admin123';
   }
 
   @override
   Widget build(BuildContext context) {
+    // Слушаем состояние для отображения ошибок
+    ref.listen<AsyncValue>(authProvider, (_, state) {
+      if (state is AsyncError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка входа: ${state.error}')),
+        );
+      }
+    });
+
     final authState = ref.watch(authProvider);
 
-    // Редирект при успешной аутентификации с учетом роли
-    if (authState.hasValue && authState.value != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final user = authState.value!;
-        Widget targetScreen;
-
-        // Prioritize roles for navigation
-        if (user.roles.any((role) => role.name == 'admin')) {
-          targetScreen = const AdminDashboard();
-        } else if (user.roles.any((role) => role.name == 'manager')) {
-          targetScreen = const ManagerDashboard();
-        } else if (user.roles.any((role) => role.name == 'trainer')) {
-          targetScreen = const TrainerDashboard();
-        } else if (user.roles.any((role) => role.name == 'instructor')) {
-          targetScreen = const InstructorDashboard();
-        } else if (user.roles.any((role) => role.name == 'client')) {
-          targetScreen = const ClientDashboard();
-        } else {
-          targetScreen = const UnknownRoleScreen();
-        }
-
-        print('Redirecting to: ${user.roles.map((r) => r.name).join(', ')} dashboard');
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => targetScreen),
-              (route) => false,
-        );
-      });
-    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Вход в систему'),
@@ -97,12 +70,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   prefixIcon: Icon(Icons.email),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Введите email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Введите корректный email';
-                  }
+                  if (value == null || value.isEmpty) return 'Введите email';
+                  if (!value.contains('@')) return 'Введите корректный email';
                   return null;
                 },
               ),
@@ -116,12 +85,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   prefixIcon: Icon(Icons.lock),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Введите пароль';
-                  }
-                  if (value.length < 6) {
-                    return 'Пароль должен быть не менее 6 символов';
-                  }
+                  if (value == null || value.isEmpty) return 'Введите пароль';
+                  if (value.length < 6) return 'Пароль должен быть не менее 6 символов';
                   return null;
                 },
               ),
@@ -140,15 +105,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       'Войти',
                       style: TextStyle(fontSize: 16),
                     ),
-                  ),
-                ),
-              if (authState.hasError)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Text(
-                    authState.error.toString(),
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               const SizedBox(height: 16),
@@ -178,6 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
+                alignment: WrapAlignment.center,
                 children: [
                   _buildTestUserChip('admin@fitman.ru', 'admin123', 'Админ'),
                   _buildTestUserChip('instructor@fitman.ru', 'instructor123', 'Инструктор'),
@@ -207,6 +164,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
+      print('[LoginScreen] Handling login...');
       ref.read(authProvider.notifier).login(
         _emailController.text.trim(),
         _passwordController.text,

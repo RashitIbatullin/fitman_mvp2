@@ -20,24 +20,6 @@ class ManagerDashboard extends ConsumerStatefulWidget {
 class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
   int _selectedIndex = 0;
 
-  late final List<Widget> _views;
-
-  @override
-  void initState() {
-    super.initState();
-    // Получаем пользователя либо из виджета, либо из провайдера
-    final user = widget.manager ?? ref.read(authProvider).value;
-    // Инициализируем _views с ID пользователя
-    _views = [
-      ClientsView(managerId: user!.id),
-      InstructorsView(managerId: user.id),
-      TrainersView(managerId: user.id),
-      const ScheduleView(),
-      const Center(child: Text('Табели - в разработке')),
-      const Center(child: Text('Каталоги - в разработке')),
-    ];
-  }
-
   void _onTabSelected(int index) {
     setState(() {
       _selectedIndex = index;
@@ -46,11 +28,21 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.manager ?? ref.watch(authProvider).value;
+    final user = widget.manager ?? ref.watch(authProvider).value?.user;
 
     if (user == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    
+    // Инициализация перенесена в build
+    final List<Widget> views = [
+      ClientsView(managerId: user.id),
+      InstructorsView(managerId: user.id),
+      TrainersView(managerId: user.id),
+      const ScheduleView(),
+      const Center(child: Text('Табели - в разработке')),
+      const Center(child: Text('Каталоги - в разработке')),
+    ];
 
     return Scaffold(
       appBar: CustomAppBar.manager(
@@ -59,7 +51,7 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: _views,
+        children: views,
       ),
     );
   }

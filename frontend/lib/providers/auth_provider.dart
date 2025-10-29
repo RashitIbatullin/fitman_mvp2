@@ -1,34 +1,92 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_front.dart';
-import '../models/role.dart'; // Import Role model
+import '../models/role.dart';
 import '../services/api_service.dart';
 
-class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
+// 1. Единый класс состояния аутентификации
+@immutable
+class AuthState {
+  final User? user;
+  final Role? selectedRole;
+
+  const AuthState({this.user, this.selectedRole});
+
+  AuthState copyWith({User? user, Role? selectedRole}) {
+    return AuthState(
+      user: user ?? this.user,
+      selectedRole: selectedRole ?? this.selectedRole,
+    );
+  }
+}
+
+// 2. Notifier управляет единым состоянием AuthState
+class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   AuthNotifier() : super(const AsyncValue.loading()) {
     _loadStoredUser();
   }
 
-  // Загружаем сохраненного пользователя при инициализации
   Future<void> _loadStoredUser() async {
     try {
       final token = await _getStoredToken();
       if (token != null) {
-        final userData = await _getStoredUser();
-        if (userData != null) {
-          state = AsyncValue.data(userData);
+        final user = await _getStoredUser();
+        if (user != null) {
+          Role? selectedRole;
+          if (user.roles.length == 1) {
+            selectedRole = user.roles.first;
+          }
+          // При запуске, если ролей много, selectedRole остается null, что вызовет экран выбора
+          state = AsyncValue.data(AuthState(user: user, selectedRole: selectedRole));
           return;
         }
       }
-      state = const AsyncValue.data(null);
-    } catch (e) {
-      print('Error loading stored user: $e');
-      state = AsyncValue.error(e, StackTrace.current);
+      state = AsyncValue.data(const AuthState(user: null, selectedRole: null));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 
+  Future<void> login(String email, String password) async {
+    print('[AuthNotifier] Login called for $email');
+    state = const AsyncValue.loading();
+    try {
+      final authResponse = await ApiService.login(email, password);
+      await _storeAuthData(authResponse);
+
+      Role? selectedRole;
+      if (authResponse.user.roles.length == 1) {
+        selectedRole = authResponse.user.roles.first;
+      }
+      
+      print('[AuthNotifier] Login success. User: ${authResponse.user.email}, Roles: ${authResponse.user.roles.map((r) => r.name)}, SelectedRole: ${selectedRole?.name}');
+
+      // Атомарно обновляем состояние с пользователем и выбранной ролью
+      state = AsyncValue.data(AuthState(user: authResponse.user, selectedRole: selectedRole));
+
+    } catch (e, st) {
+      print('[AuthNotifier] Login error: $e');
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  void logout() async {
+    print('[AuthNotifier] Logout called.');
+    await ApiService.clearToken();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_data');
+    state = AsyncValue.data(const AuthState(user: null, selectedRole: null));
+  }
+
+  // Метод для установки роли, выбранной на экране RoleSelectionScreen
+  void setSelectedRole(Role role) {
+    state = state.whenData((value) => value.copyWith(selectedRole: role));
+  }
+
+  // Вспомогательные методы
   Future<String?> _getStoredToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
@@ -38,122 +96,44 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user_data');
     if (userJson != null) {
-      final userData = jsonDecode(userJson);
-
-      return User(
-        id: userData['id'] is int ? userData['id'] : int.parse(userData['id'].toString()),
-        email: userData['email']?.toString() ?? '',
-        passwordHash: userData['passwordHash']?.toString() ?? '',
-        firstName: userData['firstName']?.toString() ?? '',
-        lastName: userData['lastName']?.toString() ?? '',
-        middleName: userData['middleName']?.toString(),
-        roles: (userData['roles'] as List<dynamic>?)
-                ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
-                .toList() ??
-            [],
-        phone: userData['phone']?.toString(),
-        gender: userData['gender']?.toString(),
-        age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
-        sendNotification: userData['sendNotification']?.toString() == 'true',
-        hourNotification: userData['hourNotification'] != null ? int.tryParse(userData['hourNotification'].toString()) ?? 1 : 1,
-        trackCalories: userData['trackCalories']?.toString() == 'true',
-        coeffActivity: userData['coeffActivity'] != null ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2 : 1.2,
-        createdAt: userData['createdAt'] is DateTime
-            ? userData['createdAt']
-            : DateTime.parse(userData['createdAt']?.toString() ?? DateTime.now().toIso8601String()),
-        updatedAt: userData['updatedAt'] is DateTime
-            ? userData['updatedAt']
-            : DateTime.parse(userData['updatedAt']?.toString() ?? DateTime.now().toIso8601String()),
-      );
+      return User.fromJson(jsonDecode(userJson));
     }
     return null;
   }
 
-  Future<void> login(String email, String password) async {
-    state = const AsyncValue.loading();
-    try {
-      final authResponse = await ApiService.login(email, password);
-      await ApiService.saveToken(authResponse.token);
-
-      // Сохраняем данные пользователя с ВСЕМИ полями
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_data', jsonEncode({
-        'id': authResponse.user.id,
-        'email': authResponse.user.email,
-        'passwordHash': authResponse.user.passwordHash,
-        'firstName': authResponse.user.firstName,
-        'lastName': authResponse.user.lastName,
-        'middleName': authResponse.user.middleName,
-        'roles': authResponse.user.roles.map((r) => r.toJson()).toList(), // Save roles as list of maps
-        'phone': authResponse.user.phone,
-        'gender': authResponse.user.gender,
-        'age': authResponse.user.age,
-        'sendNotification': authResponse.user.sendNotification,
-        'hourNotification': authResponse.user.hourNotification,
-        'trackCalories': authResponse.user.trackCalories,
-        'coeffActivity': authResponse.user.coeffActivity,
-        'createdAt': authResponse.user.createdAt.toIso8601String(),
-        'updatedAt': authResponse.user.updatedAt.toIso8601String(),
-      }));
-
-      state = AsyncValue.data(authResponse.user);
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-    }
-  }
-
-  void logout() async {
-    await ApiService.clearToken();
-
-    // Удаляем данные пользователя
+  Future<void> _storeAuthData(AuthResponse authResponse) async {
+    await ApiService.saveToken(authResponse.token);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_data');
-
-    state = const AsyncValue.data(null);
+    await prefs.setString('user_data', jsonEncode(authResponse.user.toJson()));
   }
-
-  Future<void> register(
+  
+    Future<void> register(
       String email,
       String password,
       String firstName,
       String lastName,
-      List<String> roles, // Changed to List<String>
+      List<String> roles,
       ) async {
     state = const AsyncValue.loading();
     try {
       final authResponse = await ApiService.register(
         email, password, firstName, lastName, roles,
       );
-      await ApiService.saveToken(authResponse.token);
+      await _storeAuthData(authResponse);
+      
+      Role? selectedRole;
+      if (authResponse.user.roles.length == 1) {
+        selectedRole = authResponse.user.roles.first;
+      }
 
-      // Сохраняем данные пользователя с ВСЕМИ полями
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_data', jsonEncode({
-        'id': authResponse.user.id,
-        'email': authResponse.user.email,
-        'passwordHash': authResponse.user.passwordHash,
-        'firstName': authResponse.user.firstName,
-        'lastName': authResponse.user.lastName,
-        'middleName': authResponse.user.middleName,
-        'roles': authResponse.user.roles.map((r) => r.toJson()).toList(), // Save roles as list of maps
-        'phone': authResponse.user.phone,
-        'gender': authResponse.user.gender,
-        'age': authResponse.user.age,
-        'sendNotification': authResponse.user.sendNotification,
-        'hourNotification': authResponse.user.hourNotification,
-        'trackCalories': authResponse.user.trackCalories,
-        'coeffActivity': authResponse.user.coeffActivity,
-        'createdAt': authResponse.user.createdAt.toIso8601String(),
-        'updatedAt': authResponse.user.updatedAt.toIso8601String(),
-      }));
-
-      state = AsyncValue.data(authResponse.user);
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
+      state = AsyncValue.data(AuthState(user: authResponse.user, selectedRole: selectedRole));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>(
+// 3. Провайдер теперь предоставляет AsyncValue<AuthState>
+final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<AuthState>>(
       (ref) => AuthNotifier(),
 );

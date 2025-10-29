@@ -1,5 +1,7 @@
+import 'package:fitman_app/screens/shared/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
 import '../utils/dialog_utils.dart';
 
 class AppBarAction extends StatelessWidget {
@@ -38,13 +40,14 @@ class AppBarAction extends StatelessWidget {
   }
 }
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final Widget? leading;
   final bool automaticallyImplyLeading;
   final bool showLogout;
   final bool showBackButton;
+  final bool showProfileButton;
 
   const CustomAppBar({
     super.key,
@@ -54,6 +57,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.automaticallyImplyLeading = true,
     this.showLogout = true,
     this.showBackButton = false,
+    this.showProfileButton = true, // Added for profile button
   });
 
   @override
@@ -160,7 +164,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AppBar(
       title: Text(title),
       leading: showBackButton
@@ -168,7 +172,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const BackButton(),
-                if (Scaffold.of(context).hasDrawer) // Only show drawer icon if a drawer is actually present
+                if (Scaffold.of(context).hasDrawer)
                   Builder(
                     builder: (BuildContext context) {
                       return IconButton(
@@ -182,27 +186,40 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
               ],
             )
-          : leading, // Fallback to original leading or null
-      automaticallyImplyLeading: !showBackButton, // Let Flutter decide if not showing explicit back button
-      leadingWidth: showBackButton && Scaffold.of(context).hasDrawer ? 100.0 : null, // Adjust width if both are present
+          : leading,
+      automaticallyImplyLeading: !showBackButton,
+      leadingWidth: showBackButton && (Scaffold.of(context).hasDrawer) ? 100.0 : null,
       actions: [
         ...?actions,
-        if (showLogout) _buildLogoutAction(context),
+        if (showProfileButton) _buildProfileButton(context, ref),
+        if (showLogout) _buildLogoutAction(context, ref),
       ],
       toolbarHeight: preferredSize.height,
     );
   }
 
-  Widget _buildLogoutAction(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, child) {
-        return IconButton(
-          icon: const Icon(Icons.logout, size: 30.0),
-          tooltip: 'Выйти из системы',
-          onPressed: () {
-            DialogUtils.showLogoutDialog(context, ref);
-          },
-        );
+  Widget _buildProfileButton(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      icon: const Icon(Icons.account_circle, size: 30.0),
+      tooltip: 'Профиль',
+      onPressed: () {
+        final user = ref.read(authProvider).value?.user;
+        if (user != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileScreen(user: user)),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildLogoutAction(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      icon: const Icon(Icons.logout, size: 30.0),
+      tooltip: 'Выйти из системы',
+      onPressed: () {
+        DialogUtils.showLogoutDialog(context, ref);
       },
     );
   }

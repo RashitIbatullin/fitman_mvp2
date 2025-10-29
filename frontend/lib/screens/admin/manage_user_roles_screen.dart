@@ -31,7 +31,8 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
     try {
       final roles = await ApiService.getAllRoles();
       setState(() {
-        _allRoles = roles.where((role) => role.name != 'client').toList(); // Filter out 'client' role
+        // Не фильтруем роль клиента, чтобы админ видел все роли
+        _allRoles = roles;
         _isLoading = false;
       });
     } catch (e) {
@@ -42,33 +43,30 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
     }
   }
 
-  bool _isRoleRemovable(String roleName) {
-    // A client user can only have one role, so no roles are removable if they are a client
-    if (widget.user.roles.any((r) => r.name == 'client')) {
-      return false;
-    }
-    // Cannot remove the initial role if it's the only one left
-    if (widget.user.roles.length == 1 && widget.user.roles.first.name == roleName) {
-      return false;
-    }
-    return true;
-  }
-
   Future<void> _updateRoles() async {
+    // --- Клиентская валидация ---
+    if (_selectedRoleNames.isEmpty) {
+      setState(() => _error = 'У пользователя должна быть хотя бы одна роль.');
+      return;
+    }
+    if (_selectedRoleNames.contains('client') && _selectedRoleNames.length > 1) {
+       setState(() => _error = 'Пользователь с ролью "Клиент" не может иметь другие роли.');
+      return;
+    }
+    // --- Конец валидации ---
+
     setState(() {
       _isLoading = true;
       _error = null;
     });
+
     try {
-      print('Attempting to update roles for user ID: ${widget.user.id}');
-      print('Selected roles to send: $_selectedRoleNames');
       await ApiService.updateUserRoles(widget.user.id, _selectedRoleNames);
-      print('Roles updated successfully!');
       if (mounted) {
-        Navigator.pop(context); // Go back to the user list
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Роли успешно обновлены'), backgroundColor: Colors.green));
+        Navigator.pop(context, true); // Возвращаем true для обновления списка
       }
     } catch (e) {
-      print('Error updating roles: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -80,43 +78,46 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Управление ролями для ${widget.user.fullName}',
+        title: 'Управление ролями: ${widget.user.shortName}',
+        showBackButton: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text('Ошибка: $_error'))
+          : _error != null && _allRoles.isEmpty
+              ? Center(child: Text('Ошибка загрузки ролей: $_error'))
               : Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Текущие роли: ${widget.user.roles.map((r) => r.title).join(', ')}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Доступные роли:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       Expanded(
                         child: ListView.builder(
                           itemCount: _allRoles.length,
                           itemBuilder: (context, index) {
                             final role = _allRoles[index];
                             final isSelected = _selectedRoleNames.contains(role.name);
-                            final isClientUser = widget.user.roles.any((r) => r.name == 'client');
-                            final isOnlyRole = widget.user.roles.length == 1 && widget.user.roles.first.name == role.name;
 
-                            // Disable checkbox if it's a client role, or if it's a client user, or if it's the only role and trying to deselect
-                            final bool isDisabled = role.name == 'client' || isClientUser || (isOnlyRole && isSelected && _selectedRoleNames.length == 1);
+                            // --- Логика блокировки чекбоксов ---
+                            final isClientRole = role.name == 'client';
+                            final isClientSelectedInList = _selectedRoleNames.contains('client');
+                            final isEmployeeSelected = _selectedRoleNames.any((name) => name != 'client');
+                            final isTheOnlyRole = _selectedRoleNames.length == 1 && isSelected;
+
+                            final bool isDisabled = 
+                                // Нельзя совмещать клиента с другими ролями
+                                (isClientSelectedInList && !isClientRole) || 
+                                (isEmployeeSelected && isClientRole) ||
+                                // Нельзя убрать последнюю роль
+                                isTheOnlyRole;
 
                             return CheckboxListTile(
                               title: Text(role.title),
                               value: isSelected,
                               onChanged: isDisabled
                                   ? null
-                                  : (bool? newValue) {
+                                  : (bool? value) {
                                       setState(() {
-                                        if (newValue == true) {
+                                        if (value == true) {
                                           _selectedRoleNames.add(role.name);
                                         } else {
                                           _selectedRoleNames.remove(role.name);
@@ -127,10 +128,16 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
                           },
                         ),
                       ),
+                      if (_error != null)
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                        ),
                       const SizedBox(height: 16),
                       Center(
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _updateRoles,
+                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)),
                           child: const Text('Сохранить изменения'),
                         ),
                       ),

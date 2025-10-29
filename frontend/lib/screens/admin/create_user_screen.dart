@@ -2,12 +2,13 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/role.dart';
 import '../../models/user_front.dart';
 import '../../services/api_service.dart';
 import '../../widgets/custom_app_bar.dart';
 
 class CreateUserScreen extends ConsumerStatefulWidget {
-  final String userRole;
+  final String userRole; // This can be a suggestion
 
   const CreateUserScreen({super.key, required this.userRole});
 
@@ -25,7 +26,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   final _phoneController = TextEditingController();
   final _ageController = TextEditingController();
 
-  String _selectedRole = 'client';
+  List<Role> _allRoles = [];
+  List<String> _selectedRoleNames = [];
   String? _selectedGender;
   bool _sendNotification = true;
   bool _trackCalories = true;
@@ -38,7 +40,21 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedRole = widget.userRole;
+    _selectedRoleNames.add(widget.userRole);
+    _loadRoles();
+  }
+
+  Future<void> _loadRoles() async {
+    try {
+      final roles = await ApiService.getAllRoles();
+      setState(() {
+        _allRoles = roles;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Ошибка загрузки ролей: $e';
+      });
+    }
   }
 
   void _generatePassword() {
@@ -50,17 +66,23 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
     _passwordController.text = password;
   }
 
-  void _calculateNames() {
-    // Автоматическое вычисление полного и краткого ФИО
-    final firstName = _firstNameController.text.trim();
-    final lastName = _lastNameController.text.trim();
-    final middleName = _middleNameController.text.trim();
-
-    // Здесь можно добавить логику вычисления, если нужно отображать preview
-  }
-
   Future<void> _createUser() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // --- Клиентская валидация ролей ---
+    if (_selectedRoleNames.isEmpty) {
+      setState(() {
+        _error = 'Необходимо выбрать хотя бы одну роль.';
+      });
+      return;
+    }
+    // Правила валидации уже применяются при выборе чекбоксов, но дублируем на всякий случай
+    if (_selectedRoleNames.contains('client') && _selectedRoleNames.length > 1) {
+      setState(() {
+        _error = 'Пользователь с ролью "Клиент" не может иметь другие роли.';
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -73,16 +95,16 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
         password: _passwordController.text,
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
-        middleName: _middleNameController.text.trim().isNotEmpty 
-            ? _middleNameController.text.trim() 
+        middleName: _middleNameController.text.trim().isNotEmpty
+            ? _middleNameController.text.trim()
             : null,
-        roles: [_selectedRole], // Changed to list of roles
-        phone: _phoneController.text.trim().isNotEmpty 
-            ? _phoneController.text.trim() 
+        roles: _selectedRoleNames,
+        phone: _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
             : null,
         gender: _selectedGender,
-        age: _ageController.text.trim().isNotEmpty 
-            ? int.tryParse(_ageController.text.trim()) 
+        age: _ageController.text.trim().isNotEmpty
+            ? int.tryParse(_ageController.text.trim())
             : null,
         sendNotification: _sendNotification,
         hourNotification: _hourNotification,
@@ -90,9 +112,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
         coeffActivity: _coeffActivity,
       );
 
-      // Вызов API для создания пользователя
-      final response = await ApiService.createUser(request);
-      
+      await ApiService.createUser(request);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -118,9 +139,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar.admin(
-        title: 'Создание: ${_getRoleDisplayName(_selectedRole)}',
-        onTabSelected: (index) {},
+      appBar: CustomAppBar(
+        title: 'Создание пользователя',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -128,18 +148,11 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              // Основные поля
               _buildBasicInfoSection(),
               const SizedBox(height: 20),
-              
-              // Дополнительные поля для клиента
-              if (_selectedRole == 'client') _buildClientSpecificSection(),
-              
-              // Настройки уведомлений
+              if (_selectedRoleNames.contains('client')) _buildClientSpecificSection(),
               _buildNotificationSection(),
               const SizedBox(height: 20),
-              
-              // Кнопки
               _buildActionButtons(),
             ],
           ),
@@ -160,36 +173,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
-            // Роль пользователя
-            DropdownButtonFormField<String>(
-              value: _selectedRole,
-              decoration: const InputDecoration(
-                labelText: 'Роль *',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'client', child: Text('Клиент')),
-                DropdownMenuItem(value: 'instructor', child: Text('Инструктор')),
-                DropdownMenuItem(value: 'trainer', child: Text('Тренер')),
-                DropdownMenuItem(value: 'manager', child: Text('Менеджер')),
-                DropdownMenuItem(value: 'admin', child: Text('Администратор')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedRole = value!;
-                });
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Выберите роль';
-                }
-                return null;
-              },
-            ),
+            _buildRolesCheckboxes(), // Новый виджет для ролей
             const SizedBox(height: 16),
-            
-            // Email
             TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(
@@ -198,18 +183,12 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 prefixIcon: Icon(Icons.email),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Введите email';
-                }
-                if (!value.contains('@')) {
-                  return 'Введите корректный email';
-                }
+                if (value == null || value.isEmpty) return 'Введите email';
+                if (!value.contains('@')) return 'Введите корректный email';
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            
-            // Пароль
             TextFormField(
               controller: _passwordController,
               obscureText: true,
@@ -223,112 +202,98 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 ),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Введите пароль';
-                }
-                if (value.length < 6) {
-                  return 'Пароль должен быть не менее 6 символов';
-                }
+                if (value == null || value.isEmpty) return 'Введите пароль';
+                if (value.length < 6) return 'Пароль должен быть не менее 6 символов';
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            
-            // ФИО
             Row(
               children: [
                 Expanded(
                   child: TextFormField(
                     controller: _lastNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Фамилия *',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (_) => _calculateNames(),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Введите фамилию';
-                      }
-                      return null;
-                    },
+                    decoration: const InputDecoration(labelText: 'Фамилия *', border: OutlineInputBorder()),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Введите фамилию' : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
                     controller: _firstNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Имя *',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (_) => _calculateNames(),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Введите имя';
-                      }
-                      return null;
-                    },
+                    decoration: const InputDecoration(labelText: 'Имя *', border: OutlineInputBorder()),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Введите имя' : null,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            
-            // Отчество
             TextFormField(
               controller: _middleNameController,
-              decoration: const InputDecoration(
-                labelText: 'Отчество',
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => _calculateNames(),
+              decoration: const InputDecoration(labelText: 'Отчество', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 16),
-
-            // Пол
             DropdownButtonFormField<String>(
               value: _selectedGender,
-              decoration: const InputDecoration(
-                labelText: 'Пол',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Пол', border: OutlineInputBorder()),
               items: const [
                 DropdownMenuItem(value: 'male', child: Text('Мужской')),
                 DropdownMenuItem(value: 'female', child: Text('Женский')),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedGender = value;
-                });
-              },
+              onChanged: (value) => setState(() => _selectedGender = value),
             ),
             const SizedBox(height: 16),
-
-            // Возраст
             TextFormField(
               controller: _ageController,
-              decoration: const InputDecoration(
-                labelText: 'Возраст',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.cake),
-              ),
+              decoration: const InputDecoration(labelText: 'Возраст', border: OutlineInputBorder(), prefixIcon: Icon(Icons.cake)),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
-            
-            // Телефон
             TextFormField(
               controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Телефон',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone),
-              ),
+              decoration: const InputDecoration(labelText: 'Телефон', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone)),
               keyboardType: TextInputType.phone,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRolesCheckboxes() {
+    if (_allRoles.isEmpty) {
+      return const Center(child: Text('Загрузка ролей...'));
+    }
+
+    bool isClientSelected = _selectedRoleNames.contains('client');
+    bool isEmployeeSelected = _selectedRoleNames.any((name) => name != 'client');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Роли *', style: TextStyle(fontWeight: FontWeight.bold)),
+        ..._allRoles.map((role) {
+          bool isClientRole = role.name == 'client';
+          bool isDisabled = (isClientSelected && !isClientRole) || (isEmployeeSelected && isClientRole);
+
+          return CheckboxListTile(
+            title: Text(role.title),
+            value: _selectedRoleNames.contains(role.name),
+            controlAffinity: ListTileControlAffinity.leading,
+            onChanged: isDisabled
+                ? null
+                : (bool? value) {
+                    setState(() {
+                      if (value == true) {
+                        _selectedRoleNames.add(role.name);
+                      } else {
+                        _selectedRoleNames.remove(role.name);
+                      }
+                    });
+                  },
+          );
+        }).toList(),
+      ],
     );
   }
 
@@ -344,8 +309,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
-            // Учет калорий
             SwitchListTile(
               title: const Text('Учет калорий'),
               value: _trackCalories,
@@ -355,8 +318,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 });
               },
             ),
-            
-            // Коэффициент активности
             if (_trackCalories) ...[
               const SizedBox(height: 8),
               TextFormField(
@@ -395,8 +356,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
-            // Отправка уведомлений
             SwitchListTile(
               title: const Text('Посылать уведомления'),
               value: _sendNotification,
@@ -406,12 +365,10 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 });
               },
             ),
-            
-            // Время уведомления
             if (_sendNotification) ...[
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
-                initialValue: _hourNotification,
+                value: _hourNotification,
                 decoration: const InputDecoration(
                   labelText: 'Уведомление до начала занятий (часов)',
                   border: OutlineInputBorder(),
@@ -419,7 +376,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 items: [1, 2, 3, 4, 5, 6, 12, 24]
                     .map((hour) => DropdownMenuItem(
                           value: hour,
-                          child: Text('$hour час${_getHourEnding(hour)}'),
+                          child: Text('$hour час(а/ов)'),
                         ))
                     .toList(),
                 onChanged: (value) {
@@ -447,7 +404,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               textAlign: TextAlign.center,
             ),
           ),
-        
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -455,6 +411,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
             ),
             child: _isLoading
                 ? const SizedBox(
@@ -467,7 +424,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                   )
                 : const Text(
                     'Создать пользователя',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                    style: TextStyle(fontSize: 16),
                   ),
           ),
         ),
@@ -481,29 +438,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
         ),
       ],
     );
-  }
-
-  String _getRoleDisplayName(String role) {
-    switch (role) {
-      case 'client':
-        return 'Клиент';
-      case 'instructor':
-        return 'Инструктор';
-      case 'trainer':
-        return 'Тренер';
-      case 'manager':
-        return 'Менеджер';
-      case 'admin':
-        return 'Администратор';
-      default:
-        return role;
-    }
-  }
-
-  String _getHourEnding(int hour) {
-    if (hour % 10 == 1 && hour != 11) return '';
-    if (hour % 10 >= 2 && hour % 10 <= 4 && (hour < 12 || hour > 14)) return 'а';
-    return 'ов';
   }
 
   @override
