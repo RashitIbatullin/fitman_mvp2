@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_front.dart';
 import '../../models/role.dart'; // Import Role model
 import '../../services/api_service.dart';
-import '../../widgets/custom_app_bar.dart';
 import 'create_user_screen.dart';
 import 'assign_clients_screen.dart';
 import 'assign_instructors_screen.dart';
@@ -14,6 +13,7 @@ import '../manager_dashboard.dart';
 import '../trainer_dashboard.dart';
 import '../unknown_role_screen.dart';
 import 'manage_user_roles_screen.dart'; // Import the new screen
+import '../../widgets/role_dialog_manager.dart';
 
 class UsersListScreen extends ConsumerStatefulWidget {
   final String? initialFilter;
@@ -39,8 +39,6 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
   final TextEditingController _searchController = TextEditingController();
 
-
-
   @override
 
   void initState() {
@@ -58,6 +56,33 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     _searchController.addListener(_filterUsers);
 
   }
+
+  void _navigateToDashboard(BuildContext context, User user, String roleName) {
+    Widget page;
+    switch (roleName) {
+      case 'admin':
+        return;
+      case 'manager':
+        page = ManagerDashboard(manager: user);
+        break;
+      case 'trainer':
+        page = TrainerDashboard(trainer: user);
+        break;
+      case 'instructor':
+        page = InstructorDashboard(instructor: user);
+        break;
+      case 'client':
+        page = ClientDashboard(client: user);
+        break;
+      default:
+        page = const UnknownRoleScreen();
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
+  }
+
 
 
 
@@ -609,25 +634,17 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
                                 ),
 
-                                onTap: () {
-                                   Widget page;
-                                    if (user.roles.any((role) => role.name == 'admin')) {
-                                      return;
-                                    } else if (user.roles.any((role) => role.name == 'manager')) {
-                                      page = ManagerDashboard(manager: user);
-                                    } else if (user.roles.any((role) => role.name == 'trainer')) {
-                                      page = TrainerDashboard(trainer: user);
-                                    } else if (user.roles.any((role) => role.name == 'instructor')) {
-                                      page = InstructorDashboard(instructor: user);
-                                    } else if (user.roles.any((role) => role.name == 'client')) {
-                                      page = ClientDashboard(client: user);
-                                    } else {
-                                      page = UnknownRoleScreen();
+                                onTap: () async {
+                                  if (user.roles.length > 1) {
+                                    final selectedRole = await RoleDialogManager.show(context, user.roles);
+                                    if (selectedRole != null) {
+                                      _navigateToDashboard(context, user, selectedRole.name);
                                     }
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => page),
-                                    );
+                                  } else if (user.roles.isNotEmpty) {
+                                    _navigateToDashboard(context, user, user.roles.first.name);
+                                  } else {
+                                     _navigateToDashboard(context, user, '');
+                                  }
                                 },
 
                                 onLongPress: () {

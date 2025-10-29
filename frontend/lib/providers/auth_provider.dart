@@ -75,10 +75,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
   void logout() async {
     print('[AuthNotifier] Logout called.');
-    await ApiService.clearToken();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_data');
-    state = AsyncValue.data(const AuthState(user: null, selectedRole: null));
+    print('[AuthNotifier] State before logout: ${state.value}');
+    try {
+      await ApiService.clearToken();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_data');
+      state = AsyncValue.data(const AuthState(user: null, selectedRole: null));
+      print('[AuthNotifier] Logout successful.');
+      print('[AuthNotifier] State after logout: ${state.value}');
+    } catch (e, st) {
+      print('[AuthNotifier] Logout error: $e');
+      state = AsyncValue.error(e, st);
+    }
   }
 
   // Метод для установки роли, выбранной на экране RoleSelectionScreen

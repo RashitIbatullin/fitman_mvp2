@@ -1,4 +1,3 @@
-import 'package:fitman_app/widgets/role_dialog_manager.dart';
 import 'package:fitman_app/screens/admin_dashboard.dart';
 import 'package:fitman_app/screens/client_dashboard.dart';
 import 'package:fitman_app/screens/instructor_dashboard.dart';
@@ -10,13 +9,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../models/role.dart';
+import '../widgets/role_dialog_manager.dart';
 
-class AuthWrapper extends ConsumerWidget {
+class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends ConsumerState<AuthWrapper> {
+  @override
+  Widget build(BuildContext context) {
     final authStateAsync = ref.watch(authProvider);
+    print('[AuthWrapper] build called. Auth state: ${authStateAsync.value}');
 
     return authStateAsync.when(
       data: (authState) {
@@ -29,7 +35,17 @@ class AuthWrapper extends ConsumerWidget {
 
         // Если у пользователя несколько ролей, но ни одна не выбрана -> экран выбора
         if (user.roles.length > 1 && selectedRole == null) {
-          return RoleDialogManager(user: user); // Используем новый менеджер диалога
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            final Role? chosenRole = await RoleDialogManager.show(context, user.roles);
+            if (chosenRole != null) {
+              ref.read(authProvider.notifier).setSelectedRole(chosenRole);
+            } else {
+              ref.read(authProvider.notifier).logout();
+            }
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         
         // Если роль выбрана (или она всего одна), показываем соответствующий дашборд
@@ -67,3 +83,4 @@ class AuthWrapper extends ConsumerWidget {
     }
   }
 }
+

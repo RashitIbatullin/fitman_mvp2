@@ -3,9 +3,16 @@ import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../providers/auth_provider.dart';
+
 // Провайдер для получения тренеров для конкретного менеджера
 final assignedTrainersProvider = FutureProvider.family<List<User>, int>((ref, managerId) async {
-  return ApiService.getAssignedTrainers(managerId);
+  final user = ref.watch(authProvider).value?.user;
+  // We can only get trainers if we are an admin.
+  if (user?.roles.any((role) => role.name == 'admin') ?? false) {
+    return ApiService.getAssignedTrainers(managerId);
+  }
+  return [];
 });
 
 class TrainersView extends ConsumerWidget {

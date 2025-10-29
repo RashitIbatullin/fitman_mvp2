@@ -1,3 +1,5 @@
+import 'package:flutter_riverpod/legacy.dart';
+
 import '../models/dashboard_data.dart';
 import 'package:fitman_app/providers/dashboard_provider.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/user_front.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/custom_app_bar.dart';
 import 'client/my_trainer_screen.dart';
 import 'client/my_instructor_screen.dart';
 import 'client/my_manager_screen.dart';
@@ -13,6 +14,8 @@ import 'client/anthropometry_screen.dart';
 import 'client/sessions_screen.dart';
 import 'client/calorie_tracking_screen.dart';
 import 'client/progress_screen.dart';
+
+final _clientDashboardIndexProvider = StateProvider<int>((ref) => 0);
 
 class ClientDashboard extends ConsumerWidget {
   final User? client;
@@ -23,6 +26,7 @@ class ClientDashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = client ?? ref.watch(authProvider).value?.user;
     final dashboardData = ref.watch(dashboardDataProvider);
+    final selectedIndex = ref.watch(_clientDashboardIndexProvider);
 
     if (user == null) {
       return const Scaffold(
@@ -30,86 +34,9 @@ class ClientDashboard extends ConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: CustomAppBar.client(
-        title: 'Профиль: ${user.firstName}',
-        additionalActions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {},
-          ),
-        ],
-        showBackButton: client != null,
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'Меню',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Мой тренер'),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const MyTrainerScreen()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('Мой инструктор'),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const MyInstructorScreen()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.business_center),
-              title: const Text('Мой менеджер'),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const MyManagerScreen()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.accessibility),
-              title: const Text('Антропометрия'),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const AnthropometryScreen()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.fitness_center),
-              title: const Text('Занятия'),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const SessionsScreen()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.track_changes),
-              title: const Text('Учет калорий'),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const CalorieTrackingScreen()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.show_chart),
-              title: const Text('Прогресс'),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressScreen()));
-              },
-            ),
-          ],
-        ),
-      ),
-      body: dashboardData.when(
+    final List<Widget> _views = [
+      // Профиль - это основное содержимое дашборда
+      dashboardData.when(
         data: (data) => ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
@@ -126,6 +53,100 @@ class ClientDashboard extends ConsumerWidget {
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(child: Text('Ошибка: $error')),
+      ),
+      const MyTrainerScreen(),
+      const MyInstructorScreen(),
+      const MyManagerScreen(),
+      const AnthropometryScreen(),
+      const SessionsScreen(),
+      const CalorieTrackingScreen(),
+      const ProgressScreen(),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Профиль: ${user.firstName}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {},
+          ),
+          if (client == null)
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'Выйти',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Подтверждение выхода'),
+                      content: const Text('Вы уверены, что хотите выйти?'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Нет'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Да'),
+                        ),
+                      ],
+                    );
+                  },
+                ).then((value) {
+                  if (value == true) {
+                    ref.read(authProvider.notifier).logout();
+                  }
+                });
+              },
+            ),
+        ],
+      ),
+      body: IndexedStack(
+        index: selectedIndex,
+        children: _views,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Профиль',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_baseball),
+            label: 'Тренер',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_handball),
+            label: 'Инструктор',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.business_center),
+            label: 'Менеджер',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.accessibility),
+            label: 'Антропометрия',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: 'Занятия',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.track_changes),
+            label: 'Калории',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.show_chart),
+            label: 'Прогресс',
+          ),
+        ],
+        currentIndex: selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        unselectedItemColor: Colors.grey,
+        onTap: (index) => ref.read(_clientDashboardIndexProvider.notifier).state = index,
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/custom_app_bar.dart';
 
 class UnknownRoleScreen extends ConsumerWidget {
   const UnknownRoleScreen({super.key});
@@ -12,9 +11,17 @@ class UnknownRoleScreen extends ConsumerWidget {
     final user = authState?.user;
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Неизвестная роль',
-        showLogout: true,
+      appBar: AppBar(
+        title: const Text('Неизвестная роль'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Выйти',
+            onPressed: () {
+              ref.read(authProvider.notifier).logout();
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Padding(

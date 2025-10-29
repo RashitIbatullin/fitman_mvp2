@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_front.dart';
 import '../../models/role.dart';
 import '../../services/api_service.dart';
-import '../../widgets/custom_app_bar.dart';
 
 class ManageUserRolesScreen extends ConsumerStatefulWidget {
   final User user;
@@ -77,9 +76,8 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Управление ролями: ${widget.user.shortName}',
-        showBackButton: true,
+      appBar: AppBar(
+        title: Text('Управление ролями: ${widget.user.shortName}'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

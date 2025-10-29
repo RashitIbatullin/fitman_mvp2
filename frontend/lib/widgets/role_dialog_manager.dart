@@ -1,8 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_front.dart';
 import '../providers/auth_provider.dart';
 import 'role_selection_dialog.dart';
+import '../models/role.dart';
 
 class RoleDialogManager extends ConsumerStatefulWidget {
   final User user;
@@ -10,6 +12,13 @@ class RoleDialogManager extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<RoleDialogManager> createState() => _RoleDialogManagerState();
+
+  static Future<Role?> show(BuildContext context, List<Role> roles) {
+    return showDialog<Role?>(
+      context: context,
+      builder: (context) => RoleSelectionDialog(roles: roles),
+    );
+  }
 }
 
 class _RoleDialogManagerState extends ConsumerState<RoleDialogManager> {

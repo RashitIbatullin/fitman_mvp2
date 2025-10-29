@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/role.dart';
 import '../../models/user_front.dart';
 import '../../services/api_service.dart';
-import '../../widgets/custom_app_bar.dart';
 
 class CreateUserScreen extends ConsumerStatefulWidget {
   final String userRole; // This can be a suggestion
@@ -139,8 +138,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Создание пользователя',
+      appBar: AppBar(
+        title: const Text('Создание пользователя'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

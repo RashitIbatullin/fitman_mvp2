@@ -2,42 +2,95 @@ import 'package:fitman_app/models/user_front.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/custom_app_bar.dart';
 
-class TrainerDashboard extends ConsumerWidget {
+class TrainerDashboard extends ConsumerStatefulWidget {
   final User? trainer;
   const TrainerDashboard({super.key, this.trainer});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = trainer ?? ref.watch(authProvider).value?.user;
+  ConsumerState<TrainerDashboard> createState() => _TrainerDashboardState();
+}
+
+class _TrainerDashboardState extends ConsumerState<TrainerDashboard> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.trainer ?? ref.watch(authProvider).value?.user;
+
+    final List<Widget> views = [
+      const Center(child: Text('Клиенты - в разработке')),
+      const Center(child: Text('Расписание - в разработке')),
+    ];
 
     return Scaffold(
-      appBar: CustomAppBar.trainer(
-        title: 'Тренер: ${user?.firstName ?? ''}',
-        additionalActions: [
+      appBar: AppBar(
+        title: Text('Тренер: ${user?.firstName ?? ''}'),
+        actions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
               // Создание новой тренировки
             },
           ),
+          if (widget.trainer == null)
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'Выйти',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Подтверждение выхода'),
+                      content: const Text('Вы уверены, что хотите выйти?'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Нет'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Да'),
+                        ),
+                      ],
+                    );
+                  },
+                ).then((value) {
+                  if (value == true) {
+                    ref.read(authProvider.notifier).logout();
+                  }
+                });
+              },
+            ),
         ],
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.sports, size: 64, color: Colors.green),
-            SizedBox(height: 16),
-            Text(
-              'Панель тренера',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text('Управление клиентами и тренировками'),
-          ],
-        ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: views,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Клиенты',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.schedule),
+            label: 'Расписание',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }
