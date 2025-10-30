@@ -6,7 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 
 // Провайдер для получения тренеров для конкретного менеджера
-final assignedTrainersProvider = FutureProvider.family<List<User>, int>((ref, managerId) async {
+final assignedTrainersProvider = FutureProvider.family<List<User>, int>((
+  ref,
+  managerId,
+) async {
   final user = ref.watch(authProvider).value?.user;
   // We can only get trainers if we are an admin.
   if (user?.roles.any((role) => role.name == 'admin') ?? false) {
@@ -44,7 +47,8 @@ class TrainersView extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Ошибка загрузки тренеров: $error')),
+      error: (error, stack) =>
+          Center(child: Text('Ошибка загрузки тренеров: $error')),
     );
   }
 }

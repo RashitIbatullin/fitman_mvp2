@@ -29,11 +29,7 @@ class UnknownRoleScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.warning,
-                size: 80,
-                color: Colors.orange,
-              ),
+              const Icon(Icons.warning, size: 80, color: Colors.orange),
               const SizedBox(height: 24),
               Text(
                 'Неизвестная роль пользователя',
@@ -52,7 +48,10 @@ class UnknownRoleScreen extends ConsumerWidget {
                 ),
                 Text(
                   'Роли: ${user.roles.map((r) => r.title).join(', ')}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],

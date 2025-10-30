@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class GenericCatalogScreen extends StatelessWidget {
@@ -9,9 +8,7 @@ class GenericCatalogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(catalogName),
-      ),
+      appBar: AppBar(title: Text(catalogName)),
       body: Center(
         child: Text('Экран для каталога: $catalogName (в разработке)'),
       ),

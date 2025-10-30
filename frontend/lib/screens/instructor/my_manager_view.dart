@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Провайдер для получения менеджера, назначенного инструктору
-final assignedManagerProvider = FutureProvider.family<User, int>((ref, instructorId) async {
+final assignedManagerProvider = FutureProvider.family<User, int>((
+  ref,
+  instructorId,
+) async {
   return ApiService.getAssignedManagerForInstructor(instructorId);
 });
 
@@ -24,7 +27,13 @@ class MyManagerView extends ConsumerWidget {
             children: [
               const Icon(Icons.manage_accounts, size: 64),
               const SizedBox(height: 16),
-              Text(manager.fullName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(
+                manager.fullName,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               Text(manager.email),
               // TODO: Add chat frame
@@ -33,7 +42,8 @@ class MyManagerView extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Ошибка загрузки менеджера: $error')),
+      error: (error, stack) =>
+          Center(child: Text('Ошибка загрузки менеджера: $error')),
     );
   }
 }

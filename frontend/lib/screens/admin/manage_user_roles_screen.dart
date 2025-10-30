@@ -10,7 +10,8 @@ class ManageUserRolesScreen extends ConsumerStatefulWidget {
   const ManageUserRolesScreen({super.key, required this.user});
 
   @override
-  ConsumerState<ManageUserRolesScreen> createState() => _ManageUserRolesScreenState();
+  ConsumerState<ManageUserRolesScreen> createState() =>
+      _ManageUserRolesScreenState();
 }
 
 class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
@@ -48,8 +49,12 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
       setState(() => _error = 'У пользователя должна быть хотя бы одна роль.');
       return;
     }
-    if (_selectedRoleNames.contains('client') && _selectedRoleNames.length > 1) {
-       setState(() => _error = 'Пользователь с ролью "Клиент" не может иметь другие роли.');
+    if (_selectedRoleNames.contains('client') &&
+        _selectedRoleNames.length > 1) {
+      setState(
+        () => _error =
+            'Пользователь с ролью "Клиент" не может иметь другие роли.',
+      );
       return;
     }
     // --- Конец валидации ---
@@ -62,7 +67,12 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
     try {
       await ApiService.updateUserRoles(widget.user.id, _selectedRoleNames);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Роли успешно обновлены'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Роли успешно обновлены'),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.pop(context, true); // Возвращаем true для обновления списка
       }
     } catch (e) {
@@ -82,66 +92,80 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null && _allRoles.isEmpty
-              ? Center(child: Text('Ошибка загрузки ролей: $_error'))
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: _allRoles.length,
-                          itemBuilder: (context, index) {
-                            final role = _allRoles[index];
-                            final isSelected = _selectedRoleNames.contains(role.name);
+          ? Center(child: Text('Ошибка загрузки ролей: $_error'))
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _allRoles.length,
+                      itemBuilder: (context, index) {
+                        final role = _allRoles[index];
+                        final isSelected = _selectedRoleNames.contains(
+                          role.name,
+                        );
 
-                            // --- Логика блокировки чекбоксов ---
-                            final isClientRole = role.name == 'client';
-                            final isClientSelectedInList = _selectedRoleNames.contains('client');
-                            final isEmployeeSelected = _selectedRoleNames.any((name) => name != 'client');
-                            final isTheOnlyRole = _selectedRoleNames.length == 1 && isSelected;
+                        // --- Логика блокировки чекбоксов ---
+                        final isClientRole = role.name == 'client';
+                        final isClientSelectedInList = _selectedRoleNames
+                            .contains('client');
+                        final isEmployeeSelected = _selectedRoleNames.any(
+                          (name) => name != 'client',
+                        );
+                        final isTheOnlyRole =
+                            _selectedRoleNames.length == 1 && isSelected;
 
-                            final bool isDisabled = 
-                                // Нельзя совмещать клиента с другими ролями
-                                (isClientSelectedInList && !isClientRole) || 
-                                (isEmployeeSelected && isClientRole) ||
-                                // Нельзя убрать последнюю роль
-                                isTheOnlyRole;
+                        final bool isDisabled =
+                            // Нельзя совмещать клиента с другими ролями
+                            (isClientSelectedInList && !isClientRole) ||
+                            (isEmployeeSelected && isClientRole) ||
+                            // Нельзя убрать последнюю роль
+                            isTheOnlyRole;
 
-                            return CheckboxListTile(
-                              title: Text(role.title),
-                              value: isSelected,
-                              onChanged: isDisabled
-                                  ? null
-                                  : (bool? value) {
-                                      setState(() {
-                                        if (value == true) {
-                                          _selectedRoleNames.add(role.name);
-                                        } else {
-                                          _selectedRoleNames.remove(role.name);
-                                        }
-                                      });
-                                    },
-                            );
-                          },
-                        ),
-                      ),
-                      if (_error != null)
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(_error!, style: const TextStyle(color: Colors.red)),
-                        ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _updateRoles,
-                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)),
-                          child: const Text('Сохранить изменения'),
-                        ),
-                      ),
-                    ],
+                        return CheckboxListTile(
+                          title: Text(role.title),
+                          value: isSelected,
+                          onChanged: isDisabled
+                              ? null
+                              : (bool? value) {
+                                  setState(() {
+                                    if (value == true) {
+                                      _selectedRoleNames.add(role.name);
+                                    } else {
+                                      _selectedRoleNames.remove(role.name);
+                                    }
+                                  });
+                                },
+                        );
+                      },
+                    ),
                   ),
-                ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _updateRoles,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 40,
+                          vertical: 15,
+                        ),
+                      ),
+                      child: const Text('Сохранить изменения'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

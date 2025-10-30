@@ -48,7 +48,8 @@ class User {
       lastName: json['lastName'],
       middleName: json['middleName'],
       photoUrl: json['photo_url'],
-      roles: (json['roles'] as List<dynamic>?)
+      roles:
+          (json['roles'] as List<dynamic>?)
               ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
               .toList() ??
           [],

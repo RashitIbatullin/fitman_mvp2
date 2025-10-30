@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../models/role.dart';
 
@@ -17,7 +16,12 @@ class RoleSelectionDialog extends StatelessWidget {
             return ListTile(
               title: Text(role.title),
               leading: role.icon != null
-                  ? Icon(IconData(int.parse(role.icon!), fontFamily: 'MaterialIcons'))
+                  ? Icon(
+                      IconData(
+                        int.parse(role.icon!),
+                        fontFamily: 'MaterialIcons',
+                      ),
+                    )
                   : const Icon(Icons.person),
               onTap: () {
                 Navigator.of(context).pop(role);

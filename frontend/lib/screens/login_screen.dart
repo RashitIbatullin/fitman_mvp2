@@ -27,9 +27,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // Слушаем состояние для отображения ошибок
     ref.listen<AsyncValue>(authProvider, (_, state) {
       if (state is AsyncError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка входа: ${state.error}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка входа: ${state.error}')));
       }
     });
 
@@ -48,11 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.sports_gymnastics,
-                size: 80,
-                color: Colors.blue,
-              ),
+              const Icon(Icons.sports_gymnastics, size: 80, color: Colors.blue),
               const SizedBox(height: 24),
               Text(
                 'Фитнес-менеджер',
@@ -86,7 +82,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Введите пароль';
-                  if (value.length < 6) return 'Пароль должен быть не менее 6 символов';
+                  if (value.length < 6) {
+                    return 'Пароль должен быть не менее 6 символов';
+                  }
                   return null;
                 },
               ),
@@ -101,10 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text(
-                      'Войти',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    child: const Text('Войти', style: TextStyle(fontSize: 16)),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -116,7 +111,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
                       );
                     },
                     child: const Text('Зарегистрируйтесь'),
@@ -137,9 +134,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 alignment: WrapAlignment.center,
                 children: [
                   _buildTestUserChip('admin@fitman.ru', 'admin123', 'Админ'),
-                  _buildTestUserChip('instructor@fitman.ru', 'instructor123', 'Инструктор'),
-                  _buildTestUserChip('trainer@fitman.ru', 'trainer123', 'Тренер'),
-                  _buildTestUserChip('manager@fitman.ru', 'manager123', 'Менеджер'),
+                  _buildTestUserChip(
+                    'instructor@fitman.ru',
+                    'instructor123',
+                    'Инструктор',
+                  ),
+                  _buildTestUserChip(
+                    'trainer@fitman.ru',
+                    'trainer123',
+                    'Тренер',
+                  ),
+                  _buildTestUserChip(
+                    'manager@fitman.ru',
+                    'manager123',
+                    'Менеджер',
+                  ),
                   _buildTestUserChip('client@fitman.ru', 'client123', 'Клиент'),
                 ],
               ),
@@ -165,10 +174,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
       print('[LoginScreen] Handling login...');
-      ref.read(authProvider.notifier).login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      ref
+          .read(authProvider.notifier)
+          .login(_emailController.text.trim(), _passwordController.text);
     }
   }
 

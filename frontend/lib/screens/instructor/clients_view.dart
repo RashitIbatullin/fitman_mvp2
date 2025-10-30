@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Провайдер для получения всех клиентов, назначенных инструктору
-final assignedClientsProvider = FutureProvider.family<List<User>, int>((ref, instructorId) async {
+final assignedClientsProvider = FutureProvider.family<List<User>, int>((
+  ref,
+  instructorId,
+) async {
   return ApiService.getAssignedClientsForInstructor(instructorId);
 });
 
@@ -43,7 +46,8 @@ class ClientsView extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Ошибка загрузки клиентов: $error')),
+      error: (error, stack) =>
+          Center(child: Text('Ошибка загрузки клиентов: $error')),
     );
   }
 }

@@ -95,7 +95,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: _getStatusColor(session['status']).withAlpha(51), // ~20% opacity
+            color: _getStatusColor(
+              session['status'],
+            ).withAlpha(51), // ~20% opacity
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -182,7 +184,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       } else if (sessionDate == today.add(const Duration(days: 1))) {
         datePart = 'Завтра';
       } else {
-        datePart = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}';
+        datePart =
+            '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}';
       }
 
       return '$datePart, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';

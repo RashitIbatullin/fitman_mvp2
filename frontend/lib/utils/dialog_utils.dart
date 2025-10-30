@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 
 class DialogUtils {
-  static Future<void> showLogoutDialog(BuildContext context, WidgetRef ref) async {
+  static Future<void> showLogoutDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -16,9 +19,7 @@ class DialogUtils {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Выйти'),
           ),
         ],

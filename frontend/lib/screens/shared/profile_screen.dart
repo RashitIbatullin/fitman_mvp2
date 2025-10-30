@@ -8,27 +8,22 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Профиль пользователя'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: <Widget>[
-          Center(
-            child: CircleAvatar(
-              radius: 50,
-              // TODO: Implement user.photo_url
-              // backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
-              child: user.photoUrl == null
-                  ? const Icon(Icons.person, size: 50)
-                  : null,
-            ),
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: <Widget>[
+        Center(
+          child: CircleAvatar(
+            radius: 50,
+            // TODO: Implement user.photo_url
+            // backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+            child: user.photoUrl == null
+                ? const Icon(Icons.person, size: 50)
+                : null,
           ),
-          const SizedBox(height: 16),
-          _buildProfileInfoCard(),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        _buildProfileInfoCard(),
+      ],
     );
   }
 
@@ -51,7 +46,8 @@ class ProfileScreen extends StatelessWidget {
               _buildInfoRow(label: 'Пол', value: user.gender!),
             const Divider(height: 30),
             // Требование 9.1.4, пункты 2 и 3
-            if (user.roles.length > 1 && user.roles.every((r) => r.name != 'client'))
+            if (user.roles.length > 1 &&
+                user.roles.every((r) => r.name != 'client'))
               _buildRolesSection(),
             const Divider(height: 30),
             _buildSettingsSection(),
@@ -70,7 +66,7 @@ class ProfileScreen extends StatelessWidget {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        ...user.roles.map((role) => Text('  - ${role.title}')).toList(),
+        ...user.roles.map((role) => Text('  - ${role.title}')),
         const SizedBox(height: 16),
       ],
     );

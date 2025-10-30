@@ -37,7 +37,7 @@ class ApiService {
       'Accept': 'application/json',
     };
     if (currentToken != null) {
-      headers['Authorization'] = 'Bearer ${currentToken}';
+      headers['Authorization'] = 'Bearer $currentToken';
     }
     return headers;
   }
@@ -48,10 +48,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/login'),
         headers: _headers,
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       print('=== LOGIN RESPONSE ===');
@@ -68,35 +65,62 @@ class ApiService {
         }
 
         final user = User(
-          id: userData['id'] is int ? userData['id'] : int.parse(userData['id']?.toString() ?? '0'),
+          id: userData['id'] is int
+              ? userData['id']
+              : int.parse(userData['id']?.toString() ?? '0'),
           email: userData['email']?.toString() ?? email,
           passwordHash: userData['passwordHash']?.toString() ?? '',
-          firstName: userData['firstName']?.toString() ?? userData['first_name']?.toString() ?? 'User',
-          lastName: userData['lastName']?.toString() ?? userData['last_name']?.toString() ?? '',
+          firstName:
+              userData['firstName']?.toString() ??
+              userData['first_name']?.toString() ??
+              'User',
+          lastName:
+              userData['lastName']?.toString() ??
+              userData['last_name']?.toString() ??
+              '',
           middleName: userData['middleName']?.toString(),
-          roles: (userData['roles'] as List<dynamic>?)
-                  ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+          roles:
+              (userData['roles'] as List<dynamic>?)
+                  ?.map(
+                    (roleMap) => Role.fromJson(roleMap as Map<String, dynamic>),
+                  )
                   .toList() ??
               [],
           phone: userData['phone']?.toString(),
           gender: userData['gender']?.toString(),
-          age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
+          age: userData['age'] != null
+              ? int.tryParse(userData['age'].toString())
+              : null,
           sendNotification: userData['sendNotification']?.toString() == 'true',
-          hourNotification: userData['hourNotification'] != null ? int.tryParse(userData['hourNotification'].toString()) ?? 1 : 1,
+          hourNotification: userData['hourNotification'] != null
+              ? int.tryParse(userData['hourNotification'].toString()) ?? 1
+              : 1,
           trackCalories: userData['trackCalories']?.toString() == 'true',
-          coeffActivity: userData['coeffActivity'] != null ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2 : 1.2,
+          coeffActivity: userData['coeffActivity'] != null
+              ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2
+              : 1.2,
           createdAt: userData['createdAt'] is DateTime
               ? userData['createdAt']
-              : DateTime.parse(userData['createdAt']?.toString() ?? DateTime.now().toIso8601String()),
+              : DateTime.parse(
+                  userData['createdAt']?.toString() ??
+                      DateTime.now().toIso8601String(),
+                ),
           updatedAt: userData['updatedAt'] is DateTime
               ? userData['updatedAt']
-              : DateTime.parse(userData['updatedAt']?.toString() ?? DateTime.now().toIso8601String()),
+              : DateTime.parse(
+                  userData['updatedAt']?.toString() ??
+                      DateTime.now().toIso8601String(),
+                ),
         );
 
         return AuthResponse(token: token, user: user);
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? errorData['error'] ?? 'Login failed with status ${response.statusCode}');
+        throw Exception(
+          errorData['message'] ??
+              errorData['error'] ??
+              'Login failed with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Login error: $e');
@@ -105,12 +129,15 @@ class ApiService {
   }
 
   static Future<AuthResponse> register(
-      String email,
-      String password,
-      String firstName,
-      String lastName,
-      List<String> roles, // Changed to List<String>
-      ) async {
+    String email,
+    String password,
+    String firstName,
+    String lastName,
+    List<String> roles,
+    String? phone,
+    String? gender,
+    int? age,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/register'),
@@ -120,7 +147,10 @@ class ApiService {
           'password': password,
           'firstName': firstName,
           'lastName': lastName,
-          'roles': roles, // Send as list
+          'roles': roles,
+          'phone': phone,
+          'gender': gender,
+          'age': age,
         }),
       );
 
@@ -138,35 +168,62 @@ class ApiService {
         }
 
         final user = User(
-          id: userData['id'] is int ? userData['id'] : int.parse(userData['id']?.toString() ?? '0'),
+          id: userData['id'] is int
+              ? userData['id']
+              : int.parse(userData['id']?.toString() ?? '0'),
           email: userData['email']?.toString() ?? email,
           passwordHash: userData['passwordHash']?.toString() ?? '',
-          firstName: userData['firstName']?.toString() ?? userData['first_name']?.toString() ?? firstName,
-          lastName: userData['lastName']?.toString() ?? userData['last_name']?.toString() ?? lastName,
+          firstName:
+              userData['firstName']?.toString() ??
+              userData['first_name']?.toString() ??
+              firstName,
+          lastName:
+              userData['lastName']?.toString() ??
+              userData['last_name']?.toString() ??
+              lastName,
           middleName: userData['middleName']?.toString(),
-          roles: (userData['roles'] as List<dynamic>?)
-                  ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+          roles:
+              (userData['roles'] as List<dynamic>?)
+                  ?.map(
+                    (roleMap) => Role.fromJson(roleMap as Map<String, dynamic>),
+                  )
                   .toList() ??
               [],
           phone: userData['phone']?.toString(),
           gender: userData['gender']?.toString(),
-          age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
+          age: userData['age'] != null
+              ? int.tryParse(userData['age'].toString())
+              : null,
           sendNotification: userData['sendNotification']?.toString() == 'true',
-          hourNotification: userData['hourNotification'] != null ? int.tryParse(userData['hourNotification'].toString()) ?? 1 : 1,
+          hourNotification: userData['hourNotification'] != null
+              ? int.tryParse(userData['hourNotification'].toString()) ?? 1
+              : 1,
           trackCalories: userData['trackCalories']?.toString() == 'true',
-          coeffActivity: userData['coeffActivity'] != null ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2 : 1.2,
+          coeffActivity: userData['coeffActivity'] != null
+              ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2
+              : 1.2,
           createdAt: userData['createdAt'] is DateTime
               ? userData['createdAt']
-              : DateTime.parse(userData['createdAt']?.toString() ?? DateTime.now().toIso8601String()),
+              : DateTime.parse(
+                  userData['createdAt']?.toString() ??
+                      DateTime.now().toIso8601String(),
+                ),
           updatedAt: userData['updatedAt'] is DateTime
               ? userData['updatedAt']
-              : DateTime.parse(userData['updatedAt']?.toString() ?? DateTime.now().toIso8601String()),
+              : DateTime.parse(
+                  userData['updatedAt']?.toString() ??
+                      DateTime.now().toIso8601String(),
+                ),
         );
 
         return AuthResponse(token: token, user: user);
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? errorData['error'] ?? 'Registration failed with status ${response.statusCode}');
+        throw Exception(
+          errorData['message'] ??
+              errorData['error'] ??
+              'Registration failed with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Register error: $e');
@@ -175,7 +232,9 @@ class ApiService {
   }
 
   // Создание пользователя (для админа)
-  static Future<Map<String, dynamic>> createUser(CreateUserRequest request) async {
+  static Future<Map<String, dynamic>> createUser(
+    CreateUserRequest request,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/users'),
@@ -187,7 +246,10 @@ class ApiService {
         return jsonDecode(response.body);
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to create user with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to create user with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Create user error: $e');
@@ -198,7 +260,9 @@ class ApiService {
   // Получение списка пользователей (для админа)
   static Future<List<User>> getUsers({String? role}) async {
     try {
-      final url = role != null ? '$baseUrl/api/users?role=$role' : '$baseUrl/api/users';
+      final url = role != null
+          ? '$baseUrl/api/users?role=$role'
+          : '$baseUrl/api/users';
       final response = await http.get(Uri.parse(url), headers: _headers);
 
       if (response.statusCode == 200) {
@@ -206,29 +270,50 @@ class ApiService {
         final users = data['users'] as List;
         return users.map((userData) {
           return User(
-            id: userData['id'] is int ? userData['id'] : int.parse(userData['id']?.toString() ?? '0'),
+            id: userData['id'] is int
+                ? userData['id']
+                : int.parse(userData['id']?.toString() ?? '0'),
             email: userData['email']?.toString() ?? '',
             passwordHash: userData['passwordHash']?.toString() ?? '',
             firstName: userData['firstName']?.toString() ?? '',
             lastName: userData['lastName']?.toString() ?? '',
             middleName: userData['middleName']?.toString(),
-            roles: (userData['roles'] as List<dynamic>?)
-                    ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
+            roles:
+                (userData['roles'] as List<dynamic>?)
+                    ?.map(
+                      (roleMap) =>
+                          Role.fromJson(roleMap as Map<String, dynamic>),
+                    )
                     .toList() ??
                 [],
             phone: userData['phone']?.toString(),
             gender: userData['gender']?.toString(),
-            age: userData['age'] != null ? int.tryParse(userData['age'].toString()) : null,
-            sendNotification: userData['sendNotification']?.toString() == 'true',
-            hourNotification: userData['hourNotification'] != null ? int.tryParse(userData['hourNotification'].toString()) ?? 1 : 1,
+            age: userData['age'] != null
+                ? int.tryParse(userData['age'].toString())
+                : null,
+            sendNotification:
+                userData['sendNotification']?.toString() == 'true',
+            hourNotification: userData['hourNotification'] != null
+                ? int.tryParse(userData['hourNotification'].toString()) ?? 1
+                : 1,
             trackCalories: userData['trackCalories']?.toString() == 'true',
-            coeffActivity: userData['coeffActivity'] != null ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2 : 1.2,
-            createdAt: DateTime.parse(userData['createdAt']?.toString() ?? DateTime.now().toIso8601String()),
-            updatedAt: DateTime.parse(userData['updatedAt']?.toString() ?? DateTime.now().toIso8601String()),
+            coeffActivity: userData['coeffActivity'] != null
+                ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2
+                : 1.2,
+            createdAt: DateTime.parse(
+              userData['createdAt']?.toString() ??
+                  DateTime.now().toIso8601String(),
+            ),
+            updatedAt: DateTime.parse(
+              userData['updatedAt']?.toString() ??
+                  DateTime.now().toIso8601String(),
+            ),
           );
         }).toList();
       } else {
-        throw Exception('Failed to load users with status ${response.statusCode}');
+        throw Exception(
+          'Failed to load users with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get users error: $e');
@@ -249,7 +334,9 @@ class ApiService {
         final roles = data['roles'] as List;
         return roles.map((roleData) => Role.fromJson(roleData)).toList();
       } else {
-        throw Exception('Failed to load roles with status ${response.statusCode}');
+        throw Exception(
+          'Failed to load roles with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get all roles error: $e');
@@ -270,7 +357,9 @@ class ApiService {
         final roles = data['roles'] as List;
         return roles.map((roleData) => Role.fromJson(roleData)).toList();
       } else {
-        throw Exception('Failed to load user roles with status ${response.statusCode}');
+        throw Exception(
+          'Failed to load user roles with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get user roles error: $e');
@@ -279,7 +368,10 @@ class ApiService {
   }
 
   // Обновление ролей пользователя
-  static Future<void> updateUserRoles(int userId, List<String> roleNames) async {
+  static Future<void> updateUserRoles(
+    int userId,
+    List<String> roleNames,
+  ) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/api/users/$userId/roles'),
@@ -289,7 +381,10 @@ class ApiService {
 
       if (response.statusCode != 200) {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to update user roles with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to update user roles with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Update user roles error: $e');
@@ -310,7 +405,10 @@ class ApiService {
         return data.map((json) => User.fromJson(json)).toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned clients with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load assigned clients with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get assigned clients error: $e');
@@ -331,7 +429,10 @@ class ApiService {
         return data.map((json) => User.fromJson(json)).toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned instructors with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load assigned instructors with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get assigned instructors error: $e');
@@ -352,7 +453,10 @@ class ApiService {
         return data.map((json) => User.fromJson(json)).toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned trainers with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load assigned trainers with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get assigned trainers error: $e');
@@ -361,7 +465,9 @@ class ApiService {
   }
 
   // Получение списка клиентов для инструктора
-  static Future<List<User>> getAssignedClientsForInstructor(int instructorId) async {
+  static Future<List<User>> getAssignedClientsForInstructor(
+    int instructorId,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/instructors/$instructorId/clients'),
@@ -373,7 +479,10 @@ class ApiService {
         return data.map((json) => User.fromJson(json)).toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned clients for instructor with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load assigned clients for instructor with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get assigned clients for instructor error: $e');
@@ -382,7 +491,9 @@ class ApiService {
   }
 
   // Получение списка тренеров для инструктора
-  static Future<List<User>> getAssignedTrainersForInstructor(int instructorId) async {
+  static Future<List<User>> getAssignedTrainersForInstructor(
+    int instructorId,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/instructors/$instructorId/trainers'),
@@ -394,7 +505,10 @@ class ApiService {
         return data.map((json) => User.fromJson(json)).toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned trainers for instructor with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load assigned trainers for instructor with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get assigned trainers for instructor error: $e');
@@ -415,7 +529,10 @@ class ApiService {
         return User.fromJson(data);
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned manager for instructor with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load assigned manager for instructor with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get assigned manager for instructor error: $e');
@@ -434,7 +551,9 @@ class ApiService {
       final data = jsonDecode(response.body);
       return data['plans'] as List;
     } else {
-      throw Exception('Failed to load training plans with status ${response.statusCode}');
+      throw Exception(
+        'Failed to load training plans with status ${response.statusCode}',
+      );
     }
   }
 
@@ -450,7 +569,9 @@ class ApiService {
       final scheduleList = data['schedule'] as List;
       return scheduleList.map((item) => ScheduleItem.fromJson(item)).toList();
     } else {
-      throw Exception('Failed to load schedule with status ${response.statusCode}');
+      throw Exception(
+        'Failed to load schedule with status ${response.statusCode}',
+      );
     }
   }
 
@@ -465,7 +586,9 @@ class ApiService {
       final data = jsonDecode(response.body);
       return data['messages'] as List;
     } else {
-      throw Exception('Failed to load chat messages with status ${response.statusCode}');
+      throw Exception(
+        'Failed to load chat messages with status ${response.statusCode}',
+      );
     }
   }
 
@@ -482,7 +605,9 @@ class ApiService {
         return data.cast<int>().toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned client IDs');
+        throw Exception(
+          errorData['error'] ?? 'Failed to load assigned client IDs',
+        );
       }
     } catch (e) {
       print('Get assigned client IDs error: $e');
@@ -491,7 +616,10 @@ class ApiService {
   }
 
   // Назначение клиентов менеджеру
-  static Future<void> assignClientsToManager(int managerId, List<int> clientIds) async {
+  static Future<void> assignClientsToManager(
+    int managerId,
+    List<int> clientIds,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/managers/$managerId/clients'),
@@ -522,7 +650,9 @@ class ApiService {
         return data.cast<int>().toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned instructor IDs');
+        throw Exception(
+          errorData['error'] ?? 'Failed to load assigned instructor IDs',
+        );
       }
     } catch (e) {
       print('Get assigned instructor IDs error: $e');
@@ -531,7 +661,10 @@ class ApiService {
   }
 
   // Назначение инструкторов менеджеру
-  static Future<void> assignInstructorsToManager(int managerId, List<int> instructorIds) async {
+  static Future<void> assignInstructorsToManager(
+    int managerId,
+    List<int> instructorIds,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/managers/$managerId/instructors'),
@@ -562,7 +695,9 @@ class ApiService {
         return data.cast<int>().toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load assigned trainer IDs');
+        throw Exception(
+          errorData['error'] ?? 'Failed to load assigned trainer IDs',
+        );
       }
     } catch (e) {
       print('Get assigned trainer IDs error: $e');
@@ -571,7 +706,10 @@ class ApiService {
   }
 
   // Назначение тренеров менеджеру
-  static Future<void> assignTrainersToManager(int managerId, List<int> trainerIds) async {
+  static Future<void> assignTrainersToManager(
+    int managerId,
+    List<int> trainerIds,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/managers/$managerId/trainers'),
@@ -594,14 +732,13 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/api/chat/send'),
       headers: _headers,
-      body: jsonEncode({
-        'receiverId': receiverId,
-        'message': message,
-      }),
+      body: jsonEncode({'receiverId': receiverId, 'message': message}),
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to send message with status ${response.statusCode}');
+      throw Exception(
+        'Failed to send message with status ${response.statusCode}',
+      );
     }
   }
 
@@ -617,7 +754,10 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load dashboard data with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load dashboard data with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get client dashboard data error: $e');
@@ -638,7 +778,10 @@ class ApiService {
         return User.fromJson(data['trainer']);
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load trainer data with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load trainer data with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get trainer for client error: $e');
@@ -659,7 +802,10 @@ class ApiService {
         return User.fromJson(data['instructor']);
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load instructor data with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load instructor data with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get instructor for client error: $e');
@@ -680,7 +826,10 @@ class ApiService {
         return User.fromJson(data['manager']);
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load manager data with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load manager data with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get manager for client error: $e');
@@ -700,7 +849,10 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load anthropometry data with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load anthropometry data with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get anthropometry data error: $e');
@@ -720,7 +872,10 @@ class ApiService {
         return jsonDecode(response.body) as List<dynamic>;
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load calorie tracking data with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load calorie tracking data with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get calorie tracking data error: $e');
@@ -740,7 +895,10 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load progress data with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load progress data with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get progress data error: $e');
@@ -761,7 +919,10 @@ class ApiService {
         return data.map((json) => WorkSchedule.fromJson(json)).toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load work schedules with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load work schedules with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get work schedules error: $e');
@@ -780,7 +941,10 @@ class ApiService {
 
       if (response.statusCode != 200) {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to update work schedule with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to update work schedule with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Update work schedule error: $e');
@@ -789,7 +953,9 @@ class ApiService {
   }
 
   // Сохранение предпочтений клиента
-  static Future<void> saveClientPreferences(List<ClientSchedulePreference> preferences) async {
+  static Future<void> saveClientPreferences(
+    List<ClientSchedulePreference> preferences,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/client/preferences'),
@@ -799,7 +965,10 @@ class ApiService {
 
       if (response.statusCode != 200) {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to save client preferences with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to save client preferences with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Save client preferences error: $e');
@@ -817,10 +986,15 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        return data.map((json) => ClientSchedulePreference.fromJson(json)).toList();
+        return data
+            .map((json) => ClientSchedulePreference.fromJson(json))
+            .toList();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to load client preferences with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load client preferences with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Get client preferences error: $e');
@@ -829,20 +1003,23 @@ class ApiService {
   }
 
   // Сброс пароля пользователя (для админа)
-  static Future<void> resetUserPassword(String email, String newPassword) async {
+  static Future<void> resetUserPassword(
+    String email,
+    String newPassword,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/users/reset-password'),
         headers: _headers,
-        body: jsonEncode({
-          'email': email,
-          'newPassword': newPassword,
-        }),
+        body: jsonEncode({'email': email, 'newPassword': newPassword}),
       );
 
       if (response.statusCode != 200) {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to reset password with status ${response.statusCode}');
+        throw Exception(
+          errorData['error'] ??
+              'Failed to reset password with status ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Reset user password error: $e');

@@ -3,6 +3,7 @@ import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/screens/manager/trainers_view.dart';
+import 'package:fitman_app/screens/shared/profile_screen.dart';
 
 import 'manager/clients_view.dart';
 import 'manager/instructors_view.dart';
@@ -19,6 +20,17 @@ class ManagerDashboard extends ConsumerStatefulWidget {
 class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
   int _selectedIndex = 0;
 
+  final List<String> _titles = const [
+    'Главное',
+    'Профиль',
+    'Клиенты',
+    'Инструкторы',
+    'Тренеры',
+    'Расписание',
+    'Табели',
+    'Каталоги',
+  ];
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -32,8 +44,10 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
     if (user == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    
+
     final List<Widget> views = [
+      const Center(child: Text('Главное')),
+      ProfileScreen(user: user),
       ClientsView(managerId: user.id),
       InstructorsView(managerId: user.id),
       TrainersView(managerId: user.id),
@@ -44,7 +58,7 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Панель менеджера: ${user.firstName}'),
+        title: Text(_titles[_selectedIndex]),
         actions: [
           if (widget.manager == null)
             IconButton(
@@ -78,16 +92,15 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
             ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: views,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: views),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главное'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Клиенты',
+            icon: Icon(Icons.account_circle),
+            label: 'Профиль',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Клиенты'),
           BottomNavigationBarItem(
             icon: Icon(Icons.sports),
             label: 'Инструкторы',

@@ -36,7 +36,10 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
         // Если у пользователя несколько ролей, но ни одна не выбрана -> экран выбора
         if (user.roles.length > 1 && selectedRole == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            final Role? chosenRole = await RoleDialogManager.show(context, user.roles);
+            final Role? chosenRole = await RoleDialogManager.show(
+              context,
+              user.roles,
+            );
             if (chosenRole != null) {
               ref.read(authProvider.notifier).setSelectedRole(chosenRole);
             } else {
@@ -47,18 +50,14 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        
+
         // Если роль выбрана (или она всего одна), показываем соответствующий дашборд
         return _getDashboard(selectedRole);
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (err, stack) => Scaffold(
-        body: Center(
-          child: Text('Ошибка аутентификации: $err'),
-        ),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, stack) =>
+          Scaffold(body: Center(child: Text('Ошибка аутентификации: $err'))),
     );
   }
 
@@ -83,4 +82,3 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
     }
   }
 }
-

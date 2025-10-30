@@ -8,16 +8,19 @@ class ClientPreferenceSchedule extends ConsumerStatefulWidget {
   const ClientPreferenceSchedule({super.key});
 
   @override
-  ConsumerState<ClientPreferenceSchedule> createState() => _ClientPreferenceScheduleState();
+  ConsumerState<ClientPreferenceSchedule> createState() =>
+      _ClientPreferenceScheduleState();
 }
 
-class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSchedule> {
+class _ClientPreferenceScheduleState
+    extends ConsumerState<ClientPreferenceSchedule> {
   final _formKey = GlobalKey<FormState>();
   final Map<int, TextEditingController> _preferredStartTimes = {};
   final Map<int, TextEditingController> _preferredEndTimes = {};
 
   // Add a state to hold fetched client preferences
-  AsyncValue<List<ClientSchedulePreference>> _clientPreferences = const AsyncValue.loading();
+  AsyncValue<List<ClientSchedulePreference>> _clientPreferences =
+      const AsyncValue.loading();
 
   @override
   void initState() {
@@ -72,7 +75,11 @@ class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSched
     }
   }
 
-  String? _timeValidator(String? value, String availableStartTime, String availableEndTime) {
+  String? _timeValidator(
+    String? value,
+    String availableStartTime,
+    String availableEndTime,
+  ) {
     if (value == null || value.isEmpty) {
       return null; // Not required to fill
     }
@@ -103,16 +110,16 @@ class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSched
     final workSchedulesAsync = ref.watch(workScheduleProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Предпочтения по расписанию'),
-      ),
+      appBar: AppBar(title: const Text('Предпочтения по расписанию')),
       body: Form(
         key: _formKey,
         child: workSchedulesAsync.when(
           data: (schedules) {
             final workingDays = schedules.where((s) => !s.isDayOff).toList();
             if (workingDays.isEmpty) {
-              return const Center(child: Text('Нет доступного расписания работы центра.'));
+              return const Center(
+                child: Text('Нет доступного расписания работы центра.'),
+              );
             }
 
             // Combine work schedules with client preferences
@@ -120,8 +127,20 @@ class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSched
             _clientPreferences.whenOrNull(
               data: (preferences) {
                 for (var pref in preferences) {
-                  _preferredStartTimes.putIfAbsent(pref.dayOfWeek, () => TextEditingController()).text = pref.preferredStartTime;
-                  _preferredEndTimes.putIfAbsent(pref.dayOfWeek, () => TextEditingController()).text = pref.preferredEndTime;
+                  _preferredStartTimes
+                          .putIfAbsent(
+                            pref.dayOfWeek,
+                            () => TextEditingController(),
+                          )
+                          .text =
+                      pref.preferredStartTime;
+                  _preferredEndTimes
+                          .putIfAbsent(
+                            pref.dayOfWeek,
+                            () => TextEditingController(),
+                          )
+                          .text =
+                      pref.preferredEndTime;
                 }
               },
             );
@@ -133,8 +152,14 @@ class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSched
                 final dayOfWeek = schedule.dayOfWeek;
 
                 // Ensure controllers are initialized for this day if not already by fetched preferences
-                _preferredStartTimes.putIfAbsent(dayOfWeek, () => TextEditingController());
-                _preferredEndTimes.putIfAbsent(dayOfWeek, () => TextEditingController());
+                _preferredStartTimes.putIfAbsent(
+                  dayOfWeek,
+                  () => TextEditingController(),
+                );
+                _preferredEndTimes.putIfAbsent(
+                  dayOfWeek,
+                  () => TextEditingController(),
+                );
 
                 return Card(
                   margin: const EdgeInsets.all(8.0),
@@ -145,9 +170,14 @@ class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSched
                       children: [
                         Text(
                           _dayOfWeekToString(dayOfWeek),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        Text('Доступно: ${schedule.startTime} - ${schedule.endTime}'),
+                        Text(
+                          'Доступно: ${schedule.startTime} - ${schedule.endTime}',
+                        ),
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: _preferredStartTimes[dayOfWeek],
@@ -155,7 +185,11 @@ class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSched
                             labelText: 'Желаемое время начала (ЧЧ:ММ)',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (value) => _timeValidator(value, schedule.startTime, schedule.endTime),
+                          validator: (value) => _timeValidator(
+                            value,
+                            schedule.startTime,
+                            schedule.endTime,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         TextFormField(
@@ -164,7 +198,11 @@ class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSched
                             labelText: 'Желаемое время окончания (ЧЧ:ММ)',
                             border: OutlineInputBorder(),
                           ),
-                          validator: (value) => _timeValidator(value, schedule.startTime, schedule.endTime),
+                          validator: (value) => _timeValidator(
+                            value,
+                            schedule.startTime,
+                            schedule.endTime,
+                          ),
                         ),
                       ],
                     ),
@@ -174,21 +212,26 @@ class _ClientPreferenceScheduleState extends ConsumerState<ClientPreferenceSched
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) => Center(child: Text('Ошибка загрузки расписания: $error')),
+          error: (error, stackTrace) =>
+              Center(child: Text('Ошибка загрузки расписания: $error')),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async { // Make onPressed async
+        onPressed: () async {
+          // Make onPressed async
           if (_formKey.currentState!.validate()) {
             final List<ClientSchedulePreference> preferencesToSave = [];
             _preferredStartTimes.forEach((day, controller) {
-              if (controller.text.isNotEmpty && _preferredEndTimes[day]!.text.isNotEmpty) {
-                preferencesToSave.add(ClientSchedulePreference(
-                  clientId: 0, // Will be set by backend from token
-                  dayOfWeek: day,
-                  preferredStartTime: controller.text,
-                  preferredEndTime: _preferredEndTimes[day]!.text,
-                ));
+              if (controller.text.isNotEmpty &&
+                  _preferredEndTimes[day]!.text.isNotEmpty) {
+                preferencesToSave.add(
+                  ClientSchedulePreference(
+                    clientId: 0, // Will be set by backend from token
+                    dayOfWeek: day,
+                    preferredStartTime: controller.text,
+                    preferredEndTime: _preferredEndTimes[day]!.text,
+                  ),
+                );
               }
             });
 

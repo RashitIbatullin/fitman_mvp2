@@ -1,3 +1,4 @@
+import 'package:fitman_app/screens/shared/profile_screen.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../models/dashboard_data.dart';
@@ -28,14 +29,24 @@ class ClientDashboard extends ConsumerWidget {
     final dashboardData = ref.watch(dashboardDataProvider);
     final selectedIndex = ref.watch(_clientDashboardIndexProvider);
 
+    final List<String> titles = [
+      'Главное',
+      'Профиль',
+      'Тренер',
+      'Инструктор',
+      'Менеджер',
+      'Антропометрия',
+      'Занятия',
+      'Калории',
+      'Прогресс',
+    ];
+
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final List<Widget> _views = [
-      // Профиль - это основное содержимое дашборда
+    final List<Widget> views = [
+      // Главное - это основное содержимое дашборда
       dashboardData.when(
         data: (data) => ListView(
           padding: const EdgeInsets.all(16.0),
@@ -54,6 +65,7 @@ class ClientDashboard extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(child: Text('Ошибка: $error')),
       ),
+      ProfileScreen(user: user), // Профиль
       const MyTrainerScreen(),
       const MyInstructorScreen(),
       const MyManagerScreen(),
@@ -65,12 +77,9 @@ class ClientDashboard extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Профиль: ${user.firstName}'),
+        title: Text(titles[selectedIndex]),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
           if (client == null)
             IconButton(
               icon: const Icon(Icons.logout),
@@ -103,14 +112,12 @@ class ClientDashboard extends ConsumerWidget {
             ),
         ],
       ),
-      body: IndexedStack(
-        index: selectedIndex,
-        children: _views,
-      ),
+      body: IndexedStack(index: selectedIndex, children: views),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главное'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.account_circle),
             label: 'Профиль',
           ),
           BottomNavigationBarItem(
@@ -145,7 +152,8 @@ class ClientDashboard extends ConsumerWidget {
         currentIndex: selectedIndex,
         selectedItemColor: Colors.amber[800],
         unselectedItemColor: Colors.grey,
-        onTap: (index) => ref.read(_clientDashboardIndexProvider.notifier).state = index,
+        onTap: (index) =>
+            ref.read(_clientDashboardIndexProvider.notifier).state = index,
         type: BottomNavigationBarType.fixed,
       ),
     );
@@ -153,34 +161,60 @@ class ClientDashboard extends ConsumerWidget {
 
   Widget _buildNextTrainingWidget(BuildContext context, NextTraining data) {
     final duration = data.time.difference(DateTime.now());
-    final formattedDuration = duration.isNegative ? 'Прошло' : '${duration.inHours} ч ${duration.inMinutes.remainder(60)} мин';
+    final formattedDuration = duration.isNegative
+        ? 'Прошло'
+        : '${duration.inHours} ч ${duration.inMinutes.remainder(60)} мин';
 
     return Card(
       child: ListTile(
-        leading: const Icon(Icons.watch_later_outlined, color: Colors.orange, size: 40),
+        leading: const Icon(
+          Icons.watch_later_outlined,
+          color: Colors.orange,
+          size: 40,
+        ),
         title: Text(data.title),
-        subtitle: Text('${DateFormat('d MMM y, HH:mm', 'ru').format(data.time)}\nДо начала: $formattedDuration'),
+        subtitle: Text(
+          '${DateFormat('d MMM y, HH:mm', 'ru').format(data.time)}\nДо начала: $formattedDuration',
+        ),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {},
       ),
     );
   }
 
-  Widget _buildTrainingProgressWidget(BuildContext context, TrainingProgress data) {
+  Widget _buildTrainingProgressWidget(
+    BuildContext context,
+    TrainingProgress data,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Прогресс тренировок', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Прогресс тренировок',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildProgressItem(context, 'Завершено', '${data.completed}/${data.total}'),
-                _buildProgressItem(context, 'Сожжено ккал', data.caloriesBurned.toString()),
-                _buildProgressItem(context, 'Посещаемость', '${data.attendance}%'),
+                _buildProgressItem(
+                  context,
+                  'Завершено',
+                  '${data.completed}/${data.total}',
+                ),
+                _buildProgressItem(
+                  context,
+                  'Сожжено ккал',
+                  data.caloriesBurned.toString(),
+                ),
+                _buildProgressItem(
+                  context,
+                  'Посещаемость',
+                  '${data.attendance}%',
+                ),
               ],
             ),
           ],
@@ -190,7 +224,9 @@ class ClientDashboard extends ConsumerWidget {
   }
 
   Widget _buildGoalProgressWidget(BuildContext context, GoalProgress data) {
-    final progress = (data.targetWeight - data.currentWeight).abs() / (data.targetWeight - 85).abs(); // Assuming starting weight is 85
+    final progress =
+        (data.targetWeight - data.currentWeight).abs() /
+        (data.targetWeight - 85).abs(); // Assuming starting weight is 85
 
     return Card(
       child: Padding(
@@ -198,13 +234,24 @@ class ClientDashboard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Прогресс по цели: ${data.goal}', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Прогресс по цели: ${data.goal}',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: LinearProgressIndicator(value: progress, minHeight: 10)),
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 10,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Text('${data.currentWeight}/${data.targetWeight} кг', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  '${data.currentWeight}/${data.targetWeight} кг',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -215,7 +262,10 @@ class ClientDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildAchievementsWidget(BuildContext context, List<Achievement> data) {
+  Widget _buildAchievementsWidget(
+    BuildContext context,
+    List<Achievement> data,
+  ) {
     final iconMap = {
       'star': Icons.star,
       'local_fire_department': Icons.local_fire_department,
@@ -237,8 +287,16 @@ class ClientDashboard extends ConsumerWidget {
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: data.map((ach) => Icon(iconMap[ach.icon], color: colorMap[ach.color], size: 40)).toList(),
-            )
+              children: data
+                  .map(
+                    (ach) => Icon(
+                      iconMap[ach.icon],
+                      color: colorMap[ach.color],
+                      size: 40,
+                    ),
+                  )
+                  .toList(),
+            ),
           ],
         ),
       ),
@@ -252,13 +310,22 @@ class ClientDashboard extends ConsumerWidget {
           child: Card(
             child: InkWell(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const SessionsScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SessionsScreen(),
+                  ),
+                );
               },
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Icon(Icons.fitness_center, size: 40, color: Theme.of(context).primaryColor),
+                    Icon(
+                      Icons.fitness_center,
+                      size: 40,
+                      color: Theme.of(context).primaryColor,
+                    ),
                     const SizedBox(height: 8),
                     const Text('Занятия'),
                   ],
@@ -275,7 +342,11 @@ class ClientDashboard extends ConsumerWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Icon(Icons.track_changes, size: 40, color: Theme.of(context).primaryColor),
+                    Icon(
+                      Icons.track_changes,
+                      size: 40,
+                      color: Theme.of(context).primaryColor,
+                    ),
                     const SizedBox(height: 8),
                     const Text('Учет калорий'),
                   ],
@@ -291,7 +362,12 @@ class ClientDashboard extends ConsumerWidget {
   Widget _buildProgressItem(BuildContext context, String title, String value) {
     return Column(
       children: [
-        Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 4),
         Text(title, style: Theme.of(context).textTheme.bodySmall),
       ],

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_front.dart';
@@ -49,10 +48,6 @@ class _RoleDialogManagerState extends ConsumerState<RoleDialogManager> {
   Widget build(BuildContext context) {
     // Этот виджет просто отображает пустой экран с индикатором загрузки,
     // пока диалог выбора роли активен.
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

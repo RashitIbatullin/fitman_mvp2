@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Провайдер для получения тренеров для конкретного инструктора
-final assignedTrainersProvider = FutureProvider.family<List<User>, int>((ref, instructorId) async {
+final assignedTrainersProvider = FutureProvider.family<List<User>, int>((
+  ref,
+  instructorId,
+) async {
   return ApiService.getAssignedTrainersForInstructor(instructorId);
 });
 
@@ -14,7 +17,9 @@ class MyTrainerView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trainersAsyncValue = ref.watch(assignedTrainersProvider(instructorId));
+    final trainersAsyncValue = ref.watch(
+      assignedTrainersProvider(instructorId),
+    );
 
     return trainersAsyncValue.when(
       data: (trainers) {
@@ -37,7 +42,8 @@ class MyTrainerView extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Ошибка загрузки тренеров: $error')),
+      error: (error, stack) =>
+          Center(child: Text('Ошибка загрузки тренеров: $error')),
     );
   }
 }

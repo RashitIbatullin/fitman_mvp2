@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../models/work_schedule.dart';
 import '../../services/api_service.dart';
 
-final workScheduleProvider = StateNotifierProvider<WorkScheduleNotifier, AsyncValue<List<WorkSchedule>>>((ref) {
-  return WorkScheduleNotifier();
-});
+final workScheduleProvider =
+    StateNotifierProvider<WorkScheduleNotifier, AsyncValue<List<WorkSchedule>>>(
+      (ref) {
+        return WorkScheduleNotifier();
+      },
+    );
 
-class WorkScheduleNotifier extends StateNotifier<AsyncValue<List<WorkSchedule>>> {
+class WorkScheduleNotifier
+    extends StateNotifier<AsyncValue<List<WorkSchedule>>> {
   WorkScheduleNotifier() : super(const AsyncValue.loading()) {
     _fetchWorkSchedules();
   }

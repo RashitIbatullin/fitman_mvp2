@@ -1,4 +1,3 @@
-
 import 'package:json_annotation/json_annotation.dart';
 
 part 'client_schedule_preference.g.dart';
@@ -23,6 +22,7 @@ class ClientSchedulePreference {
     required this.preferredEndTime,
   });
 
-  factory ClientSchedulePreference.fromJson(Map<String, dynamic> json) => _$ClientSchedulePreferenceFromJson(json);
+  factory ClientSchedulePreference.fromJson(Map<String, dynamic> json) =>
+      _$ClientSchedulePreferenceFromJson(json);
   Map<String, dynamic> toJson() => _$ClientSchedulePreferenceToJson(this);
 }

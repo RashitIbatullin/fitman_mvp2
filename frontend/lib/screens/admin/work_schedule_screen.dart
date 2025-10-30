@@ -32,9 +32,7 @@ class WorkScheduleScreen extends ConsumerWidget {
     final workSchedules = ref.watch(workScheduleProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Расписание работы центра'),
-      ),
+      appBar: AppBar(title: const Text('Расписание работы центра')),
       body: workSchedules.when(
         data: (schedules) => ListView.builder(
           itemCount: schedules.length,
@@ -55,7 +53,9 @@ class WorkScheduleScreen extends ConsumerWidget {
                       endTime: schedule.endTime,
                       isDayOff: !value,
                     );
-                    ref.read(workScheduleProvider.notifier).updateWorkSchedule(updatedSchedule);
+                    ref
+                        .read(workScheduleProvider.notifier)
+                        .updateWorkSchedule(updatedSchedule);
                   },
                 ),
                 onTap: () => _showEditDialog(context, ref, schedule),
@@ -69,7 +69,11 @@ class WorkScheduleScreen extends ConsumerWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context, WidgetRef ref, WorkSchedule schedule) {
+  void _showEditDialog(
+    BuildContext context,
+    WidgetRef ref,
+    WorkSchedule schedule,
+  ) {
     final startTimeController = TextEditingController(text: schedule.startTime);
     final endTimeController = TextEditingController(text: schedule.endTime);
     final formKey = GlobalKey<FormState>(); // Add a GlobalKey for the Form
@@ -77,15 +81,19 @@ class WorkScheduleScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Редактировать ${ _dayOfWeekToString(schedule.dayOfWeek)}'),
-        content: Form( // Wrap content in a Form widget
+        title: Text('Редактировать ${_dayOfWeekToString(schedule.dayOfWeek)}'),
+        content: Form(
+          // Wrap content in a Form widget
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField( // Use TextFormField for validation
+              TextFormField(
+                // Use TextFormField for validation
                 controller: startTimeController,
-                decoration: const InputDecoration(labelText: 'Начало работы (ЧЧ:ММ)'),
+                decoration: const InputDecoration(
+                  labelText: 'Начало работы (ЧЧ:ММ)',
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Пожалуйста, введите время начала работы';
@@ -97,9 +105,12 @@ class WorkScheduleScreen extends ConsumerWidget {
                   return null;
                 },
               ),
-              TextFormField( // Use TextFormField for validation
+              TextFormField(
+                // Use TextFormField for validation
                 controller: endTimeController,
-                decoration: const InputDecoration(labelText: 'Конец работы (ЧЧ:ММ)'),
+                decoration: const InputDecoration(
+                  labelText: 'Конец работы (ЧЧ:ММ)',
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Пожалуйста, введите время окончания работы';
@@ -121,7 +132,8 @@ class WorkScheduleScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () {
-              if (formKey.currentState!.validate()) { // Validate the form
+              if (formKey.currentState!.validate()) {
+                // Validate the form
                 final updatedSchedule = WorkSchedule(
                   id: schedule.id,
                   dayOfWeek: schedule.dayOfWeek,
@@ -129,7 +141,9 @@ class WorkScheduleScreen extends ConsumerWidget {
                   endTime: endTimeController.text,
                   isDayOff: schedule.isDayOff,
                 );
-                ref.read(workScheduleProvider.notifier).updateWorkSchedule(updatedSchedule);
+                ref
+                    .read(workScheduleProvider.notifier)
+                    .updateWorkSchedule(updatedSchedule);
                 Navigator.pop(context);
               }
             },

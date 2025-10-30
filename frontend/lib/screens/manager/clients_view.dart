@@ -6,7 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 
 // Провайдер для получения клиентов для конкретного менеджера
-final assignedClientsProvider = FutureProvider.family<List<User>, int>((ref, managerId) async {
+final assignedClientsProvider = FutureProvider.family<List<User>, int>((
+  ref,
+  managerId,
+) async {
   final user = ref.watch(authProvider).value?.user;
   // We can only get clients if we are an admin.
   if (user?.roles.any((role) => role.name == 'admin') ?? false) {
@@ -44,7 +47,8 @@ class ClientsView extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Ошибка загрузки клиентов: $error')),
+      error: (error, stack) =>
+          Center(child: Text('Ошибка загрузки клиентов: $error')),
     );
   }
 }

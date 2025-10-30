@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'dart:math';
 
@@ -33,10 +32,15 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
   }
 
   String _generateRandomPassword() {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*()_+';
+    const chars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*()_+';
     final random = Random.secure();
-    return String.fromCharCodes(Iterable.generate(
-        12, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
+    return String.fromCharCodes(
+      Iterable.generate(
+        12,
+        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
+      ),
+    );
   }
 
   Future<void> _generatePassword() async {
@@ -57,7 +61,10 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
     });
 
     try {
-      await ApiService.resetUserPassword(widget.userLogin, _passwordController.text);
+      await ApiService.resetUserPassword(
+        widget.userLogin,
+        _passwordController.text,
+      );
       if (mounted) {
         Navigator.of(context).pop(true); // Indicate success
         ScaffoldMessenger.of(context).showSnackBar(
@@ -112,7 +119,9 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
                           ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2.0),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.0,
+                              ),
                             )
                           : const Icon(Icons.refresh),
                       onPressed: _isGenerating ? null : _generatePassword,

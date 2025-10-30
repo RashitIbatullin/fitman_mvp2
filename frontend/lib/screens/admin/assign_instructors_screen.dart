@@ -9,7 +9,10 @@ final allInstructorsProvider = FutureProvider<List<User>>((ref) async {
 });
 
 // Провайдер для получения ID назначенных инструкторов для конкретного менеджера
-final assignedInstructorIdsProvider = FutureProvider.family<List<int>, int>((ref, managerId) async {
+final assignedInstructorIdsProvider = FutureProvider.family<List<int>, int>((
+  ref,
+  managerId,
+) async {
   // TODO: Implement ApiService.getAssignedInstructorIds
   return ApiService.getAssignedInstructorIds(managerId);
 });
@@ -20,17 +23,21 @@ class AssignInstructorsScreen extends ConsumerStatefulWidget {
   const AssignInstructorsScreen({super.key, required this.manager});
 
   @override
-  ConsumerState<AssignInstructorsScreen> createState() => _AssignInstructorsScreenState();
+  ConsumerState<AssignInstructorsScreen> createState() =>
+      _AssignInstructorsScreenState();
 }
 
-class _AssignInstructorsScreenState extends ConsumerState<AssignInstructorsScreen> {
+class _AssignInstructorsScreenState
+    extends ConsumerState<AssignInstructorsScreen> {
   final Set<int> _selectedInstructorIds = {};
   bool _isInitialLoad = true;
 
   @override
   Widget build(BuildContext context) {
     final allInstructorsAsync = ref.watch(allInstructorsProvider);
-    final assignedIdsAsync = ref.watch(assignedInstructorIdsProvider(widget.manager.id));
+    final assignedIdsAsync = ref.watch(
+      assignedInstructorIdsProvider(widget.manager.id),
+    );
 
     if (_isInitialLoad && assignedIdsAsync is AsyncData<List<int>>) {
       _selectedInstructorIds.clear();
@@ -58,7 +65,9 @@ class _AssignInstructorsScreenState extends ConsumerState<AssignInstructorsScree
       body: allInstructorsAsync.when(
         data: (allInstructors) {
           if (allInstructors.isEmpty) {
-            return const Center(child: Text('В системе нет ни одного инструктора.'));
+            return const Center(
+              child: Text('В системе нет ни одного инструктора.'),
+            );
           }
           return ListView.builder(
             itemCount: allInstructors.length,
@@ -82,7 +91,8 @@ class _AssignInstructorsScreenState extends ConsumerState<AssignInstructorsScree
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Ошибка загрузки списка инструкторов: $e')),
+        error: (e, st) =>
+            Center(child: Text('Ошибка загрузки списка инструкторов: $e')),
       ),
     );
   }
@@ -90,7 +100,10 @@ class _AssignInstructorsScreenState extends ConsumerState<AssignInstructorsScree
   Future<void> _saveAssignments() async {
     try {
       // TODO: Implement ApiService.assignInstructorsToManager
-      await ApiService.assignInstructorsToManager(widget.manager.id, _selectedInstructorIds.toList());
+      await ApiService.assignInstructorsToManager(
+        widget.manager.id,
+        _selectedInstructorIds.toList(),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Назначения успешно сохранены')),
@@ -99,9 +112,9 @@ class _AssignInstructorsScreenState extends ConsumerState<AssignInstructorsScree
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка сохранения: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка сохранения: $e')));
       }
     }
   }

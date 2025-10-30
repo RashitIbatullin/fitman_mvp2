@@ -40,7 +40,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
             selectedRole = user.roles.first;
           }
           // При запуске, если ролей много, selectedRole остается null, что вызовет экран выбора
-          state = AsyncValue.data(AuthState(user: user, selectedRole: selectedRole));
+          state = AsyncValue.data(
+            AuthState(user: user, selectedRole: selectedRole),
+          );
           return;
         }
       }
@@ -61,12 +63,15 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       if (authResponse.user.roles.length == 1) {
         selectedRole = authResponse.user.roles.first;
       }
-      
-      print('[AuthNotifier] Login success. User: ${authResponse.user.email}, Roles: ${authResponse.user.roles.map((r) => r.name)}, SelectedRole: ${selectedRole?.name}');
+
+      print(
+        '[AuthNotifier] Login success. User: ${authResponse.user.email}, Roles: ${authResponse.user.roles.map((r) => r.name)}, SelectedRole: ${selectedRole?.name}',
+      );
 
       // Атомарно обновляем состояние с пользователем и выбранной ролью
-      state = AsyncValue.data(AuthState(user: authResponse.user, selectedRole: selectedRole));
-
+      state = AsyncValue.data(
+        AuthState(user: authResponse.user, selectedRole: selectedRole),
+      );
     } catch (e, st) {
       print('[AuthNotifier] Login error: $e');
       state = AsyncValue.error(e, st);
@@ -114,27 +119,39 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_data', jsonEncode(authResponse.user.toJson()));
   }
-  
-    Future<void> register(
-      String email,
-      String password,
-      String firstName,
-      String lastName,
-      List<String> roles,
-      ) async {
+
+  Future<void> register(
+    String email,
+    String password,
+    String firstName,
+    String lastName,
+    List<String> roles,
+    String? phone,
+    String? gender,
+    int? age,
+  ) async {
     state = const AsyncValue.loading();
     try {
       final authResponse = await ApiService.register(
-        email, password, firstName, lastName, roles,
+        email,
+        password,
+        firstName,
+        lastName,
+        roles,
+        phone,
+        gender,
+        age,
       );
       await _storeAuthData(authResponse);
-      
+
       Role? selectedRole;
       if (authResponse.user.roles.length == 1) {
         selectedRole = authResponse.user.roles.first;
       }
 
-      state = AsyncValue.data(AuthState(user: authResponse.user, selectedRole: selectedRole));
+      state = AsyncValue.data(
+        AuthState(user: authResponse.user, selectedRole: selectedRole),
+      );
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -143,5 +160,5 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
 // 3. Провайдер теперь предоставляет AsyncValue<AuthState>
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<AuthState>>(
-      (ref) => AuthNotifier(),
+  (ref) => AuthNotifier(),
 );

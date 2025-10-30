@@ -4,12 +4,7 @@ class Role {
   final String title;
   final String? icon;
 
-  Role({
-    required this.id,
-    required this.name,
-    required this.title,
-    this.icon,
-  });
+  Role({required this.id, required this.name, required this.title, this.icon});
 
   factory Role.fromJson(Map<String, dynamic> json) {
     return Role(
@@ -21,11 +16,6 @@ class Role {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'title': title,
-      'icon': icon,
-    };
+    return {'id': id, 'name': name, 'title': title, 'icon': icon};
   }
 }

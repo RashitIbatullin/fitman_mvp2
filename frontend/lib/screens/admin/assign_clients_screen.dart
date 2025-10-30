@@ -9,7 +9,10 @@ final allClientsProvider = FutureProvider<List<User>>((ref) async {
 });
 
 // Провайдер для получения ID назначенных клиентов для конкретного менеджера
-final assignedClientIdsProvider = FutureProvider.family<List<int>, int>((ref, managerId) async {
+final assignedClientIdsProvider = FutureProvider.family<List<int>, int>((
+  ref,
+  managerId,
+) async {
   return ApiService.getAssignedClientIds(managerId);
 });
 
@@ -19,7 +22,8 @@ class AssignClientsScreen extends ConsumerStatefulWidget {
   const AssignClientsScreen({super.key, required this.manager});
 
   @override
-  ConsumerState<AssignClientsScreen> createState() => _AssignClientsScreenState();
+  ConsumerState<AssignClientsScreen> createState() =>
+      _AssignClientsScreenState();
 }
 
 class _AssignClientsScreenState extends ConsumerState<AssignClientsScreen> {
@@ -29,7 +33,9 @@ class _AssignClientsScreenState extends ConsumerState<AssignClientsScreen> {
   @override
   Widget build(BuildContext context) {
     final allClientsAsync = ref.watch(allClientsProvider);
-    final assignedIdsAsync = ref.watch(assignedClientIdsProvider(widget.manager.id));
+    final assignedIdsAsync = ref.watch(
+      assignedClientIdsProvider(widget.manager.id),
+    );
 
     // Инициализируем выбранные ID при первой загрузке
     if (_isInitialLoad && assignedIdsAsync is AsyncData<List<int>>) {
@@ -59,7 +65,9 @@ class _AssignClientsScreenState extends ConsumerState<AssignClientsScreen> {
       body: allClientsAsync.when(
         data: (allClients) {
           if (allClients.isEmpty) {
-            return const Center(child: Text('В системе нет ни одного клиента.'));
+            return const Center(
+              child: Text('В системе нет ни одного клиента.'),
+            );
           }
           return ListView.builder(
             itemCount: allClients.length,
@@ -83,14 +91,18 @@ class _AssignClientsScreenState extends ConsumerState<AssignClientsScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Ошибка загрузки списка клиентов: $e')),
+        error: (e, st) =>
+            Center(child: Text('Ошибка загрузки списка клиентов: $e')),
       ),
     );
   }
 
   Future<void> _saveAssignments() async {
     try {
-      await ApiService.assignClientsToManager(widget.manager.id, _selectedClientIds.toList());
+      await ApiService.assignClientsToManager(
+        widget.manager.id,
+        _selectedClientIds.toList(),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Назначения успешно сохранены')),
@@ -99,9 +111,9 @@ class _AssignClientsScreenState extends ConsumerState<AssignClientsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка сохранения: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка сохранения: $e')));
       }
     }
   }

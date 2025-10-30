@@ -28,9 +28,7 @@ class ScheduleView extends ConsumerWidget {
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ListTile(
-                leading: CircleAvatar(
-                  child: Text((index + 1).toString()),
-                ),
+                leading: CircleAvatar(child: Text((index + 1).toString())),
                 title: Text(item.trainingPlanName),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,7 +46,8 @@ class ScheduleView extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Ошибка загрузки расписания: $error')),
+      error: (error, stack) =>
+          Center(child: Text('Ошибка загрузки расписания: $error')),
     );
   }
 }

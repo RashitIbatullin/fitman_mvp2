@@ -2,17 +2,29 @@ import 'package:fitman_app/models/user_front.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import 'package:fitman_app/screens/shared/profile_screen.dart';
 
 class InstructorDashboard extends ConsumerStatefulWidget {
   final User? instructor;
   const InstructorDashboard({super.key, this.instructor});
 
   @override
-  ConsumerState<InstructorDashboard> createState() => _InstructorDashboardState();
+  ConsumerState<InstructorDashboard> createState() =>
+      _InstructorDashboardState();
 }
 
 class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
   int _selectedIndex = 0;
+
+  final List<String> _titles = const [
+    'Главное',
+    'Профиль',
+    'Клиенты',
+    'Мой тренер',
+    'Мой менеджер',
+    'Расписание',
+    'Табель',
+  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -24,7 +36,13 @@ class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
   Widget build(BuildContext context) {
     final user = widget.instructor ?? ref.watch(authProvider).value?.user;
 
+    if (user == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final List<Widget> views = [
+      const Center(child: Text('Главное')),
+      ProfileScreen(user: user),
       const Center(child: Text('Клиенты - в разработке')),
       const Center(child: Text('Мой тренер - в разработке')),
       const Center(child: Text('Мой менеджер - в разработке')),
@@ -34,7 +52,7 @@ class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Инструктор: ${user?.firstName ?? ''}'),
+        title: Text(_titles[_selectedIndex]),
         actions: [
           if (widget.instructor == null)
             IconButton(
@@ -68,20 +86,16 @@ class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
             ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: views,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: views),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главное'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Клиенты',
+            icon: Icon(Icons.account_circle),
+            label: 'Профиль',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Тренер',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Клиенты'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Тренер'),
           BottomNavigationBarItem(
             icon: Icon(Icons.manage_accounts),
             label: 'Менеджер',
@@ -104,4 +118,3 @@ class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
     );
   }
 }
-

@@ -6,7 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 
 // Провайдер для получения инструкторов для конкретного менеджера
-final assignedInstructorsProvider = FutureProvider.family<List<User>, int>((ref, managerId) async {
+final assignedInstructorsProvider = FutureProvider.family<List<User>, int>((
+  ref,
+  managerId,
+) async {
   final user = ref.watch(authProvider).value?.user;
   // We can only get instructors if we are an admin.
   if (user?.roles.any((role) => role.name == 'admin') ?? false) {
@@ -21,7 +24,9 @@ class InstructorsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final instructorsAsyncValue = ref.watch(assignedInstructorsProvider(managerId));
+    final instructorsAsyncValue = ref.watch(
+      assignedInstructorsProvider(managerId),
+    );
 
     return instructorsAsyncValue.when(
       data: (instructors) {
@@ -44,7 +49,8 @@ class InstructorsView extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Ошибка загрузки инструкторов: $error')),
+      error: (error, stack) =>
+          Center(child: Text('Ошибка загрузки инструкторов: $error')),
     );
   }
 }

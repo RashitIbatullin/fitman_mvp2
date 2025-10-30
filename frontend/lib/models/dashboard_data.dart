@@ -90,9 +90,6 @@ class Achievement {
   Achievement({required this.icon, required this.color});
 
   factory Achievement.fromJson(Map<String, dynamic> json) {
-    return Achievement(
-      icon: json['icon'],
-      color: json['color'],
-    );
+    return Achievement(icon: json['icon'], color: json['color']);
   }
 }

@@ -26,7 +26,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   final _ageController = TextEditingController();
 
   List<Role> _allRoles = [];
-  List<String> _selectedRoleNames = [];
+  final List<String> _selectedRoleNames = [];
   String? _selectedGender;
   bool _sendNotification = true;
   bool _trackCalories = true;
@@ -57,7 +57,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   }
 
   void _generatePassword() {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*';
+    const chars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*';
     final random = Random.secure();
     final password = String.fromCharCodes(
       List.generate(12, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
@@ -76,7 +77,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
       return;
     }
     // Правила валидации уже применяются при выборе чекбоксов, но дублируем на всякий случай
-    if (_selectedRoleNames.contains('client') && _selectedRoleNames.length > 1) {
+    if (_selectedRoleNames.contains('client') &&
+        _selectedRoleNames.length > 1) {
       setState(() {
         _error = 'Пользователь с ролью "Клиент" не может иметь другие роли.';
       });
@@ -138,9 +140,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Создание пользователя'),
-      ),
+      appBar: AppBar(title: const Text('Создание пользователя')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -149,7 +149,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             children: [
               _buildBasicInfoSection(),
               const SizedBox(height: 20),
-              if (_selectedRoleNames.contains('client')) _buildClientSpecificSection(),
+              if (_selectedRoleNames.contains('client'))
+                _buildClientSpecificSection(),
               _buildNotificationSection(),
               const SizedBox(height: 20),
               _buildActionButtons(),
@@ -202,7 +203,9 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) return 'Введите пароль';
-                if (value.length < 6) return 'Пароль должен быть не менее 6 символов';
+                if (value.length < 6) {
+                  return 'Пароль должен быть не менее 6 символов';
+                }
                 return null;
               },
             ),
@@ -212,16 +215,25 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _lastNameController,
-                    decoration: const InputDecoration(labelText: 'Фамилия *', border: OutlineInputBorder()),
-                    validator: (value) => (value == null || value.isEmpty) ? 'Введите фамилию' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Фамилия *',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) => (value == null || value.isEmpty)
+                        ? 'Введите фамилию'
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
                     controller: _firstNameController,
-                    decoration: const InputDecoration(labelText: 'Имя *', border: OutlineInputBorder()),
-                    validator: (value) => (value == null || value.isEmpty) ? 'Введите имя' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Имя *',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                        (value == null || value.isEmpty) ? 'Введите имя' : null,
                   ),
                 ),
               ],
@@ -229,12 +241,18 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _middleNameController,
-              decoration: const InputDecoration(labelText: 'Отчество', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Отчество',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedGender,
-              decoration: const InputDecoration(labelText: 'Пол', border: OutlineInputBorder()),
+              initialValue: _selectedGender,
+              decoration: const InputDecoration(
+                labelText: 'Пол',
+                border: OutlineInputBorder(),
+              ),
               items: const [
                 DropdownMenuItem(value: 'male', child: Text('Мужской')),
                 DropdownMenuItem(value: 'female', child: Text('Женский')),
@@ -244,13 +262,21 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _ageController,
-              decoration: const InputDecoration(labelText: 'Возраст', border: OutlineInputBorder(), prefixIcon: Icon(Icons.cake)),
+              decoration: const InputDecoration(
+                labelText: 'Возраст',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.cake),
+              ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _phoneController,
-              decoration: const InputDecoration(labelText: 'Телефон', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone)),
+              decoration: const InputDecoration(
+                labelText: 'Телефон',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
               keyboardType: TextInputType.phone,
             ),
           ],
@@ -265,7 +291,9 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
     }
 
     bool isClientSelected = _selectedRoleNames.contains('client');
-    bool isEmployeeSelected = _selectedRoleNames.any((name) => name != 'client');
+    bool isEmployeeSelected = _selectedRoleNames.any(
+      (name) => name != 'client',
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +301,9 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
         const Text('Роли *', style: TextStyle(fontWeight: FontWeight.bold)),
         ..._allRoles.map((role) {
           bool isClientRole = role.name == 'client';
-          bool isDisabled = (isClientSelected && !isClientRole) || (isEmployeeSelected && isClientRole);
+          bool isDisabled =
+              (isClientSelected && !isClientRole) ||
+              (isEmployeeSelected && isClientRole);
 
           return CheckboxListTile(
             title: Text(role.title),
@@ -291,7 +321,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                     });
                   },
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -367,16 +397,18 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             if (_sendNotification) ...[
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
-                value: _hourNotification,
+                initialValue: _hourNotification,
                 decoration: const InputDecoration(
                   labelText: 'Уведомление до начала занятий (часов)',
                   border: OutlineInputBorder(),
                 ),
                 items: [1, 2, 3, 4, 5, 6, 12, 24]
-                    .map((hour) => DropdownMenuItem(
-                          value: hour,
-                          child: Text('$hour час(а/ов)'),
-                        ))
+                    .map(
+                      (hour) => DropdownMenuItem(
+                        value: hour,
+                        child: Text('$hour час(а/ов)'),
+                      ),
+                    )
                     .toList(),
                 onChanged: (value) {
                   setState(() {

@@ -1,3 +1,4 @@
+import 'package:fitman_app/screens/shared/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -14,26 +15,41 @@ class AdminDashboard extends ConsumerStatefulWidget {
 class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   int _selectedIndex = 0;
 
-  final List<Widget> _views = const [
-    UsersListScreen(),
-    Center(child: Text('Настройки - в разработке')),
-    Center(child: Text('Аналитика - в разработке')),
-    CatalogsScreen(),
+  final List<String> _titles = const [
+    'Главное',
+    'Профиль',
+    'Пользователи',
+    'Настройки',
+    'Аналитика',
+    'Каталоги',
   ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).value?.user;
 
+    if (user == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final List<Widget> views = [
+      const Center(child: Text('Главное')),
+      ProfileScreen(user: user),
+      const UsersListScreen(),
+      const Center(child: Text('Настройки - в разработке')),
+      const Center(child: Text('Аналитика - в разработке')),
+      const CatalogsScreen(),
+    ];
+
+    void onItemTapped(int index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Администратор: ${user?.firstName ?? ''}'),
+        title: Text(_titles[_selectedIndex]),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -66,12 +82,14 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _views,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: views),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главное'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Профиль',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
             label: 'Пользователи',
@@ -92,7 +110,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],
         unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
+        onTap: onItemTapped,
       ),
     );
   }

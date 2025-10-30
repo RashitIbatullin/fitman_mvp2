@@ -17,7 +17,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _ageController = TextEditingController();
   String _selectedRole = 'client';
+  String? _selectedGender;
 
   @override
   Widget build(BuildContext context) {
@@ -46,11 +49,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: ListView(
             children: [
               const SizedBox(height: 20),
-              const Icon(
-                Icons.person_add,
-                size: 60,
-                color: Colors.blue,
-              ),
+              const Icon(Icons.person_add, size: 60, color: Colors.blue),
               const SizedBox(height: 16),
               Text(
                 'Создать аккаунт',
@@ -109,6 +108,52 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 },
               ),
               const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
+                decoration: const InputDecoration(
+                  labelText: 'Телефон (необязательно)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedGender,
+                decoration: const InputDecoration(
+                  labelText: 'Пол (необязательно)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.people),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'Мужской', child: Text('Мужской')),
+                  DropdownMenuItem(value: 'Женский', child: Text('Женский')),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedGender = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _ageController,
+                decoration: const InputDecoration(
+                  labelText: 'Возраст (необязательно)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.calendar_today),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    if (int.tryParse(value) == null) {
+                      return 'Введите корректный возраст';
+                    }
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedRole,
                 decoration: const InputDecoration(
@@ -117,14 +162,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   prefixIcon: Icon(Icons.work),
                 ),
                 items: const [
-                  DropdownMenuItem(
-                    value: 'client',
-                    child: Text('Клиент'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'trainer',
-                    child: Text('Тренер'),
-                  ),
+                  DropdownMenuItem(value: 'client', child: Text('Клиент')),
+                  DropdownMenuItem(value: 'trainer', child: Text('Тренер')),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -212,13 +251,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
-      ref.read(authProvider.notifier).register(
-        _emailController.text.trim(),
-        _passwordController.text,
-        _firstNameController.text.trim(),
-        _lastNameController.text.trim(),
-        [_selectedRole],
-      );
+      ref
+          .read(authProvider.notifier)
+          .register(
+            _emailController.text.trim(),
+            _passwordController.text,
+            _firstNameController.text.trim(),
+            _lastNameController.text.trim(),
+            [_selectedRole],
+            _phoneController.text.trim().isNotEmpty
+                ? _phoneController.text.trim()
+                : null,
+            _selectedGender,
+            _ageController.text.trim().isNotEmpty
+                ? int.tryParse(_ageController.text.trim())
+                : null,
+          );
     }
   }
 
@@ -229,6 +277,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _confirmPasswordController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _phoneController.dispose();
+    _ageController.dispose();
     super.dispose();
   }
 }
