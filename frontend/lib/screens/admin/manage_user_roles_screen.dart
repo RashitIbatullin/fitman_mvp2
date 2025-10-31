@@ -31,8 +31,8 @@ class _ManageUserRolesScreenState extends ConsumerState<ManageUserRolesScreen> {
     try {
       final roles = await ApiService.getAllRoles();
       setState(() {
-        // Не фильтруем роль клиента, чтобы админ видел все роли
-        _allRoles = roles;
+        // Фильтруем роль "Клиент" согласно требованию
+        _allRoles = roles.where((role) => role.name != 'client').toList();
         _isLoading = false;
       });
     } catch (e) {

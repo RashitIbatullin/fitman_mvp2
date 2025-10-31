@@ -498,8 +498,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                             if (currentUserIsAdmin &&
                                 !user.roles.any(
                                   (role) => role.name == 'client',
-                                ) &&
-                                !user.roles.any((role) => role.name == 'admin'))
+                                ))
                               IconButton(
                                 icon: const Icon(Icons.manage_accounts),
 

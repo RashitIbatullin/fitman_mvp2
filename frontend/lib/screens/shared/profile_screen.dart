@@ -38,12 +38,9 @@ class ProfileScreen extends StatelessWidget {
             _buildInfoRow(label: 'ID', value: user.id.toString()),
             _buildInfoRow(label: 'Полное имя', value: user.fullName),
             _buildInfoRow(label: 'Email', value: user.email),
-            if (user.phone != null)
-              _buildInfoRow(label: 'Телефон', value: user.phone!),
-            if (user.age != null)
-              _buildInfoRow(label: 'Возраст', value: user.age.toString()),
-            if (user.gender != null)
-              _buildInfoRow(label: 'Пол', value: user.gender!),
+            _buildInfoRow(label: 'Телефон', value: user.phone ?? 'не указан'),
+            _buildInfoRow(label: 'Пол', value: user.gender ?? 'не указан'),
+            _buildInfoRow(label: 'Возраст', value: user.age?.toString() ?? 'не указан'),
             const Divider(height: 30),
             // Требование 9.1.4, пункты 2 и 3
             if (user.roles.length > 1 &&

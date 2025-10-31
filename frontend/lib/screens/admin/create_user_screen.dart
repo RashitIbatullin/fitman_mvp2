@@ -25,7 +25,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   final _phoneController = TextEditingController();
   final _ageController = TextEditingController();
 
-  List<Role> _allRoles = [];
+
   final List<String> _selectedRoleNames = [];
   String? _selectedGender;
   bool _sendNotification = true;
@@ -40,20 +40,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   void initState() {
     super.initState();
     _selectedRoleNames.add(widget.userRole);
-    _loadRoles();
-  }
-
-  Future<void> _loadRoles() async {
-    try {
-      final roles = await ApiService.getAllRoles();
-      setState(() {
-        _allRoles = roles;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Ошибка загрузки ролей: $e';
-      });
-    }
   }
 
   void _generatePassword() {
@@ -64,6 +50,23 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
       List.generate(12, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
     );
     _passwordController.text = password;
+  }
+
+  String _getRoleDisplayName(String roleName) {
+    switch (roleName) {
+      case 'admin':
+        return 'Администратор';
+      case 'manager':
+        return 'Менеджер';
+      case 'trainer':
+        return 'Тренер';
+      case 'instructor':
+        return 'Инструктор';
+      case 'client':
+        return 'Клиент';
+      default:
+        return 'Пользователь';
+    }
   }
 
   Future<void> _createUser() async {
@@ -140,7 +143,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Создание пользователя')),
+      appBar: AppBar(title: Text('Создание: ${_getRoleDisplayName(widget.userRole)}')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -173,8 +176,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildRolesCheckboxes(), // Новый виджет для ролей
-            const SizedBox(height: 16),
+
             TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(
@@ -285,46 +287,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
     );
   }
 
-  Widget _buildRolesCheckboxes() {
-    if (_allRoles.isEmpty) {
-      return const Center(child: Text('Загрузка ролей...'));
-    }
 
-    bool isClientSelected = _selectedRoleNames.contains('client');
-    bool isEmployeeSelected = _selectedRoleNames.any(
-      (name) => name != 'client',
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Роли *', style: TextStyle(fontWeight: FontWeight.bold)),
-        ..._allRoles.map((role) {
-          bool isClientRole = role.name == 'client';
-          bool isDisabled =
-              (isClientSelected && !isClientRole) ||
-              (isEmployeeSelected && isClientRole);
-
-          return CheckboxListTile(
-            title: Text(role.title),
-            value: _selectedRoleNames.contains(role.name),
-            controlAffinity: ListTileControlAffinity.leading,
-            onChanged: isDisabled
-                ? null
-                : (bool? value) {
-                    setState(() {
-                      if (value == true) {
-                        _selectedRoleNames.add(role.name);
-                      } else {
-                        _selectedRoleNames.remove(role.name);
-                      }
-                    });
-                  },
-          );
-        }),
-      ],
-    );
-  }
 
   Widget _buildClientSpecificSection() {
     return Card(
