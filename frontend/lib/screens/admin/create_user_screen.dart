@@ -116,7 +116,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
         coeffActivity: _coeffActivity,
       );
 
-      await ApiService.createUser(request);
+      final newUser = await ApiService.createUser(request);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -125,7 +125,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true); // Возвращаем успех
+        Navigator.pop(context, newUser); // Возвращаем созданного пользователя
       }
     } catch (e) {
       setState(() {
