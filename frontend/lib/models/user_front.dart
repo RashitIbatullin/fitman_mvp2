@@ -164,3 +164,38 @@ class CreateUserRequest {
     };
   }
 }
+
+class UpdateUserRequest {
+  final int id;
+  final String email;
+  final String firstName;
+  final String lastName;
+  final String? middleName;
+  final String? phone;
+  final String? gender;
+  final int? age;
+
+  UpdateUserRequest({
+    required this.id,
+    required this.email,
+    required this.firstName,
+    required this.lastName,
+    this.middleName,
+    this.phone,
+    this.gender,
+    this.age,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'firstName': firstName,
+      'lastName': lastName,
+      'middleName': middleName,
+      'phone': phone,
+      'gender': gender,
+      'age': age,
+    };
+  }
+}

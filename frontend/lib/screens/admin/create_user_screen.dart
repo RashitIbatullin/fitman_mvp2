@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/role.dart';
 import '../../models/user_front.dart';
 import '../../services/api_service.dart';
 
@@ -154,7 +153,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               const SizedBox(height: 20),
               if (_selectedRoleNames.contains('client'))
                 _buildClientSpecificSection(),
-              _buildNotificationSection(),
+              if (widget.userRole != 'admin')
+                _buildNotificationSection(),
               const SizedBox(height: 20),
               _buildActionButtons(),
             ],
@@ -178,6 +178,26 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             const SizedBox(height: 16),
 
             TextFormField(
+              controller: _phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Телефон *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Введите телефон';
+                }
+                final phoneRegExp = RegExp(r'^(\+7|8)?[\s-]?\(?[489][0-9]{2}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{2}[\s-]?[0-9]{2}$');
+                if (!phoneRegExp.hasMatch(value)) {
+                  return 'Неверный формат телефона';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(
                 labelText: 'Email *',
@@ -186,7 +206,10 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) return 'Введите email';
-                if (!value.contains('@')) return 'Введите корректный email';
+                final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                if (!emailRegExp.hasMatch(value)) {
+                  return 'Неверный формат email';
+                }
                 return null;
               },
             ),
@@ -256,8 +279,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 border: OutlineInputBorder(),
               ),
               items: const [
-                DropdownMenuItem(value: 'male', child: Text('Мужской')),
-                DropdownMenuItem(value: 'female', child: Text('Женский')),
+                DropdownMenuItem(value: 'мужской', child: Text('Мужской')),
+                DropdownMenuItem(value: 'женский', child: Text('Женский')),
               ],
               onChanged: (value) => setState(() => _selectedGender = value),
             ),
@@ -271,16 +294,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               ),
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Телефон',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone),
-              ),
-              keyboardType: TextInputType.phone,
-            ),
+
           ],
         ),
       ),

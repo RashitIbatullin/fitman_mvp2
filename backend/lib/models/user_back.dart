@@ -6,8 +6,11 @@ class User {
   final String passwordHash;
   final String firstName;
   final String lastName;
-  final List<Role> roles; // Changed from single role string to list of Role objects
+  final String? middleName;
+  final List<Role> roles;
   final String? phone;
+  final String? gender;
+  final int? age;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -17,8 +20,11 @@ class User {
     required this.passwordHash,
     required this.firstName,
     required this.lastName,
-    required this.roles, // Updated constructor
+    this.middleName,
+    required this.roles,
     this.phone,
+    this.gender,
+    this.age,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,8 +36,11 @@ class User {
       passwordHash: map['password_hash'].toString(),
       firstName: map['first_name'].toString(),
       lastName: map['last_name'].toString(),
+      middleName: map['middle_name']?.toString(),
       roles: [], // Roles will be fetched separately and populated
       phone: map['phone']?.toString(),
+      gender: map['gender'] != null ? (map['gender'] == 0 ? 'мужской' : 'женский') : null,
+      age: map['age'] as int?,
       createdAt: map['created_at'] is DateTime
           ? map['created_at']
           : DateTime.parse(map['created_at'].toString()),
@@ -47,8 +56,11 @@ class User {
       'email': email,
       'firstName': firstName,
       'lastName': lastName,
-      'roles': roles.map((r) => r.toJson()).toList(), // Serialize roles
+      'middleName': middleName,
+      'roles': roles.map((r) => r.toJson()).toList(),
       'phone': phone,
+      'gender': gender,
+      'age': age,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -60,8 +72,11 @@ class User {
       'email': email,
       'firstName': firstName,
       'lastName': lastName,
-      'roles': roles.map((r) => r.toJson()).toList(), // Serialize roles
+      'middleName': middleName,
+      'roles': roles.map((r) => r.toJson()).toList(),
       'phone': phone,
+      'gender': gender,
+      'age': age,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -70,8 +85,11 @@ class User {
   User copyWith({
     String? firstName,
     String? lastName,
+    String? middleName,
     String? phone,
-    List<Role>? roles, // Added roles to copyWith
+    String? gender,
+    int? age,
+    List<Role>? roles,
   }) {
     return User(
       id: id,
@@ -79,8 +97,11 @@ class User {
       passwordHash: passwordHash,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
-      roles: roles ?? this.roles, // Updated roles in copyWith
+      middleName: middleName ?? this.middleName,
+      roles: roles ?? this.roles,
       phone: phone ?? this.phone,
+      gender: gender ?? this.gender,
+      age: age ?? this.age,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
     );
