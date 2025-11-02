@@ -58,12 +58,12 @@ class ProfileScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const SelectableText(
           'Роли',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        ...user.roles.map((role) => Text('  - ${role.title}')),
+        ...user.roles.map((role) => SelectableText('  - ${role.title}')),
         const SizedBox(height: 16),
       ],
     );
@@ -76,13 +76,13 @@ class ProfileScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const SelectableText(
           'Настройки',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         SwitchListTile(
-          title: const Text('Получать уведомления'),
+          title: const SelectableText('Получать уведомления'),
           value: user.sendNotification,
           onChanged: null, // TODO: Implement settings change
         ),
@@ -92,7 +92,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         if (isClient)
           SwitchListTile(
-            title: const Text('Отслеживать калории'),
+            title: const SelectableText('Отслеживать калории'),
             value: user.trackCalories,
             onChanged: null, // TODO: Implement settings change
           ),
@@ -111,8 +111,8 @@ class ProfileScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(value),
+          SelectableText(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          SelectableText(value),
         ],
       ),
     );

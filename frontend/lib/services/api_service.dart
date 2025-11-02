@@ -232,7 +232,7 @@ class ApiService {
   }
 
   // Создание пользователя (для админа)
-  static Future<Map<String, dynamic>> createUser(
+  static Future<User> createUser(
     CreateUserRequest request,
   ) async {
     try {
@@ -243,7 +243,9 @@ class ApiService {
       );
 
       if (response.statusCode == 201) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        final userData = data['user'] as Map<String, dynamic>;
+        return User.fromJson(userData);
       } else {
         final errorData = jsonDecode(response.body);
         throw Exception(
@@ -253,6 +255,32 @@ class ApiService {
       }
     } catch (e) {
       print('Create user error: $e');
+      rethrow;
+    }
+  }
+
+  // Обновление пользователя (для админа)
+  static Future<User> updateUser(UpdateUserRequest request) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/users/${request.id}'),
+        headers: _headers,
+        body: jsonEncode(request.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final userData = data['user'] as Map<String, dynamic>;
+        return User.fromJson(userData);
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ??
+              'Failed to update user with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Update user error: $e');
       rethrow;
     }
   }
@@ -856,6 +884,70 @@ class ApiService {
       }
     } catch (e) {
       print('Get anthropometry data error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> updateAnthropometryFixed({
+    required int height,
+    required int wristCirc,
+    required int ankleCirc,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/client/anthropometry/fixed'),
+        headers: _headers,
+        body: jsonEncode({
+          'height': height,
+          'wristCirc': wristCirc,
+          'ankleCirc': ankleCirc,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ?? 'Failed to update fixed anthropometry with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Update fixed anthropometry error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> updateAnthropometryMeasurements({
+    required String type,
+    required double weight,
+    required int shouldersCirc,
+    required int breastCirc,
+    required int waistCirc,
+    required int hipsCirc,
+    required int bmr,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/client/anthropometry/measurements'),
+        headers: _headers,
+        body: jsonEncode({
+          'type': type,
+          'weight': weight,
+          'shouldersCirc': shouldersCirc,
+          'breastCirc': breastCirc,
+          'waistCirc': waistCirc,
+          'hipsCirc': hipsCirc,
+          'bmr': bmr,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ?? 'Failed to update measurements anthropometry with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Update measurements anthropometry error: $e');
       rethrow;
     }
   }

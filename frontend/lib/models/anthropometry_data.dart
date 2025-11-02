@@ -11,22 +11,22 @@ class AnthropometryData {
 
   factory AnthropometryData.fromJson(Map<String, dynamic> json) {
     return AnthropometryData(
-      fixed: AnthropometryFixed.fromJson(json['fixed']),
-      start: AnthropometryMeasurements.fromJson(json['start']),
-      finish: AnthropometryMeasurements.fromJson(json['finish']),
+      fixed: AnthropometryFixed.fromJson(json['fixed'] ?? {}),
+      start: AnthropometryMeasurements.fromJson(json['start'] ?? {}),
+      finish: AnthropometryMeasurements.fromJson(json['finish'] ?? {}),
     );
   }
 }
 
 class AnthropometryFixed {
-  final int height;
-  final int wristCirc;
-  final int ankleCirc;
+  final int? height;
+  final int? wristCirc;
+  final int? ankleCirc;
 
   AnthropometryFixed({
-    required this.height,
-    required this.wristCirc,
-    required this.ankleCirc,
+    this.height,
+    this.wristCirc,
+    this.ankleCirc,
   });
 
   factory AnthropometryFixed.fromJson(Map<String, dynamic> json) {
@@ -39,27 +39,38 @@ class AnthropometryFixed {
 }
 
 class AnthropometryMeasurements {
-  final double weight;
-  final int shouldersCirc;
-  final int breastCirc;
-  final int waistCirc;
-  final int hipsCirc;
+  final double? weight;
+  final int? shouldersCirc;
+  final int? breastCirc;
+  final int? waistCirc;
+  final int? hipsCirc;
+  final int? bmr;
+  final String? photo;
+  final DateTime? photoDateTime;
 
   AnthropometryMeasurements({
-    required this.weight,
-    required this.shouldersCirc,
-    required this.breastCirc,
-    required this.waistCirc,
-    required this.hipsCirc,
+    this.weight,
+    this.shouldersCirc,
+    this.breastCirc,
+    this.waistCirc,
+    this.hipsCirc,
+    this.bmr,
+    this.photo,
+    this.photoDateTime,
   });
 
   factory AnthropometryMeasurements.fromJson(Map<String, dynamic> json) {
     return AnthropometryMeasurements(
-      weight: (json['weight'] as num).toDouble(),
+      weight: (json['weight'] as num?)?.toDouble(),
       shouldersCirc: json['shoulders_circ'],
       breastCirc: json['breast_circ'],
       waistCirc: json['waist_circ'],
       hipsCirc: json['hips_circ'],
+      bmr: json['bmr'],
+      photo: json['photo'],
+      photoDateTime: json['photo_date_time'] != null
+          ? DateTime.parse(json['photo_date_time'])
+          : null,
     );
   }
 }

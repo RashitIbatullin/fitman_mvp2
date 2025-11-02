@@ -12,6 +12,7 @@ import '../instructor_dashboard.dart';
 import '../manager_dashboard.dart';
 import '../trainer_dashboard.dart';
 import '../unknown_role_screen.dart';
+import 'edit_user_screen.dart';
 import 'manage_user_roles_screen.dart'; // Import the new screen
 import '../../widgets/role_dialog_manager.dart';
 import '../../widgets/reset_password_dialog.dart';
@@ -190,20 +191,21 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     }
   }
 
-  void _navigateToCreateUser(BuildContext context, String role) {
-    Navigator.push(
+  void _navigateToCreateUser(BuildContext context, String role) async {
+    final newUser = await Navigator.push(
       context,
-
       MaterialPageRoute(builder: (context) => CreateUserScreen(userRole: role)),
-    ).then((created) {
-      if (created == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Пользователь успешно создан')),
-        );
+    );
 
-        _loadUsers();
-      }
-    });
+    if (newUser is User) {
+      setState(() {
+        _users.add(newUser);
+        _filterUsers(); // To apply current filter and search
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Пользователь успешно создан')),
+      );
+    }
   }
 
   void _showCreateUserDialog(BuildContext context) {
@@ -301,10 +303,22 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
           onEdit: _selectedUser == null
               ? null
-              : () {
-                  // TODO: Implement Edit User
-
-                  print('Edit user: ${_selectedUser!.fullName}');
+              : () async {
+                  final updatedUser = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditUserScreen(user: _selectedUser!),
+                    ),
+                  );
+                  if (updatedUser is User) {
+                    setState(() {
+                      final index = _users.indexWhere((u) => u.id == updatedUser.id);
+                      if (index != -1) {
+                        _users[index] = updatedUser;
+                      }
+                      _filterUsers();
+                    });
+                  }
                 },
 
           onArchive: _selectedUser == null

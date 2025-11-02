@@ -11,7 +11,8 @@ class ScheduleController {
       }
 
       final userId = userPayload['userId'] as int?;
-      final userRole = userPayload['role'] as String?;
+      final userRoles = userPayload['roles'] as List<dynamic>?;
+      final userRole = userRoles?.isNotEmpty == true ? userRoles!.first as String : null;
 
       if (userId == null || userRole == null) {
         return Response.badRequest(body: '{"error": "Invalid token payload"}');

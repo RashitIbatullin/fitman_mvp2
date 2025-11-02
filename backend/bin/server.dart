@@ -1,24 +1,43 @@
 import 'dart:io';
+
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:shelf_helmet/shelf_helmet.dart';
+import 'package:shelf_static/shelf_static.dart';
+import 'package:path/path.dart' as p;
+import 'package:shelf_router/shelf_router.dart';
+
 import '../lib/routes/router.dart';
 import '../lib/config/database.dart';
 import  '../lib/config/app_config.dart';
 import '../lib/middleware/cors_middleware.dart';
 
 void main(List<String> args) async {
-  // Создаем pipeline с middleware
+  // Формируем абсолютный путь к директории uploads
+  final uploadPath = p.normalize(p.join(Directory.current.path, '..', 'uploads'));
+
+  // Создаем директорию для загрузок, если она не существует
+  final uploadDir = Directory(uploadPath);
+  if (!await uploadDir.exists()) {
+    await uploadDir.create(recursive: true);
+  }
+
+  // Создаем router для статических файлов
+  final staticRouter = Router();
+  staticRouter.mount('/uploads/', createStaticHandler(uploadPath, listDirectories: false).call);
+
+  // Создаем каскад для объединения роутеров
+  final cascade = Cascade()
+      .add(staticRouter.call) // Сначала проверяем статику
+      .add(router.call);      // Потом API
+
   final handler = const Pipeline()
       .addMiddleware(helmet())
       .addMiddleware(corsHeaders())
       .addMiddleware(corsMiddleware())
       .addMiddleware(logRequests())
-      .addHandler((Request request) {
-        print('Request reaching router: ${request.method} ${request.url}'); // Debug print
-        return router.call(request);
-      });
+      .addHandler(cascade.handler);
 
   // Запускаем сервер
   final server = await io.serve(
@@ -42,7 +61,7 @@ void main(List<String> args) async {
 //  print('📊 Training endpoints:');
 //  print('   GET http://localhost:${AppConfig.serverPort}/api/training/plans');
 //  print('📅 Schedule endpoints:');
-//  print('   GET http://localhost:${AppConfig.serverPort}/api/schedule');
+//  print('   GET http://localhost:${App_config.serverPort}/api/schedule');
 
   // Обработка graceful shutdown
   ProcessSignal.sigint.watch().listen((_) async {

@@ -150,6 +150,9 @@ final Router router = Router()
   ..get('/api/client/progress', (Request request) => _protectedHandler(ProgressController.getProgressDataForClient)(request))
   ..get('/api/client/preferences', (Request request) => _protectedHandler(ClientPreferenceController.getClientPreferences)(request))
   ..post('/api/client/preferences', (Request request) => _protectedHandler(ClientPreferenceController.saveClientPreferences)(request))
+  ..post('/api/client/anthropometry/photo', (Request request) => _protectedHandler(AnthropometryController.uploadPhoto)(request))
+  ..post('/api/client/anthropometry/fixed', (Request request) => _protectedHandler(AnthropometryController.updateFixedAnthropometry)(request))
+  ..post('/api/client/anthropometry/measurements', (Request request) => _protectedHandler(AnthropometryController.updateMeasurementsAnthropometry)(request))
 
 // Work Schedule routes
   ..get('/api/work-schedules', (Request request) => _protectedHandler(WorkScheduleController.getWorkSchedules)(request))

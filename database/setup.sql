@@ -16,6 +16,9 @@ DROP TABLE IF EXISTS
 "trainer_profiles",
 "manager_profiles",
 "work_schedules",
+"anthropometry_fix",
+"anthropometry_start",
+"anthropometry_finish",
 "roles",
 "users",
 "user_roles",
@@ -57,8 +60,8 @@ CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     login VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE,
     phone VARCHAR(255) UNIQUE,
+    email VARCHAR(255) UNIQUE,
     last_name VARCHAR(255),
     first_name VARCHAR(255),
     middle_name VARCHAR(255),
@@ -251,8 +254,8 @@ BEGIN
     SELECT id INTO client_role_id FROM roles WHERE name = 'client';
 
     -- Создание Администратора (пароль: admin123)
-    INSERT INTO users (login, password_hash, email, last_name, first_name, gender, age)
-    VALUES ('admin@fitman.ru', '$2a$10$RATHndPnw7mQZOOfAb3RHeaGhV8Aul2U4BXx2C94pDr4EqV58uEUW', 'admin@fitman.ru', 'Администратор', 'Админ', 1, 30)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age)
+    VALUES ('admin@fitman.ru', '$2a$10$RATHndPnw7mQZOOfAb3RHeaGhV8Aul2U4BXx2C94pDr4EqV58uEUW', '+79603949645', 'admin@fitman.ru', 'Администратор', 'Админ', 1, 30)
     RETURNING id INTO admin_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (admin_id, admin_role_id, admin_id, admin_id);
     
@@ -263,29 +266,29 @@ BEGIN
     UPDATE levels_training SET created_by = admin_id, updated_by = admin_id;
 
     -- Создание Менеджера (пароль: manager123)
-    INSERT INTO users (login, password_hash, email, last_name, first_name, gender, age, created_by, updated_by)
-    VALUES ('manager@fitman.ru', '$2a$10$gH1uvOKi0oiI4nwhiapDgeKZjHx2Oo0OiojVABKYL5DWBaxOAKDWa', 'manager@fitman.ru', 'Менеджеров', 'Менеджер', 1, 28, admin_id, admin_id)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age, created_by, updated_by)
+    VALUES ('manager@fitman.ru', '$2a$10$gH1uvOKi0oiI4nwhiapDgeKZjHx2Oo0OiojVABKYL5DWBaxOAKDWa', '+79603949646', 'manager@fitman.ru', 'Менеджеров', 'Менеджер', 1, 28, admin_id, admin_id)
     RETURNING id INTO manager_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (manager_id, manager_role_id, admin_id, admin_id);
     INSERT INTO manager_profiles (user_id, specialization, work_experience, created_by, updated_by) VALUES (manager_id, 'Управление', 3, admin_id, admin_id);
 
     -- Создание Тренера (пароль: trainer123)
-    INSERT INTO users (login, password_hash, email, last_name, first_name, gender, age, created_by, updated_by)
-    VALUES ('trainer@fitman.ru', '$2a$10$eMnEUxZ5YndkG8KJjfrDrugj0UbvaoRkBeopAVnzWgo18kmQIs6PG', 'trainer@fitman.ru', 'Тренеров', 'Тренер', 1, 25, admin_id, admin_id)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age, created_by, updated_by)
+    VALUES ('trainer@fitman.ru', '$2a$10$eMnEUxZ5YndkG8KJjfrDrugj0UbvaoRkBeopAVnzWgo18kmQIs6PG', '+79603949647', 'trainer@fitman.ru', 'Тренеров', 'Тренер', 1, 25, admin_id, admin_id)
     RETURNING id INTO trainer_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (trainer_id, trainer_role_id, admin_id, admin_id);
     INSERT INTO trainer_profiles (user_id, specialization, work_experience, created_by, updated_by) VALUES (trainer_id, 'Силовой тренинг', 5, admin_id, admin_id);
 
     -- Создание Инструктора (пароль: instructor123)
-    INSERT INTO users (login, password_hash, email, last_name, first_name, gender, age, created_by, updated_by)
-    VALUES ('instructor@fitman.ru', '$2a$10$zo5j5Qm0OJAZkiwVWfIHyeSSs831kV95YsNIK0/8/rlm3WvXxY6Mi', 'instructor@fitman.ru', 'Инструкторов', 'Инструктор', 2, 22, admin_id, admin_id)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age, created_by, updated_by)
+    VALUES ('instructor@fitman.ru', '$2a$10$zo5j5Qm0OJAZkiwVWfIHyeSSs831kV95YsNIK0/8/rlm3WvXxY6Mi', '+79603949648', 'instructor@fitman.ru', 'Инструкторов', 'Инструктор', 2, 22, admin_id, admin_id)
     RETURNING id INTO instructor_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (instructor_id, instructor_role_id, admin_id, admin_id);
     INSERT INTO instructor_profiles (user_id, specialization, work_experience, created_by, updated_by) VALUES (instructor_id, 'Групповые занятия', 2, admin_id, admin_id);
 
     -- Создание Клиента (пароль: client123)
-    INSERT INTO users (login, password_hash, email, last_name, first_name, gender, age, created_by, updated_by)
-    VALUES ('client@fitman.ru', '$2a$10$Ho/wfV6sIt9DetDJ3.NQY.u7lMnKUGpfzZO0Qc5rzs/2UskxxDLoW', 'client@fitman.ru', 'Клиентов', 'Клиент', 2, 29, admin_id, admin_id)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age, created_by, updated_by)
+    VALUES ('client@fitman.ru', '$2a$10$Ho/wfV6sIt9DetDJ3.NQY.u7lMnKUGpfzZO0Qc5rzs/2UskxxDLoW', '+79603949649', 'client@fitman.ru', 'Клиентов', 'Клиент', 2, 29, admin_id, admin_id)
     RETURNING id INTO client_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (client_id, client_role_id, admin_id, admin_id);
     INSERT INTO client_profiles (user_id, goal_training_id, level_training_id, created_by, updated_by) VALUES (client_id, 1, 1, admin_id, admin_id);
@@ -348,5 +351,39 @@ CREATE TABLE client_schedule_preferences (
 );
 
 COMMENT ON TABLE client_schedule_preferences IS 'Предпочтения клиента по расписанию';
+
+CREATE TABLE anthropometry_fix (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    date_time TIMESTAMPTZ DEFAULT NOW(),
+    height INT,
+    wrist_circ INT,
+    ankle_circ INT
+);
+
+CREATE TABLE anthropometry_start (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    date_time TIMESTAMPTZ DEFAULT NOW(),
+    photo VARCHAR(255),
+    photo_date_time TIMESTAMPTZ,
+    weight REAL,
+    shoulders_circ INT,
+    breast_circ INT,
+    waist_circ INT,
+    hips_circ INT,
+    bmr INT
+);
+
+CREATE TABLE anthropometry_finish (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    date_time TIMESTAMPTZ DEFAULT NOW(),
+    photo VARCHAR(255),
+    photo_date_time TIMESTAMPTZ,
+    weight REAL,
+    shoulders_circ INT,
+    breast_circ INT,
+    waist_circ INT,
+    hips_circ INT,
+    bmr INT
+);
 
 END $$;

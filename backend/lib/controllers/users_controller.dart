@@ -10,30 +10,57 @@ class UsersController {
   // Создать нового пользователя (только для админа)
   static Future<Response> createUser(Request request) async {
     try {
+      final payload = request.context['user'] as Map<String, dynamic>?;
+      if (payload == null) {
+        return Response.forbidden('Not authorized.');
+      }
+      final creatorId = payload['userId'] as int;
+
       final body = await request.readAsString();
       final data = jsonDecode(body) as Map<String, dynamic>;
 
       final roles = List<String>.from(data['roles'] as List<dynamic>);
 
-      // --- НАЧАЛО ВАЛИДАЦИИ РОЛЕЙ ---
+      // --- НАЧАЛО ВАЛИДАЦИИ ---
+      final email = data['email'] as String?;
+      final phone = data['phone'] as String?;
+
+      if (email == null || email.isEmpty) {
+        return Response(400, body: jsonEncode({'error': 'Email является обязательным полем'}));
+      }
+
+      final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      if (!emailRegExp.hasMatch(email)) {
+        return Response(400, body: jsonEncode({'error': 'Неверный формат email'}));
+      }
+
+      final existingUserByEmail = await Database().getUserByEmail(email);
+      if (existingUserByEmail != null) {
+        return Response(400, body: jsonEncode({'error': 'Пользователь с таким email уже существует'}));
+      }
+
+      if (phone != null && phone.isNotEmpty) {
+        final phoneRegExp = RegExp(r'^\+?[0-9\s-]{7,15}$');
+        if (!phoneRegExp.hasMatch(phone)) {
+          return Response(400, body: jsonEncode({'error': 'Неверный формат телефона'}));
+        }
+        final existingUserByPhone = await Database().getUserByPhone(phone);
+        if (existingUserByPhone != null) {
+          return Response(400, body: jsonEncode({'error': 'Пользователь с таким телефоном уже существует'}));
+        }
+      }
+
       if (roles.contains('client') && roles.length > 1) {
         return Response(400, body: jsonEncode({'error': 'Пользователь с ролью "Клиент" не может иметь другие роли.'}));
       }
       if (roles.any((r) => r != 'client') && roles.contains('client')) {
          return Response(400, body: jsonEncode({'error': 'Роль "Клиент" не может быть совмещена с другими ролями.'}));
       }
-      // --- КОНЕЦ ВАЛИДАЦИИ РОЛЕЙ ---
+      // --- КОНЕЦ ВАЛИДАЦИИ ---
 
-      final email = data['email'] as String;
       final password = data['password'] as String;
       final firstName = data['firstName'] as String;
       final lastName = data['lastName'] as String;
-      final phone = data['phone'] as String?;
-
-      final existingUser = await Database().getUserByEmail(email);
-      if (existingUser != null) {
-        return Response(400, body: jsonEncode({'error': 'Пользователь с таким email уже существует'}));
-      }
 
       final passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
 
@@ -49,7 +76,7 @@ class UsersController {
         updatedAt: DateTime.now(),
       );
 
-      final createdUser = await Database().createUser(newUser, roles);
+      final createdUser = await Database().createUser(newUser, roles, creatorId);
 
       return Response(201, body: jsonEncode({
         'message': 'Пользователь успешно создан',
@@ -156,21 +183,48 @@ class UsersController {
       if (userId == null) {
         return Response(400, body: jsonEncode({'error': 'Invalid user ID'}));
       }
+
+      final payload = request.context['user'] as Map<String, dynamic>?;
+      final updaterId = payload?['userId'] as int?;
+
       final body = await request.readAsString();
       final data = jsonDecode(body) as Map<String, dynamic>;
+
+      final email = data['email'] as String?;
+      if (email != null) {
+        final existingUser = await Database().getUserByEmail(email);
+        if (existingUser != null && existingUser.id != userId) {
+          return Response(400, body: jsonEncode({'error': 'Пользователь с таким email уже существует'}));
+        }
+      }
+
+      final phone = data['phone'] as String?;
+      if (phone != null && phone.isNotEmpty) {
+        final existingUser = await Database().getUserByPhone(phone);
+        if (existingUser != null && existingUser.id != userId) {
+          return Response(400, body: jsonEncode({'error': 'Пользователь с таким телефоном уже существует'}));
+        }
+      }
+
       final updatedUser = await Database().updateUser(
         userId,
+        email: email,
         firstName: data['firstName'] as String?,
         lastName: data['lastName'] as String?,
-        phone: data['phone'] as String?,
+        middleName: data['middleName'] as String?,
+        phone: phone,
+        gender: data['gender'] as String?,
+        age: data['age'] as int?,
+        updatedBy: updaterId,
       );
+
       if (updatedUser == null) {
         return Response(404, body: jsonEncode({'error': 'User not found'}));
       }
       return Response.ok(jsonEncode({'user': updatedUser.toSafeJson()}));
     } catch (e) {
       print('Update user error: $e');
-      return Response(500, body: jsonEncode({'error': 'Internal server error'}));
+      return Response(500, body: jsonEncode({'error': 'Internal server error: $e'}));
     }
   }
 

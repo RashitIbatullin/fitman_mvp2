@@ -112,9 +112,9 @@ class Database {
   }
 
   // Получить роли для пользователя
-  Future<List<Role>> getRolesForUser(int userId) async {
+  Future<List<Role>> getRolesForUser(int userId, [Session? context]) async {
     try {
-      final conn = await connection;
+      final conn = context ?? await connection;
       final results = await conn.execute(
         Sql.named('''
           SELECT r.id, r.name, r.title, r.icon
@@ -136,7 +136,7 @@ class Database {
     try {
       final conn = await connection;
       final results = await conn.execute('''
-        SELECT id, email, password_hash, first_name, last_name, phone, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, age, created_at, updated_at
         FROM users
       ''');
 
@@ -160,7 +160,7 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, phone, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, age, created_at, updated_at
         FROM users
         WHERE email = @email
         LIMIT 1
@@ -185,13 +185,44 @@ class Database {
     }
   }
 
+  // Получить пользователя по телефону
+  Future<User?> getUserByPhone(String phone) async {
+    try {
+      final conn = await connection;
+
+      final sql = '''
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, age, created_at, updated_at
+        FROM users
+        WHERE phone = @phone
+        LIMIT 1
+      ''';
+
+      final results = await conn.execute(
+        Sql.named(sql),
+        parameters: {
+          'phone': phone,
+        },
+      );
+
+      if (results.isEmpty) return null;
+
+      final userMap = results.first.toColumnMap();
+      final user = User.fromMap(userMap);
+      final roles = await getRolesForUser(user.id);
+      return user.copyWith(roles: roles);
+    } catch (e) {
+      print('❌ getUserByPhone error: $e');
+      rethrow;
+    }
+  }
+
   // Получить пользователя по ID
   Future<User?> getUserById(int id) async {
     try {
       final conn = await connection;
 
       final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, phone, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, age, created_at, updated_at
         FROM users
         WHERE id = @id
         LIMIT 1
@@ -217,14 +248,14 @@ class Database {
   }
 
   // Создать пользователя
-  Future<User> createUser(User user, List<String> roleNames) async {
+  Future<User> createUser(User user, List<String> roleNames, [int? creatorId]) async {
     final conn = await connection;
     return await conn.runTx((ctx) async {
       // 1. Вставить пользователя в таблицу users и получить его ID
       final userResult = await ctx.execute(
         Sql.named('''
-          INSERT INTO users (login, email, password_hash, first_name, last_name, phone, created_at, updated_at, created_by, updated_by)
-          VALUES (@login, @email, @password_hash, @first_name, @last_name, @phone, @created_at, @updated_at, @created_by, @updated_by)
+          INSERT INTO users (login, email, password_hash, first_name, last_name, phone, created_at, updated_at)
+          VALUES (@login, @email, @password_hash, @first_name, @last_name, @phone, @created_at, @updated_at)
           RETURNING id
         '''),
         parameters: {
@@ -236,14 +267,27 @@ class Database {
           'phone': user.phone,
           'created_at': user.createdAt,
           'updated_at': user.updatedAt,
-          'created_by': user.id, // Предполагаем, что ID создателя передается в объекте user
-          'updated_by': user.id,
         },
       );
 
       final newUserId = userResult.first[0] as int;
+      final finalCreatorId = creatorId ?? newUserId;
 
-      // 2. Связать пользователя с ролями
+      // 2. Обновить created_by и updated_by
+      await ctx.execute(
+        Sql.named('''
+          UPDATE users 
+          SET created_by = @creatorId, updated_by = @creatorId 
+          WHERE id = @userId
+        '''),
+        parameters: {
+          'creatorId': finalCreatorId,
+          'userId': newUserId,
+        },
+      );
+
+
+      // 3. Связать пользователя с ролями
       for (final roleName in roleNames) {
         final roleResult = await ctx.execute(
           Sql.named('SELECT id FROM roles WHERE name = @roleName'),
@@ -256,19 +300,23 @@ class Database {
         final roleId = roleResult.first[0] as int;
 
         await ctx.execute(
-          Sql.named('INSERT INTO user_roles (user_id, role_id) VALUES (@userId, @roleId)'),
+          Sql.named('INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (@userId, @roleId, @creatorId, @creatorId)'),
           parameters: {
             'userId': newUserId,
             'roleId': roleId,
+            'creatorId': finalCreatorId,
           },
         );
       }
 
-      // 3. Вернуть созданного пользователя со всей информацией
-      final newUser = await getUserById(newUserId);
-      if (newUser == null) {
-        throw Exception('Failed to fetch newly created user.');
-      }
+      // 4. Вернуть созданного пользователя со всей информацией
+      final createdUserResult = await ctx.execute(
+        Sql.named('SELECT * FROM users WHERE id = @id'),
+        parameters: {'id': newUserId},
+      );
+      final userMap = createdUserResult.first.toColumnMap();
+      final roles = await getRolesForUser(newUserId, ctx);
+      final newUser = User.fromMap(userMap).copyWith(roles: roles);
       return newUser;
     });
   }
@@ -296,9 +344,14 @@ class Database {
   // Обновить пользователя
   Future<User?> updateUser(
       int id, {
+        String? email,
         String? firstName,
         String? lastName,
+        String? middleName,
         String? phone,
+        String? gender,
+        int? age,
+        int? updatedBy,
       }) async {
     try {
       final conn = await connection;
@@ -306,6 +359,10 @@ class Database {
       final setParts = <String>[];
       final parameters = <String, dynamic>{'id': id};
 
+      if (email != null) {
+        setParts.add('email = @email');
+        parameters['email'] = email;
+      }
       if (firstName != null) {
         setParts.add('first_name = @firstName');
         parameters['firstName'] = firstName;
@@ -314,9 +371,22 @@ class Database {
         setParts.add('last_name = @lastName');
         parameters['lastName'] = lastName;
       }
+      if (middleName != null) {
+        setParts.add('middle_name = @middleName');
+        parameters['middleName'] = middleName;
+      }
       if (phone != null) {
         setParts.add('phone = @phone');
         parameters['phone'] = phone;
+      }
+      if (gender != null) {
+        // В базе gender хранится как SMALLINT, 0 для мужского, 1 для женского
+        setParts.add('gender = @gender');
+        parameters['gender'] = gender == 'мужской' ? 0 : 1;
+      }
+      if (age != null) {
+        setParts.add('age = @age');
+        parameters['age'] = age;
       }
 
       if (setParts.isEmpty) {
@@ -325,6 +395,10 @@ class Database {
 
       setParts.add('updated_at = @updatedAt');
       parameters['updatedAt'] = DateTime.now();
+      if (updatedBy != null) {
+        setParts.add('updated_by = @updatedBy');
+        parameters['updatedBy'] = updatedBy;
+      }
 
       final sql = '''
         UPDATE users 
@@ -787,30 +861,142 @@ class Database {
 
   // Получить данные антропометрии для клиента
   Future<Map<String, dynamic>> getAnthropometryData(int clientId) async {
-    // TODO: Implement actual database query
-    print('Fetching anthropometry data for client $clientId');
-    // Placeholder implementation
-    return {
-      'fixed': {
-        'height': 180,
-        'wrist_circ': 18,
-        'ankle_circ': 22,
-      },
-      'start': {
-        'weight': 85,
-        'shoulders_circ': 120,
-        'breast_circ': 100,
-        'waist_circ': 90,
-        'hips_circ': 100,
-      },
-      'finish': {
-        'weight': 75,
-        'shoulders_circ': 115,
-        'breast_circ': 95,
-        'waist_circ': 80,
-        'hips_circ': 95,
-      },
-    };
+    try {
+      final conn = await connection;
+      final fixedResult = await conn.execute(
+        Sql.named('SELECT * FROM anthropometry_fix WHERE user_id = @clientId'),
+        parameters: {'clientId': clientId},
+      );
+      final startResult = await conn.execute(
+        Sql.named('SELECT * FROM anthropometry_start WHERE user_id = @clientId'),
+        parameters: {'clientId': clientId},
+      );
+      final finishResult = await conn.execute(
+        Sql.named('SELECT * FROM anthropometry_finish WHERE user_id = @clientId'),
+        parameters: {'clientId': clientId},
+      );
+
+      final fixedData = fixedResult.isNotEmpty ? _convertDateTimeToString(fixedResult.first.toColumnMap()) : {};
+      final startData = startResult.isNotEmpty ? _convertDateTimeToString(startResult.first.toColumnMap()) : {};
+      final finishData = finishResult.isNotEmpty ? _convertDateTimeToString(finishResult.first.toColumnMap()) : {};
+
+      return {
+        'fixed': fixedData,
+        'start': startData,
+        'finish': finishData,
+      };
+    } catch (e) {
+      print('❌ getAnthropometryData error: $e');
+      rethrow;
+    }
+  }
+
+  Map<String, dynamic> _convertDateTimeToString(Map<String, dynamic> map) {
+    final newMap = <String, dynamic>{};
+    map.forEach((key, value) {
+      if (value is DateTime) {
+        newMap[key] = value.toIso8601String();
+      } else {
+        newMap[key] = value;
+      }
+    });
+    return newMap;
+  }
+
+  Future<void> updateAnthropometryPhoto(int clientId, String photoUrl, String type, DateTime photoDateTime) async {
+    try {
+      final conn = await connection;
+      final tableName = type == 'start' ? 'anthropometry_start' : 'anthropometry_finish';
+      await conn.execute(
+        Sql.named('''
+          INSERT INTO $tableName (user_id, photo, photo_date_time)
+          VALUES (@clientId, @photoUrl, @photoDateTime)
+          ON CONFLICT (user_id) DO UPDATE
+          SET photo = @photoUrl, photo_date_time = @photoDateTime
+        '''),
+        parameters: {
+          'photoUrl': photoUrl,
+          'clientId': clientId,
+          'photoDateTime': photoDateTime,
+        },
+      );
+    } catch (e) {
+      print('❌ updateAnthropometryPhoto error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateAnthropometryFixed(
+    int clientId,
+    int? height,
+    int? wristCirc,
+    int? ankleCirc,
+  ) async {
+    try {
+      final conn = await connection;
+      await conn.execute(
+        Sql.named('''
+          INSERT INTO anthropometry_fix (user_id, height, wrist_circ, ankle_circ)
+          VALUES (@clientId, @height, @wristCirc, @ankleCirc)
+          ON CONFLICT (user_id) DO UPDATE
+          SET 
+            height = @height,
+            wrist_circ = @wristCirc,
+            ankle_circ = @ankleCirc
+        '''),
+        parameters: {
+          'clientId': clientId,
+          'height': height,
+          'wristCirc': wristCirc,
+          'ankleCirc': ankleCirc,
+        },
+      );
+    } catch (e) {
+      print('❌ updateAnthropometryFixed error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateAnthropometryMeasurements(
+    int clientId,
+    String type, // 'start' or 'finish'
+    double? weight,
+    int? shouldersCirc,
+    int? breastCirc,
+    int? waistCirc,
+    int? hipsCirc,
+    int? bmr,
+  ) async {
+    try {
+      final conn = await connection;
+      final tableName = type == 'start' ? 'anthropometry_start' : 'anthropometry_finish';
+      await conn.execute(
+        Sql.named('''
+          INSERT INTO $tableName (user_id, weight, shoulders_circ, breast_circ, waist_circ, hips_circ, bmr)
+          VALUES (@clientId, @weight, @shouldersCirc, @breastCirc, @waistCirc, @hipsCirc, @bmr)
+          ON CONFLICT (user_id) DO UPDATE
+          SET 
+            weight = @weight,
+            shoulders_circ = @shouldersCirc,
+            breast_circ = @breastCirc,
+            waist_circ = @waistCirc,
+            hips_circ = @hipsCirc,
+            bmr = @bmr
+        '''),
+        parameters: {
+          'clientId': clientId,
+          'weight': weight,
+          'shouldersCirc': shouldersCirc,
+          'breastCirc': breastCirc,
+          'waistCirc': waistCirc,
+          'hipsCirc': hipsCirc,
+          'bmr': bmr,
+        },
+      );
+    } catch (e) {
+      print('❌ updateAnthropometryMeasurements error: $e');
+      rethrow;
+    }
   }
 
   // Получить данные отслеживания калорий для клиента
@@ -1066,6 +1252,44 @@ class Database {
             archived_by BIGINT,
             company_id BIGINT DEFAULT -1
         )
+      ''');
+
+      await conn.execute('''
+        CREATE TABLE IF NOT EXISTS anthropometry_fix (
+            user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            date_time TIMESTAMPTZ DEFAULT NOW(),
+            height INT,
+            wrist_circ INT,
+            ankle_circ INT
+        );
+      ''');
+
+      await conn.execute('''
+        CREATE TABLE IF NOT EXISTS anthropometry_start (
+            user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            date_time TIMESTAMPTZ DEFAULT NOW(),
+            photo VARCHAR(255),
+            weight REAL,
+            shoulders_circ INT,
+            breast_circ INT,
+            waist_circ INT,
+            hips_circ INT,
+            bmr INT
+        );
+      ''');
+
+      await conn.execute('''
+        CREATE TABLE IF NOT EXISTS anthropometry_finish (
+            user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            date_time TIMESTAMPTZ DEFAULT NOW(),
+            photo VARCHAR(255),
+            weight REAL,
+            shoulders_circ INT,
+            breast_circ INT,
+            waist_circ INT,
+            hips_circ INT,
+            bmr INT
+        );
       ''');
 
       //print('✅ Database tables initialized');
