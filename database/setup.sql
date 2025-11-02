@@ -99,7 +99,7 @@ CREATE TABLE user_roles (
     created_by BIGINT REFERENCES users(id),
     updated_by BIGINT REFERENCES users(id),
     archived_at TIMESTAMPTZ,
-    archived_by BIGINT REFERENCES users(id),
+    archived_by BIGINT REFERENCES users(id),Начало
     PRIMARY KEY (user_id, role_id)
 );
 

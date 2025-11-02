@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:before_after/before_after.dart';
+import 'package:fitman_app/widgets/image_comparison_slider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
@@ -165,7 +165,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                       const SizedBox(height: 10),
                       SizedBox(
                         height: 400, // Make comparison view larger
-                        child: BeforeAfter(
+                        child: ImageComparisonSlider(
                           before: Image.network(
                             Uri.parse(ApiService.baseUrl).replace(path: _startPhotoUrl!).toString(),
                             fit: BoxFit.contain,

@@ -970,10 +970,11 @@ class Database {
     try {
       final conn = await connection;
       final tableName = type == 'start' ? 'anthropometry_start' : 'anthropometry_finish';
+      final now = DateTime.now();
       await conn.execute(
         Sql.named('''
-          INSERT INTO $tableName (user_id, weight, shoulders_circ, breast_circ, waist_circ, hips_circ, bmr)
-          VALUES (@clientId, @weight, @shouldersCirc, @breastCirc, @waistCirc, @hipsCirc, @bmr)
+          INSERT INTO $tableName (user_id, weight, shoulders_circ, breast_circ, waist_circ, hips_circ, bmr, date_time)
+          VALUES (@clientId, @weight, @shouldersCirc, @breastCirc, @waistCirc, @hipsCirc, @bmr, @now)
           ON CONFLICT (user_id) DO UPDATE
           SET 
             weight = @weight,
@@ -981,7 +982,8 @@ class Database {
             breast_circ = @breastCirc,
             waist_circ = @waistCirc,
             hips_circ = @hipsCirc,
-            bmr = @bmr
+            bmr = @bmr,
+            date_time = @now
         '''),
         parameters: {
           'clientId': clientId,
@@ -991,6 +993,7 @@ class Database {
           'waistCirc': waistCirc,
           'hipsCirc': hipsCirc,
           'bmr': bmr,
+          'now': now,
         },
       );
     } catch (e) {

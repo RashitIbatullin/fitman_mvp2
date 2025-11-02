@@ -200,7 +200,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildMeasurementsCard(
-                          'Конец',
+                          'Окончание',
                           data.finish,
                           _finishPhotoUrl,
                           'finish',
@@ -237,6 +237,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
           labelText: label,
           border: const OutlineInputBorder(),
           isDense: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
         ),
         keyboardType: isInt || isDouble ? TextInputType.number : TextInputType
             .text,

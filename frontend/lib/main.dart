@@ -1,4 +1,5 @@
 import 'package:fitman_app/screens/auth_wrapper.dart';
+import 'package:fitman_app/utils/my_custom_scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
+      scrollBehavior: MyCustomScrollBehavior(),
       home: AuthWrapper(), // Используем AuthWrapper как главный экран
     );
   }

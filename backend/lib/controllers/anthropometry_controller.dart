@@ -115,7 +115,7 @@ class AnthropometryController {
       final data = jsonDecode(body) as Map<String, dynamic>;
 
       final type = data['type'] as String; // 'start' or 'finish'
-      final weight = data['weight'] as double?;
+      final weight = (data['weight'] as num?)?.toDouble();
       final shouldersCirc = data['shouldersCirc'] as int?;
       final breastCirc = data['breastCirc'] as int?;
       final waistCirc = data['waistCirc'] as int?;
@@ -141,7 +141,7 @@ class AnthropometryController {
     } catch (e, s) {
       print('Update measurements anthropometry error: $e');
       print(s);
-      return Response.internalServerError(body: jsonEncode({'error': 'Internal server error'}));
+      return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
     }
   }
 }

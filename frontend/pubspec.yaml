@@ -21,7 +21,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   json_annotation: ^4.9.0
-  before_after: ^3.2.0
+
   file_picker: ^8.0.0
 
 dev_dependencies:
