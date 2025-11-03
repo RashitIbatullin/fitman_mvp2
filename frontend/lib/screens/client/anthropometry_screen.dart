@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:fitman_app/models/anthropometry_data.dart';
 import 'package:fitman_app/screens/client/photo_comparison_screen.dart';
 import 'package:fitman_app/services/api_service.dart';
