@@ -1,5 +1,9 @@
 import 'dart:io';
 
+import 'package:fitman_backend/config/app_config.dart';
+import 'package:fitman_backend/config/database.dart';
+import 'package:fitman_backend/middleware/cors_middleware.dart';
+import 'package:fitman_backend/routes/router.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
@@ -7,11 +11,6 @@ import 'package:shelf_helmet/shelf_helmet.dart';
 import 'package:shelf_static/shelf_static.dart';
 import 'package:path/path.dart' as p;
 import 'package:shelf_router/shelf_router.dart';
-
-import '../lib/routes/router.dart';
-import '../lib/config/database.dart';
-import  '../lib/config/app_config.dart';
-import '../lib/middleware/cors_middleware.dart';
 
 void main(List<String> args) async {
   // Формируем абсолютный путь к директории uploads

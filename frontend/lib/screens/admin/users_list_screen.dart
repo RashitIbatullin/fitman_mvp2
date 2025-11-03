@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_front.dart';
@@ -356,7 +357,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                       ),
 
                       color: isSelected
-                          ? Theme.of(context).primaryColor.withOpacity(0.1)
+                          ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).round())
                           : null,
 
                       child: ListTile(

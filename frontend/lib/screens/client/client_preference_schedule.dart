@@ -235,9 +235,11 @@ class _ClientPreferenceScheduleState
               }
             });
 
+            final messenger = ScaffoldMessenger.of(context);
+
             try {
               await ApiService.saveClientPreferences(preferencesToSave);
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: const Text('Предпочтения сохранены!'),
                   backgroundColor: Colors.green,
@@ -247,7 +249,7 @@ class _ClientPreferenceScheduleState
               // Re-fetch preferences to ensure UI is updated if needed
               _fetchClientPreferences();
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text('Ошибка сохранения предпочтений: $e'),
                   backgroundColor: Colors.red,

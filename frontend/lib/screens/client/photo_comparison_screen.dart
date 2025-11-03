@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
-import 'package:fitman_app/models/user_front.dart';
 
 class PhotoComparisonScreen extends ConsumerStatefulWidget {
   final String? initialStartPhotoUrl;
@@ -140,15 +139,16 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
 
     final canUploadPhoto = user != null && (!user.roles.any((role) => role.name == 'client') || user.roles.length > 1);
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false, // Prevent default back button behavior
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return; // If the system already popped, do nothing
         Navigator.pop(context, {
           'startPhotoUrl': _startPhotoUrl,
           'finishPhotoUrl': _finishPhotoUrl,
           'startPhotoDateTime': _startPhotoDateTime,
           'finishPhotoDateTime': _finishPhotoDateTime,
         });
-        return false;
       },
       child: Scaffold(
         appBar: AppBar(

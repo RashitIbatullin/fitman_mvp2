@@ -46,8 +46,7 @@ class _ImageComparisonSliderState extends State<ImageComparisonSlider> {
                 top: 0,
                 bottom: 0,
                 child: Container(
-                  width: 4,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withAlpha((0.7 * 255).round()),
                 ),
               ),
               Positioned(
@@ -58,7 +57,7 @@ class _ImageComparisonSliderState extends State<ImageComparisonSlider> {
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withAlpha((0.7 * 255).round()),
                   ),
                   child: const Icon(
                     Icons.unfold_more,

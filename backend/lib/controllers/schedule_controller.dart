@@ -43,9 +43,6 @@ class ScheduleController {
         return Response(403, body: jsonEncode({'error': 'Insufficient permissions'}));
       }
 
-      final body = await request.readAsString();
-      final data = jsonDecode(body) as Map<String, dynamic>;
-
       // В MVP1 просто возвращаем успех
       return Response(201, body: jsonEncode({
         'message': 'Schedule created successfully',

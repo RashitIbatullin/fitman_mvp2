@@ -202,7 +202,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedGender,
+              initialValue: _selectedGender,
               decoration: const InputDecoration(
                 labelText: 'Пол',
                 border: OutlineInputBorder(),
@@ -300,7 +300,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
             if (_sendNotification) ...[
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
-                value: _hourNotification,
+                initialValue: _hourNotification,
                 decoration: const InputDecoration(
                   labelText: 'Уведомление до начала занятий (часов)',
                   border: OutlineInputBorder(),
