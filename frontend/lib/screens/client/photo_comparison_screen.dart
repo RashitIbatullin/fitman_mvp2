@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fitman_app/providers/auth_provider.dart';
+import 'package:fitman_app/models/user_front.dart';
 
 class PhotoComparisonScreen extends ConsumerStatefulWidget {
   final String? initialStartPhotoUrl;
@@ -92,7 +94,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   }
 
   Widget _buildPhotoSection(
-      String? photoUrl, DateTime? photoDateTime, String title, String type) {
+      String? photoUrl, DateTime? photoDateTime, String title, String type, bool canUploadPhoto) {
     // Simple date formatting, for better formatting, use the intl package
     final formattedDate = photoDateTime != null
         ? '${photoDateTime.day.toString().padLeft(2, '0')}.${photoDateTime.month.toString().padLeft(2, '0')}.${photoDateTime.year} ${photoDateTime.hour.toString().padLeft(2, '0')}:${photoDateTime.minute.toString().padLeft(2, '0')}'
@@ -122,16 +124,22 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
         const SizedBox(height: 8),
         Text(formattedDate),
         const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: () => _pickAndUploadImage(type),
-          child: const Text('Загрузить фото'),
-        ),
+        if (canUploadPhoto)
+          ElevatedButton(
+            onPressed: () => _pickAndUploadImage(type),
+            child: const Text('Загрузить фото'),
+          ),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final user = authState.value?.user;
+
+    final canUploadPhoto = user != null && (!user.roles.any((role) => role.name == 'client') || user.roles.length > 1);
+
     return WillPopScope(
       onWillPop: () async {
         Navigator.pop(context, {
@@ -153,30 +161,25 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
               if (_startPhotoUrl != null && _finishPhotoUrl != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Column(
-                    children: [
-                      Text("Сравнение", style: Theme.of(context).textTheme.headlineSmall),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Перетащите ползунок, чтобы сравнить фотографии:',
-                        style: TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 400, // Make comparison view larger
-                        child: ImageComparisonSlider(
-                          before: Image.network(
-                            Uri.parse(ApiService.baseUrl).replace(path: _startPhotoUrl!).toString(),
-                            fit: BoxFit.contain,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return Scaffold(
+                          appBar: AppBar(title: const Text('Сравнение')),
+                          body: ImageComparisonSlider(
+                            before: Image.network(
+                              Uri.parse(ApiService.baseUrl).replace(path: _startPhotoUrl!).toString(),
+                              fit: BoxFit.contain,
+                            ),
+                            after: Image.network(
+                              Uri.parse(ApiService.baseUrl).replace(path: _finishPhotoUrl!).toString(),
+                              fit: BoxFit.contain,
+                            ),
                           ),
-                          after: Image.network(
-                            Uri.parse(ApiService.baseUrl).replace(path: _finishPhotoUrl!).toString(),
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                    ],
+                        );
+                      }));
+                    },
+                    child: const Text('Сравнить'),
                   ),
                 )
               else
@@ -193,12 +196,12 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                 children: [
                   Expanded(
                     child: _buildPhotoSection(
-                        _startPhotoUrl, _startPhotoDateTime, 'Начало', 'start'),
+                        _startPhotoUrl, _startPhotoDateTime, 'Начало', 'start', canUploadPhoto),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildPhotoSection(_finishPhotoUrl,
-                        _finishPhotoDateTime, 'Окончание', 'finish'),
+                        _finishPhotoDateTime, 'Окончание', 'finish', canUploadPhoto),
                   ),
                 ],
               ),
