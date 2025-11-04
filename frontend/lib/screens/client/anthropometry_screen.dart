@@ -64,7 +64,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
   late TextEditingController _startBreastCircController;
   late TextEditingController _startWaistCircController;
   late TextEditingController _startHipsCircController;
-  late TextEditingController _startBmrController;
 
   // Controllers for anthropometry_finish
   late TextEditingController _finishWeightController;
@@ -72,7 +71,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
   late TextEditingController _finishBreastCircController;
   late TextEditingController _finishWaistCircController;
   late TextEditingController _finishHipsCircController;
-  late TextEditingController _finishBmrController;
 
   // Flag to ensure controllers are initialized only once
   bool _controllersInitialized = false;
@@ -109,13 +107,11 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
     _startBreastCircController.dispose();
     _startWaistCircController.dispose();
     _startHipsCircController.dispose();
-    _startBmrController.dispose();
     _finishWeightController.dispose();
     _finishShouldersCircController.dispose();
     _finishBreastCircController.dispose();
     _finishWaistCircController.dispose();
     _finishHipsCircController.dispose();
-    _finishBmrController.dispose();
     super.dispose();
   }
 
@@ -148,8 +144,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
         TextEditingController(text: start.waistCirc?.toString() ?? '');
     _startHipsCircController =
         TextEditingController(text: start.hipsCirc?.toString() ?? '');
-    _startBmrController =
-        TextEditingController(text: start.bmr?.toString() ?? '');
 
     _finishWeightController =
         TextEditingController(text: finish.weight?.toString() ?? '');
@@ -161,8 +155,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
         TextEditingController(text: finish.waistCirc?.toString() ?? '');
     _finishHipsCircController =
         TextEditingController(text: finish.hipsCirc?.toString() ?? '');
-    _finishBmrController =
-        TextEditingController(text: finish.bmr?.toString() ?? '');
 
     _startBodyShape = calculateBodyShape(
       shouldersCirc: start.shouldersCirc,
@@ -297,7 +289,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                           _startBreastCircController,
                           _startWaistCircController,
                           _startHipsCircController,
-                          _startBmrController,
                           _isStartEditing,
                           canEdit,
                           _startBodyShape,
@@ -309,7 +300,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                               final currentBreastCirc = int.tryParse(_startBreastCircController.text);
                               final currentWaistCirc = int.tryParse(_startWaistCircController.text);
                               final currentHipsCirc = int.tryParse(_startHipsCircController.text);
-                              final currentBmr = int.tryParse(_startBmrController.text);
 
                               try {
                                 await ApiService.updateAnthropometryMeasurements(
@@ -320,7 +310,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                                   breastCirc: currentBreastCirc ?? 0,
                                   waistCirc: currentWaistCirc ?? 0,
                                   hipsCirc: currentHipsCirc ?? 0,
-                                  bmr: currentBmr ?? 0,
                                 );
                                 ref.invalidate(anthropometryProvider(widget.clientId));
                                 setState(() {
@@ -342,7 +331,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                             _startBreastCircController.text = data.start.breastCirc?.toString() ?? '';
                             _startWaistCircController.text = data.start.waistCirc?.toString() ?? '';
                             _startHipsCircController.text = data.start.hipsCirc?.toString() ?? '';
-                            _startBmrController.text = data.start.bmr?.toString() ?? '';
                             setState(() { _isStartEditing = false; });
                           },
                         ),
@@ -359,7 +347,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                           _finishBreastCircController,
                           _finishWaistCircController,
                           _finishHipsCircController,
-                          _finishBmrController,
                           _isFinishEditing,
                           canEdit,
                           finishBodyShape,
@@ -371,7 +358,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                               final currentBreastCirc = int.tryParse(_finishBreastCircController.text);
                               final currentWaistCirc = int.tryParse(_finishWaistCircController.text);
                               final currentHipsCirc = int.tryParse(_finishHipsCircController.text);
-                              final currentBmr = int.tryParse(_finishBmrController.text);
 
                               try {
                                 await ApiService.updateAnthropometryMeasurements(
@@ -382,7 +368,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                                   breastCirc: currentBreastCirc ?? 0,
                                   waistCirc: currentWaistCirc ?? 0,
                                   hipsCirc: currentHipsCirc ?? 0,
-                                  bmr: currentBmr ?? 0,
                                 );
                                 ref.invalidate(anthropometryProvider(widget.clientId));
                                 setState(() {
@@ -404,7 +389,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                             _finishBreastCircController.text = data.finish.breastCirc?.toString() ?? '';
                             _finishWaistCircController.text = data.finish.waistCirc?.toString() ?? '';
                             _finishHipsCircController.text = data.finish.hipsCirc?.toString() ?? '';
-                            _finishBmrController.text = data.finish.bmr?.toString() ?? '';
                             setState(() { _isFinishEditing = false; });
                           },
                         ),
@@ -549,7 +533,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
       TextEditingController breastCircController,
       TextEditingController waistCircController,
       TextEditingController hipsCircController,
-      TextEditingController bmrController,
       bool isEditing, // New parameter
       bool canEdit,
       String? bodyShape,
@@ -601,8 +584,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                 isEditing: isEditing, focusNode: type == 'start' ? _startWaistCircFocusNode : null),
             _buildEditableField('Обхват бедер', hipsCircController, isInt: true,
                 isEditing: isEditing, focusNode: type == 'start' ? _startHipsCircFocusNode : null),
-            _buildEditableField(
-                'BMR', bmrController, isInt: true, isEditing: isEditing),
             if (whtrRatio != null && (bodyShape == 'Яблоко' || bodyShape == 'Перевернутый треугольник')) ...[
               const SizedBox(height: 8),
               Text('WHtR: ${whtrRatio.toStringAsFixed(2)}'),

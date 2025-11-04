@@ -357,7 +357,12 @@ CREATE TABLE anthropometry_fix (
     date_time TIMESTAMPTZ DEFAULT NOW(),
     height INT,
     wrist_circ INT,
-    ankle_circ INT
+    ankle_circ INT,
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id)
 );
 
 CREATE TABLE anthropometry_start (
@@ -370,7 +375,11 @@ CREATE TABLE anthropometry_start (
     breast_circ INT,
     waist_circ INT,
     hips_circ INT,
-    bmr INT
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id)
 );
 
 CREATE TABLE anthropometry_finish (
@@ -383,7 +392,11 @@ CREATE TABLE anthropometry_finish (
     breast_circ INT,
     waist_circ INT,
     hips_circ INT,
-    bmr INT
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id)
 );
 
 END $$;

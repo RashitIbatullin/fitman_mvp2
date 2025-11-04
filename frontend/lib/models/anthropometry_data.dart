@@ -44,7 +44,6 @@ class AnthropometryMeasurements {
   final int? breastCirc;
   final int? waistCirc;
   final int? hipsCirc;
-  final int? bmr;
   final String? photo;
   final DateTime? photoDateTime;
 
@@ -54,7 +53,6 @@ class AnthropometryMeasurements {
     this.breastCirc,
     this.waistCirc,
     this.hipsCirc,
-    this.bmr,
     this.photo,
     this.photoDateTime,
   });
@@ -66,7 +64,6 @@ class AnthropometryMeasurements {
       breastCirc: json['breast_circ'],
       waistCirc: json['waist_circ'],
       hipsCirc: json['hips_circ'],
-      bmr: json['bmr'],
       photo: json['photo'],
       photoDateTime: json['photo_date_time'] != null
           ? DateTime.parse(json['photo_date_time'])

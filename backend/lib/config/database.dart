@@ -903,21 +903,22 @@ class Database {
     return newMap;
   }
 
-  Future<void> updateAnthropometryPhoto(int clientId, String photoUrl, String type, DateTime? photoDateTime) async {
+  Future<void> updateAnthropometryPhoto(int clientId, String photoUrl, String type, DateTime? photoDateTime, int creatorId) async {
     try {
       final conn = await connection;
       final tableName = type == 'start' ? 'anthropometry_start' : 'anthropometry_finish';
       await conn.execute(
         Sql.named('''
-          INSERT INTO $tableName (user_id, photo, photo_date_time)
-          VALUES (@clientId, @photoUrl, @photoDateTime)
+          INSERT INTO $tableName (user_id, photo, photo_date_time, created_by, updated_by)
+          VALUES (@clientId, @photoUrl, @photoDateTime, @creatorId, @creatorId)
           ON CONFLICT (user_id) DO UPDATE
-          SET photo = @photoUrl, photo_date_time = @photoDateTime
+          SET photo = @photoUrl, photo_date_time = @photoDateTime, updated_at = NOW(), updated_by = @creatorId
         '''),
         parameters: {
           'photoUrl': photoUrl,
           'clientId': clientId,
           'photoDateTime': photoDateTime ?? DateTime.now(),
+          'creatorId': creatorId,
         },
       );
     } catch (e) {
@@ -931,24 +932,28 @@ class Database {
     int? height,
     int? wristCirc,
     int? ankleCirc,
+    int creatorId,
   ) async {
     try {
       final conn = await connection;
       await conn.execute(
         Sql.named('''
-          INSERT INTO anthropometry_fix (user_id, height, wrist_circ, ankle_circ)
-          VALUES (@clientId, @height, @wristCirc, @ankleCirc)
+          INSERT INTO anthropometry_fix (user_id, height, wrist_circ, ankle_circ, created_by, updated_by)
+          VALUES (@clientId, @height, @wristCirc, @ankleCirc, @creatorId, @creatorId)
           ON CONFLICT (user_id) DO UPDATE
           SET 
             height = @height,
             wrist_circ = @wristCirc,
-            ankle_circ = @ankleCirc
+            ankle_circ = @ankleCirc,
+            updated_at = NOW(),
+            updated_by = @creatorId
         '''),
         parameters: {
           'clientId': clientId,
           'height': height,
           'wristCirc': wristCirc,
           'ankleCirc': ankleCirc,
+          'creatorId': creatorId,
         },
       );
     } catch (e) {
@@ -965,7 +970,7 @@ class Database {
     int? breastCirc,
     int? waistCirc,
     int? hipsCirc,
-    int? bmr,
+    int creatorId,
   ) async {
     try {
       final conn = await connection;
@@ -973,8 +978,8 @@ class Database {
       final now = DateTime.now();
       await conn.execute(
         Sql.named('''
-          INSERT INTO $tableName (user_id, weight, shoulders_circ, breast_circ, waist_circ, hips_circ, bmr, date_time)
-          VALUES (@clientId, @weight, @shouldersCirc, @breastCirc, @waistCirc, @hipsCirc, @bmr, @now)
+          INSERT INTO $tableName (user_id, weight, shoulders_circ, breast_circ, waist_circ, hips_circ, date_time, created_by, updated_by)
+          VALUES (@clientId, @weight, @shouldersCirc, @breastCirc, @waistCirc, @hipsCirc, @now, @creatorId, @creatorId)
           ON CONFLICT (user_id) DO UPDATE
           SET 
             weight = @weight,
@@ -982,8 +987,9 @@ class Database {
             breast_circ = @breastCirc,
             waist_circ = @waistCirc,
             hips_circ = @hipsCirc,
-            bmr = @bmr,
-            date_time = @now
+            date_time = @now,
+            updated_at = NOW(),
+            updated_by = @creatorId
         '''),
         parameters: {
           'clientId': clientId,
@@ -992,8 +998,8 @@ class Database {
           'breastCirc': breastCirc,
           'waistCirc': waistCirc,
           'hipsCirc': hipsCirc,
-          'bmr': bmr,
           'now': now,
+          'creatorId': creatorId,
         },
       );
     } catch (e) {

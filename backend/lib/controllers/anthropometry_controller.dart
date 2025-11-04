@@ -81,7 +81,8 @@ class AnthropometryController {
       final photoUrl = '/uploads/$fileName';
 
       final now = photoDateTimeFromRequest ?? DateTime.now();
-      await Database().updateAnthropometryPhoto(clientId, photoUrl, type, now);
+      final creatorId = user['userId'] as int;
+      await Database().updateAnthropometryPhoto(clientId, photoUrl, type, now, creatorId);
 
       return Response.ok(jsonEncode({
         'url': photoUrl,
@@ -115,7 +116,8 @@ class AnthropometryController {
       final wristCirc = data['wristCirc'] as int?;
       final ankleCirc = data['ankleCirc'] as int?;
 
-      await Database().updateAnthropometryFixed(clientId, height, wristCirc, ankleCirc);
+      final creatorId = user['userId'] as int;
+      await Database().updateAnthropometryFixed(clientId, height, wristCirc, ankleCirc, creatorId);
 
       return Response.ok(jsonEncode({'message': 'Fixed anthropometry updated successfully'}));
     } catch (e, s) {
@@ -147,7 +149,6 @@ class AnthropometryController {
       final breastCirc = data['breastCirc'] as int?;
       final waistCirc = data['waistCirc'] as int?;
       final hipsCirc = data['hipsCirc'] as int?;
-      final bmr = data['bmr'] as int?;
 
       final type = data['type'] as String; // 'start' or 'finish'
 
@@ -155,6 +156,7 @@ class AnthropometryController {
         return Response.badRequest(body: jsonEncode({'error': 'Invalid anthropometry type. Must be \'start\' or \'finish\''}));
       }
 
+      final creatorId = user['userId'] as int;
       await Database().updateAnthropometryMeasurements(
         clientId,
         type,
@@ -163,7 +165,7 @@ class AnthropometryController {
         breastCirc,
         waistCirc,
         hipsCirc,
-        bmr,
+        creatorId,
       );
 
       return Response.ok(jsonEncode({'message': 'Measurements anthropometry updated successfully'}));

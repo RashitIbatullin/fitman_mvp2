@@ -955,7 +955,6 @@ class ApiService {
     required int breastCirc,
     required int waistCirc,
     required int hipsCirc,
-    required int bmr,
   }) async {
     try {
       final url = clientId != null
@@ -968,7 +967,6 @@ class ApiService {
         'breastCirc': breastCirc,
         'waistCirc': waistCirc,
         'hipsCirc': hipsCirc,
-        'bmr': bmr,
       };
       if (clientId != null) {
         body['clientId'] = clientId;
