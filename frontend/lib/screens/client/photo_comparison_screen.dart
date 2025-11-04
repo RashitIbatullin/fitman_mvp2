@@ -1,14 +1,12 @@
-import 'dart:convert';
 import 'package:fitman_app/widgets/image_comparison_slider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
 
 class PhotoComparisonScreen extends ConsumerStatefulWidget {
+  final int? clientId;
   final String? initialStartPhotoUrl;
   final String? initialFinishPhotoUrl;
   final DateTime? initialStartPhotoDateTime;
@@ -16,6 +14,7 @@ class PhotoComparisonScreen extends ConsumerStatefulWidget {
 
   const PhotoComparisonScreen({
     super.key,
+    this.clientId,
     this.initialStartPhotoUrl,
     this.initialFinishPhotoUrl,
     this.initialStartPhotoDateTime,
@@ -49,26 +48,15 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
       final fileBytes = result.files.single.bytes;
       final fileName = result.files.single.name;
       if (fileBytes != null) {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
+        try {
+          final responseData = await ApiService.uploadAnthropometryPhoto(
+            fileBytes,
+            fileName,
+            type,
+            clientId: widget.clientId,
+          );
 
-        final uri =
-            Uri.parse('${ApiService.baseUrl}/api/client/anthropometry/photo');
-        final request = http.MultipartRequest('POST', uri);
-        request.headers['Authorization'] = 'Bearer $token';
-        request.fields['type'] = type;
-        request.files.add(http.MultipartFile.fromBytes(
-          'photo',
-          fileBytes,
-          filename: fileName,
-        ));
-        final response = await request.send();
-
-        if (response.statusCode == 200) {
-          final responseBody = await response.stream.bytesToString();
-          final responseData = jsonDecode(responseBody);
           final newUrl = responseData['url'];
-          // Assuming backend might send photo_date_time, otherwise use now()
           final newDateTime = responseData['photo_date_time'] != null
               ? DateTime.parse(responseData['photo_date_time'])
               : DateTime.now();
@@ -82,11 +70,9 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
               _finishPhotoDateTime = newDateTime;
             }
           });
-        } else {
+        } catch (e) {
           // Handle error
-          final responseBody = await response.stream.bytesToString();
-          print('Image upload failed with status: ${response.statusCode}');
-          print('Response body: $responseBody');
+          print('Image upload failed: $e');
         }
       }
     }

@@ -866,7 +866,7 @@ class ApiService {
   }
 
   // Получение данных антропометрии для клиента
-  static Future<Map<String, dynamic>> getAnthropometryData() async {
+  static Future<Map<String, dynamic>> getOwnAnthropometryData() async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/client/anthropometry'),
@@ -888,20 +888,51 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getAnthropometryDataForClient(int clientId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/admin/clients/$clientId/anthropometry'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ??
+              'Failed to load anthropometry data with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Get anthropometry data error: $e');
+      rethrow;
+    }
+  }
+
   static Future<void> updateAnthropometryFixed({
+    int? clientId,
     required int height,
     required int wristCirc,
     required int ankleCirc,
   }) async {
     try {
+      final url = clientId != null
+          ? '$baseUrl/api/admin/clients/$clientId/anthropometry/fixed'
+          : '$baseUrl/api/client/anthropometry/fixed';
+      final body = {
+        'height': height,
+        'wristCirc': wristCirc,
+        'ankleCirc': ankleCirc,
+      };
+      if (clientId != null) {
+        body['clientId'] = clientId;
+      }
+
       final response = await http.post(
-        Uri.parse('$baseUrl/api/client/anthropometry/fixed'),
+        Uri.parse(url),
         headers: _headers,
-        body: jsonEncode({
-          'height': height,
-          'wristCirc': wristCirc,
-          'ankleCirc': ankleCirc,
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode != 200) {
@@ -917,6 +948,7 @@ class ApiService {
   }
 
   static Future<void> updateAnthropometryMeasurements({
+    int? clientId,
     required String type,
     required double weight,
     required int shouldersCirc,
@@ -926,18 +958,26 @@ class ApiService {
     required int bmr,
   }) async {
     try {
+      final url = clientId != null
+          ? '$baseUrl/api/admin/clients/$clientId/anthropometry/measurements'
+          : '$baseUrl/api/client/anthropometry/measurements';
+      final body = {
+        'type': type,
+        'weight': weight,
+        'shouldersCirc': shouldersCirc,
+        'breastCirc': breastCirc,
+        'waistCirc': waistCirc,
+        'hipsCirc': hipsCirc,
+        'bmr': bmr,
+      };
+      if (clientId != null) {
+        body['clientId'] = clientId;
+      }
+
       final response = await http.post(
-        Uri.parse('$baseUrl/api/client/anthropometry/measurements'),
+        Uri.parse(url),
         headers: _headers,
-        body: jsonEncode({
-          'type': type,
-          'weight': weight,
-          'shouldersCirc': shouldersCirc,
-          'breastCirc': breastCirc,
-          'waistCirc': waistCirc,
-          'hipsCirc': hipsCirc,
-          'bmr': bmr,
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode != 200) {
@@ -948,6 +988,49 @@ class ApiService {
       }
     } catch (e) {
       print('Update measurements anthropometry error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> uploadAnthropometryPhoto(
+    List<int> photoBytes,
+    String fileName,
+    String type,
+    {int? clientId}
+  ) async {
+    try {
+      final url = clientId != null
+          ? '$baseUrl/api/admin/clients/$clientId/anthropometry/photo'
+          : '$baseUrl/api/client/anthropometry/photo';
+      
+      var request = http.MultipartRequest('POST', Uri.parse(url));
+      request.headers.addAll({
+        'Authorization': 'Bearer $currentToken',
+      });
+      request.fields['type'] = type;
+      if (clientId != null) {
+        request.fields['clientId'] = clientId.toString();
+      }
+      request.files.add(http.MultipartFile.fromBytes(
+        'photo',
+        photoBytes,
+        filename: fileName,
+      ));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        return jsonDecode(responseBody) as Map<String, dynamic>;
+      } else {
+        final responseBody = await response.stream.bytesToString();
+        final errorData = jsonDecode(responseBody);
+        throw Exception(
+          errorData['error'] ?? 'Failed to upload photo with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Upload anthropometry photo error: $e');
       rethrow;
     }
   }

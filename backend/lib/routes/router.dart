@@ -154,6 +154,12 @@ final Router router = Router()
   ..post('/api/client/anthropometry/fixed', (Request request) => _protectedHandler(AnthropometryController.updateFixedAnthropometry)(request))
   ..post('/api/client/anthropometry/measurements', (Request request) => _protectedHandler(AnthropometryController.updateMeasurementsAnthropometry)(request))
 
+// Admin routes for client anthropometry
+  ..get('/api/admin/clients/<id>/anthropometry', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.getAnthropometryDataForClient(req, id))(request))
+  ..post('/api/admin/clients/<id>/anthropometry/photo', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.uploadPhoto(req, id))(request))
+  ..post('/api/admin/clients/<id>/anthropometry/fixed', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.updateFixedAnthropometry(req, id))(request))
+  ..post('/api/admin/clients/<id>/anthropometry/measurements', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.updateMeasurementsAnthropometry(req, id))(request))
+
 // Work Schedule routes
   ..get('/api/work-schedules', (Request request) => _protectedHandler(WorkScheduleController.getWorkSchedules)(request))
   ..post('/api/work-schedules', (Request request) => _adminHandler(WorkScheduleController.createWorkSchedule)(request))

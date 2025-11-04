@@ -5,14 +5,20 @@ import 'package:shelf_multipart/shelf_multipart.dart';
 import '../config/database.dart';
 
 class AnthropometryController {
-  static Future<Response> getAnthropometryDataForClient(Request request) async {
+  static Future<Response> getAnthropometryDataForClient(Request request, [String? id]) async {
     try {
       final user = request.context['user'] as Map<String, dynamic>?;
       if (user == null) {
         return Response.unauthorized(jsonEncode({'error': 'Not authenticated'}));
       }
 
-      final clientId = user['userId'] as int;
+      int clientId;
+      if (id != null) {
+        clientId = int.parse(id);
+      } else {
+        clientId = user['userId'] as int;
+      }
+      print('[getAnthropometryDataForClient] Authenticated userId: ${user['userId']}, Using clientId: $clientId');
       final data = await Database().getAnthropometryData(clientId);
 
       return Response.ok(jsonEncode(data));
@@ -22,14 +28,21 @@ class AnthropometryController {
     }
   }
 
-  static Future<Response> uploadPhoto(Request request) async {
+  static Future<Response> uploadPhoto(Request request, [String? id]) async {
     try {
       final user = request.context['user'] as Map<String, dynamic>?;
       if (user == null) {
         return Response.unauthorized(jsonEncode({'error': 'Not authenticated'}));
       }
 
-      final clientId = user['userId'] as int;
+      int clientId;
+      if (id != null) {
+        clientId = int.parse(id);
+      } else {
+        clientId = user['userId'] as int;
+      }
+      print('[uploadPhoto] Authenticated userId: ${user['userId']}, Using clientId: $clientId');
+
       String? type;
       String? fileName;
       List<int>? fileBytes;
@@ -78,17 +91,23 @@ class AnthropometryController {
     }
   }
 
-  static Future<Response> updateFixedAnthropometry(Request request) async {
+  static Future<Response> updateFixedAnthropometry(Request request, [String? id]) async {
     try {
       final user = request.context['user'] as Map<String, dynamic>?;
       if (user == null) {
         return Response.unauthorized(jsonEncode({'error': 'Not authenticated'}));
       }
-      final clientId = user['userId'] as int;
+
+      int clientId;
+      if (id != null) {
+        clientId = int.parse(id);
+      } else {
+        clientId = user['userId'] as int;
+      }
+      print('[updateFixedAnthropometry] Authenticated userId: ${user['userId']}, Using clientId: $clientId');
 
       final body = await request.readAsString();
       final data = jsonDecode(body) as Map<String, dynamic>;
-
       final height = data['height'] as int?;
       final wristCirc = data['wristCirc'] as int?;
       final ankleCirc = data['ankleCirc'] as int?;
@@ -103,24 +122,31 @@ class AnthropometryController {
     }
   }
 
-  static Future<Response> updateMeasurementsAnthropometry(Request request) async {
+  static Future<Response> updateMeasurementsAnthropometry(Request request, [String? id]) async {
     try {
       final user = request.context['user'] as Map<String, dynamic>?;
       if (user == null) {
         return Response.unauthorized(jsonEncode({'error': 'Not authenticated'}));
       }
-      final clientId = user['userId'] as int;
+
+      int clientId;
+      if (id != null) {
+        clientId = int.parse(id);
+      } else {
+        clientId = user['userId'] as int;
+      }
+      print('[updateMeasurementsAnthropometry] Authenticated userId: ${user['userId']}, Using clientId: $clientId');
 
       final body = await request.readAsString();
       final data = jsonDecode(body) as Map<String, dynamic>;
-
-      final type = data['type'] as String; // 'start' or 'finish'
       final weight = (data['weight'] as num?)?.toDouble();
       final shouldersCirc = data['shouldersCirc'] as int?;
       final breastCirc = data['breastCirc'] as int?;
       final waistCirc = data['waistCirc'] as int?;
       final hipsCirc = data['hipsCirc'] as int?;
       final bmr = data['bmr'] as int?;
+
+      final type = data['type'] as String; // 'start' or 'finish'
 
       if (type != 'start' && type != 'finish') {
         return Response.badRequest(body: jsonEncode({'error': 'Invalid anthropometry type. Must be \'start\' or \'finish\''}));

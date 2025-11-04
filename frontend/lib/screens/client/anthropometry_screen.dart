@@ -7,13 +7,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/utils/body_shape_calculator.dart';
 
-final anthropometryProvider = FutureProvider<AnthropometryData>((ref) async {
-  final data = await ApiService.getAnthropometryData();
-  return AnthropometryData.fromJson(data);
+final anthropometryProvider = FutureProvider.family<AnthropometryData, int?>((ref, clientId) async {
+  final authUser = ref.watch(authProvider).value?.user;
+  if (authUser == null) {
+    throw Exception('User not authenticated');
+  }
+
+  final isAdmin = authUser.roles.any((role) => role.name == 'admin');
+  // TODO: Expand this role check to include manager, trainer, instructor roles when they can edit client data.
+
+  // If an admin is viewing a specific client's page, clientId will be passed.
+  // If a client is viewing their own page, clientId will also be passed (it will be their own id).
+  if (isAdmin && clientId != null && clientId != authUser.id) {
+    final data = await ApiService.getAnthropometryDataForClient(clientId);
+    return AnthropometryData.fromJson(data);
+  } else {
+    // This covers the client viewing their own data, and an admin viewing their own data.
+    final data = await ApiService.getOwnAnthropometryData();
+    return AnthropometryData.fromJson(data);
+  }
 });
 
 class AnthropometryScreen extends ConsumerStatefulWidget {
-  const AnthropometryScreen({super.key});
+  final int? clientId;
+  const AnthropometryScreen({super.key, this.clientId});
 
   @override
   ConsumerState<AnthropometryScreen> createState() => _AnthropometryScreenState();
@@ -156,7 +173,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final anthropometryData = ref.watch(anthropometryProvider);
+    final anthropometryData = ref.watch(anthropometryProvider(widget.clientId));
     final authState = ref.watch(authProvider);
     final user = authState.value?.user;
 
@@ -196,6 +213,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => PhotoComparisonScreen(
+                            clientId: widget.clientId,
                             initialStartPhotoUrl: _startPhotoUrl,
                             initialFinishPhotoUrl: _finishPhotoUrl,
                             initialStartPhotoDateTime: _startPhotoDateTime,
@@ -238,11 +256,12 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
 
                         try {
                           await ApiService.updateAnthropometryFixed(
+                            clientId: widget.clientId,
                             height: currentHeight ?? 0,
                             wristCirc: currentWristCirc ?? 0,
                             ankleCirc: currentAnkleCirc ?? 0,
                           );
-                          ref.invalidate(anthropometryProvider);
+                          ref.invalidate(anthropometryProvider(widget.clientId));
                           setState(() {
                             _isFixedEditing = false;
                           });
@@ -296,6 +315,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
 
                               try {
                                 await ApiService.updateAnthropometryMeasurements(
+                                  clientId: widget.clientId,
                                   type: 'start',
                                   weight: currentWeight ?? 0.0,
                                   shouldersCirc: currentShouldersCirc ?? 0,
@@ -304,7 +324,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                                   hipsCirc: currentHipsCirc ?? 0,
                                   bmr: currentBmr ?? 0,
                                 );
-                                ref.invalidate(anthropometryProvider);
+                                ref.invalidate(anthropometryProvider(widget.clientId));
                                 setState(() {
                                   _isStartEditing = false;
                                 });
@@ -357,6 +377,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
 
                               try {
                                 await ApiService.updateAnthropometryMeasurements(
+                                  clientId: widget.clientId,
                                   type: 'finish',
                                   weight: currentWeight ?? 0.0,
                                   shouldersCirc: currentShouldersCirc ?? 0,
@@ -365,7 +386,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                                   hipsCirc: currentHipsCirc ?? 0,
                                   bmr: currentBmr ?? 0,
                                 );
-                                ref.invalidate(anthropometryProvider);
+                                ref.invalidate(anthropometryProvider(widget.clientId));
                                 setState(() {
                                   _isFinishEditing = false;
                                 });
