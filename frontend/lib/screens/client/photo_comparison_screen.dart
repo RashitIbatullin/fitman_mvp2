@@ -40,43 +40,48 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     _startPhotoDateTime = widget.initialStartPhotoDateTime;
     _finishPhotoDateTime = widget.initialFinishPhotoDateTime;
   }
-  Future<void> _pickAndUploadImage(String type) async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(type: FileType.image);
-
-    if (result != null) {
-      final fileBytes = result.files.single.bytes;
-      final fileName = result.files.single.name;
-      if (fileBytes != null) {
-        try {
-          final responseData = await ApiService.uploadAnthropometryPhoto(
-            fileBytes,
-            fileName,
-            type,
-            clientId: widget.clientId,
-          );
-
-          final newUrl = responseData['url'];
-          final newDateTime = responseData['photo_date_time'] != null
-              ? DateTime.parse(responseData['photo_date_time'])
-              : DateTime.now();
-
-          setState(() {
-            if (type == 'start') {
-              _startPhotoUrl = newUrl;
-              _startPhotoDateTime = newDateTime;
-            } else {
-              _finishPhotoUrl = newUrl;
-              _finishPhotoDateTime = newDateTime;
-            }
-          });
-        } catch (e) {
-          // Handle error
-          print('Image upload failed: $e');
+    Future<void> _pickAndUploadImage(String type) async {
+      print('[_pickAndUploadImage] Starting photo pick for type: $type');
+      FilePickerResult? result =
+          await FilePicker.platform.pickFiles(type: FileType.image);
+          //print('[_pickAndUploadImage] FilePicker result: $result');
+          if (result != null) {
+          print('[_pickAndUploadImage] Number of files picked: ${result.files.length}');
+          final fileBytes = result.files.single.bytes;
+                final fileName = result.files.single.name;
+          
+                if (fileBytes != null) {
+                  try {
+                    print('[_pickAndUploadImage] Calling ApiService.uploadAnthropometryPhoto...');
+                    final responseData = await ApiService.uploadAnthropometryPhoto(
+                      fileBytes,
+                      fileName,
+                      type,
+                      clientId: widget.clientId,
+                      photoDateTime: null, // Path is not available on web, so we can't get lastModified
+                    );            print('[_pickAndUploadImage] ApiService response: $responseData');
+  
+            final newUrl = responseData['url'];
+            final newDateTime = responseData['photo_date_time'] != null
+                ? DateTime.parse(responseData['photo_date_time'])
+                : DateTime.now();
+  
+            setState(() {
+              if (type == 'start') {
+                _startPhotoUrl = newUrl;
+                _startPhotoDateTime = newDateTime;
+              } else {
+                _finishPhotoUrl = newUrl;
+                _finishPhotoDateTime = newDateTime;
+              }
+            });
+          } catch (e) {
+            // Handle error
+            print('[_pickAndUploadImage] Image upload failed: $e');
+          }
         }
       }
     }
-  }
 
   Widget _buildPhotoSection(
       String? photoUrl, DateTime? photoDateTime, String title, String type, bool canUploadPhoto) {

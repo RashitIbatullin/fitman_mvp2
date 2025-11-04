@@ -996,7 +996,7 @@ class ApiService {
     List<int> photoBytes,
     String fileName,
     String type,
-    {int? clientId}
+    {int? clientId, DateTime? photoDateTime}
   ) async {
     try {
       final url = clientId != null
@@ -1010,6 +1010,9 @@ class ApiService {
       request.fields['type'] = type;
       if (clientId != null) {
         request.fields['clientId'] = clientId.toString();
+      }
+      if (photoDateTime != null) {
+        request.fields['photoDateTime'] = photoDateTime.toIso8601String();
       }
       request.files.add(http.MultipartFile.fromBytes(
         'photo',

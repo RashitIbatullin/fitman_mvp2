@@ -903,7 +903,7 @@ class Database {
     return newMap;
   }
 
-  Future<void> updateAnthropometryPhoto(int clientId, String photoUrl, String type, DateTime photoDateTime) async {
+  Future<void> updateAnthropometryPhoto(int clientId, String photoUrl, String type, DateTime? photoDateTime) async {
     try {
       final conn = await connection;
       final tableName = type == 'start' ? 'anthropometry_start' : 'anthropometry_finish';
@@ -917,7 +917,7 @@ class Database {
         parameters: {
           'photoUrl': photoUrl,
           'clientId': clientId,
-          'photoDateTime': photoDateTime,
+          'photoDateTime': photoDateTime ?? DateTime.now(),
         },
       );
     } catch (e) {

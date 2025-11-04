@@ -181,8 +181,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
     final canEdit = user != null && (!user.roles.any((role) => role.name == 'client') || user.roles.length > 1);
 
     return Scaffold(
-      appBar: AppBar(
-      ),
       body: anthropometryData.when(
         data: (data) {
           if (!_controllersInitialized) {

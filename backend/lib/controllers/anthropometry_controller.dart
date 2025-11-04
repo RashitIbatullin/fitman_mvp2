@@ -46,6 +46,7 @@ class AnthropometryController {
       String? type;
       String? fileName;
       List<int>? fileBytes;
+      DateTime? photoDateTimeFromRequest;
 
       if (request.formData() case final form?) {
         await for (final formData in form.formData) {
@@ -56,6 +57,8 @@ class AnthropometryController {
           } else if (formData.name == 'photo') {
             fileName = formData.filename;
             fileBytes = await formData.part.readBytes();
+          } else if (formData.name == 'photoDateTime') {
+            photoDateTimeFromRequest = DateTime.tryParse(await formData.part.readString());
           }
         }
       } else {
@@ -77,7 +80,7 @@ class AnthropometryController {
 
       final photoUrl = '/uploads/$fileName';
 
-      final now = DateTime.now();
+      final now = photoDateTimeFromRequest ?? DateTime.now();
       await Database().updateAnthropometryPhoto(clientId, photoUrl, type, now);
 
       return Response.ok(jsonEncode({
