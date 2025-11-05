@@ -19,7 +19,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   final _lastNameController = TextEditingController();
   final _middleNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _ageController = TextEditingController();
+  final _dateOfBirthController = TextEditingController();
 
   String? _selectedGender;
   bool _sendNotification = true;
@@ -39,7 +39,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     _lastNameController.text = user.lastName;
     _middleNameController.text = user.middleName ?? '';
     _phoneController.text = user.phone ?? '';
-    _ageController.text = user.age?.toString() ?? '';
+    _dateOfBirthController.text = user.dateOfBirth?.toIso8601String().split('T').first ?? '';
     _selectedGender = user.gender;
     _sendNotification = user.sendNotification;
     _trackCalories = user.trackCalories;
@@ -64,7 +64,9 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
         middleName: _middleNameController.text.trim(),
         phone: _phoneController.text.trim(),
         gender: _selectedGender,
-        age: int.tryParse(_ageController.text.trim()),
+        dateOfBirth: _dateOfBirthController.text.trim().isNotEmpty
+            ? DateTime.parse(_dateOfBirthController.text.trim())
+            : null,
       );
 
       final updatedUser = await ApiService.updateUser(request);
@@ -215,13 +217,26 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: _ageController,
+              controller: _dateOfBirthController,
               decoration: const InputDecoration(
-                labelText: 'Возраст',
+                labelText: 'Дата рождения',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.cake),
+                prefixIcon: Icon(Icons.calendar_today),
               ),
-              keyboardType: TextInputType.number,
+              readOnly: true,
+              onTap: () async {
+                final selectedDate = await showDatePicker(
+                  context: context,
+                  initialDate: _dateOfBirthController.text.isNotEmpty
+                      ? DateTime.parse(_dateOfBirthController.text)
+                      : DateTime.now(),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime.now(),
+                );
+                if (selectedDate != null) {
+                  _dateOfBirthController.text = selectedDate.toIso8601String().split('T').first;
+                }
+              },
             ),
           ],
         ),
@@ -381,7 +396,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     _lastNameController.dispose();
     _middleNameController.dispose();
     _phoneController.dispose();
-    _ageController.dispose();
+    _dateOfBirthController.dispose();
     super.dispose();
   }
 }

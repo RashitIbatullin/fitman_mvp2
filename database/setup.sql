@@ -66,7 +66,7 @@ CREATE TABLE users (
     first_name VARCHAR(255),
     middle_name VARCHAR(255),
     gender SMALLINT,
-    age INTEGER,
+    date_of_birth DATE,
     photo_url VARCHAR(255),
     company_id BIGINT DEFAULT -1,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -209,25 +209,53 @@ CREATE TABLE manager_profiles (
 CREATE TABLE instructor_clients (
     instructor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     client_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    PRIMARY KEY (instructor_id, client_id)
+    PRIMARY KEY (instructor_id, client_id),
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMPTZ,
+    archived_by BIGINT REFERENCES users(id)
 );
 
 CREATE TABLE manager_clients (
     manager_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     client_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    PRIMARY KEY (manager_id, client_id)
+    PRIMARY KEY (manager_id, client_id),
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMPTZ,
+    archived_by BIGINT REFERENCES users(id)
 );
 
 CREATE TABLE manager_trainers (
     manager_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     trainer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    PRIMARY KEY (manager_id, trainer_id)
+    PRIMARY KEY (manager_id, trainer_id),
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMPTZ,
+    archived_by BIGINT REFERENCES users(id)
 );
 
 CREATE TABLE manager_instructors (
     manager_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     instructor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    PRIMARY KEY (manager_id, instructor_id)
+    PRIMARY KEY (manager_id, instructor_id),
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMPTZ,
+    archived_by BIGINT REFERENCES users(id)
 );
 
 -- 7. Создание начальных пользователей для каждой роли
@@ -254,11 +282,11 @@ BEGIN
     SELECT id INTO client_role_id FROM roles WHERE name = 'client';
 
     -- Создание Администратора (пароль: admin123)
-    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age)
-    VALUES ('admin@fitman.ru', '$2a$10$RATHndPnw7mQZOOfAb3RHeaGhV8Aul2U4BXx2C94pDr4EqV58uEUW', '+79603949645', 'admin@fitman.ru', 'Администратор', 'Админ', 1, 30)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, date_of_birth, created_by, updated_by)
+    VALUES ('admin@fitman.ru', '$2a$10$RATHndPnw7mQZOOfAb3RHeaGhV8Aul2U4BXx2C94pDr4EqV58uEUW', '+79603949645', 'admin@fitman.ru', 'Администратор', 'Админ', 0, '1994-02-15', admin_id, admin_id)
     RETURNING id INTO admin_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (admin_id, admin_role_id, admin_id, admin_id);
-    
+
     -- Устанавливаем created_by/updated_by для самого первого пользователя и справочников
     UPDATE users SET created_by = admin_id, updated_by = admin_id WHERE id = admin_id;
     UPDATE roles SET created_by = admin_id, updated_by = admin_id;
@@ -266,29 +294,29 @@ BEGIN
     UPDATE levels_training SET created_by = admin_id, updated_by = admin_id;
 
     -- Создание Менеджера (пароль: manager123)
-    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age, created_by, updated_by)
-    VALUES ('manager@fitman.ru', '$2a$10$gH1uvOKi0oiI4nwhiapDgeKZjHx2Oo0OiojVABKYL5DWBaxOAKDWa', '+79603949646', 'manager@fitman.ru', 'Менеджеров', 'Менеджер', 1, 28, admin_id, admin_id)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, date_of_birth, created_by, updated_by)
+    VALUES ('manager@fitman.ru', '$2a$10$gH1uvOKi0oiI4nwhiapDgeKZjHx2Oo0OiojVABKYL5DWBaxOAKDWa', '+79603949646', 'manager@fitman.ru', 'Менеджеров', 'Менеджер', 0, '1997-01-15', admin_id, admin_id)
     RETURNING id INTO manager_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (manager_id, manager_role_id, admin_id, admin_id);
     INSERT INTO manager_profiles (user_id, specialization, work_experience, created_by, updated_by) VALUES (manager_id, 'Управление', 3, admin_id, admin_id);
 
     -- Создание Тренера (пароль: trainer123)
-    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age, created_by, updated_by)
-    VALUES ('trainer@fitman.ru', '$2a$10$eMnEUxZ5YndkG8KJjfrDrugj0UbvaoRkBeopAVnzWgo18kmQIs6PG', '+79603949647', 'trainer@fitman.ru', 'Тренеров', 'Тренер', 1, 25, admin_id, admin_id)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, date_of_birth, created_by, updated_by)
+    VALUES ('trainer@fitman.ru', '$2a$10$eMnEUxZ5YndkG8KJjfrDrugj0UbvaoRkBeopAVnzWgo18kmQIs6PG', '+79603949647', 'trainer@fitman.ru', 'Тренеров', 'Тренер', 0, '1999-03-20', admin_id, admin_id)
     RETURNING id INTO trainer_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (trainer_id, trainer_role_id, admin_id, admin_id);
     INSERT INTO trainer_profiles (user_id, specialization, work_experience, created_by, updated_by) VALUES (trainer_id, 'Силовой тренинг', 5, admin_id, admin_id);
 
     -- Создание Инструктора (пароль: instructor123)
-    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age, created_by, updated_by)
-    VALUES ('instructor@fitman.ru', '$2a$10$zo5j5Qm0OJAZkiwVWfIHyeSSs831kV95YsNIK0/8/rlm3WvXxY6Mi', '+79603949648', 'instructor@fitman.ru', 'Инструкторов', 'Инструктор', 2, 22, admin_id, admin_id)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, date_of_birth, created_by, updated_by)
+    VALUES ('instructor@fitman.ru', '$2a$10$zo5j5Qm0OJAZkiwVWfIHyeSSs831kV95YsNIK0/8/rlm3WvXxY6Mi', '+79603949648', 'instructor@fitman.ru', 'Инструкторов', 'Инструктор', 1, '2002-07-01', admin_id, admin_id)
     RETURNING id INTO instructor_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (instructor_id, instructor_role_id, admin_id, admin_id);
     INSERT INTO instructor_profiles (user_id, specialization, work_experience, created_by, updated_by) VALUES (instructor_id, 'Групповые занятия', 2, admin_id, admin_id);
 
     -- Создание Клиента (пароль: client123)
-    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, age, created_by, updated_by)
-    VALUES ('client@fitman.ru', '$2a$10$Ho/wfV6sIt9DetDJ3.NQY.u7lMnKUGpfzZO0Qc5rzs/2UskxxDLoW', '+79603949649', 'client@fitman.ru', 'Клиентов', 'Клиент', 2, 29, admin_id, admin_id)
+    INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, date_of_birth, created_by, updated_by)
+    VALUES ('client@fitman.ru', '$2a$10$Ho/wfV6sIt9DetDJ3.NQY.u7lMnKUGpfzZO0Qc5rzs/2UskxxDLoW', '+79603949649', 'client@fitman.ru', 'Клиентов', 'Клиент', 1, '1996-09-10', admin_id, admin_id)
     RETURNING id INTO client_id;
     INSERT INTO user_roles (user_id, role_id, created_by, updated_by) VALUES (client_id, client_role_id, admin_id, admin_id);
     INSERT INTO client_profiles (user_id, goal_training_id, level_training_id, created_by, updated_by) VALUES (client_id, 1, 1, admin_id, admin_id);
@@ -362,7 +390,9 @@ CREATE TABLE anthropometry_fix (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by BIGINT REFERENCES users(id),
-    updated_by BIGINT REFERENCES users(id)
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMP WITH TIME ZONE,
+    archived_by BIGINT
 );
 
 CREATE TABLE anthropometry_start (
@@ -379,7 +409,9 @@ CREATE TABLE anthropometry_start (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by BIGINT REFERENCES users(id),
-    updated_by BIGINT REFERENCES users(id)
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMP WITH TIME ZONE,
+    archived_by BIGINT
 );
 
 CREATE TABLE anthropometry_finish (
@@ -396,7 +428,9 @@ CREATE TABLE anthropometry_finish (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by BIGINT REFERENCES users(id),
-    updated_by BIGINT REFERENCES users(id)
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMP WITH TIME ZONE,
+    archived_by BIGINT
 );
 
 END $$;

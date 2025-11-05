@@ -128,7 +128,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     List<String> roles,
     String? phone,
     String? gender,
-    int? age,
+    DateTime? dateOfBirth,
   ) async {
     state = const AsyncValue.loading();
     try {
@@ -140,7 +140,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
         roles,
         phone,
         gender,
-        age,
+        dateOfBirth,
       );
       await _storeAuthData(authResponse);
 

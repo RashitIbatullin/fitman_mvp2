@@ -10,9 +10,20 @@ class User {
   final List<Role> roles;
   final String? phone;
   final String? gender;
-  final int? age;
+  final DateTime? dateOfBirth;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  int? get age {
+    if (dateOfBirth == null) return null;
+    final now = DateTime.now();
+    int age = now.year - dateOfBirth!.year;
+    if (now.month < dateOfBirth!.month ||
+        (now.month == dateOfBirth!.month && now.day < dateOfBirth!.day)) {
+      age--;
+    }
+    return age;
+  }
 
   User({
     required this.id,
@@ -24,7 +35,7 @@ class User {
     required this.roles,
     this.phone,
     this.gender,
-    this.age,
+    this.dateOfBirth,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -40,7 +51,9 @@ class User {
       roles: [], // Roles will be fetched separately and populated
       phone: map['phone']?.toString(),
       gender: map['gender'] != null ? (map['gender'] == 0 ? 'мужской' : 'женский') : null,
-      age: map['age'] as int?,
+      dateOfBirth: map['date_of_birth'] is DateTime
+          ? map['date_of_birth']
+          : (map['date_of_birth'] != null ? DateTime.parse(map['date_of_birth'].toString()) : null),
       createdAt: map['created_at'] is DateTime
           ? map['created_at']
           : DateTime.parse(map['created_at'].toString()),
@@ -60,7 +73,7 @@ class User {
       'roles': roles.map((r) => r.toJson()).toList(),
       'phone': phone,
       'gender': gender,
-      'age': age,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -76,7 +89,7 @@ class User {
       'roles': roles.map((r) => r.toJson()).toList(),
       'phone': phone,
       'gender': gender,
-      'age': age,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -88,7 +101,7 @@ class User {
     String? middleName,
     String? phone,
     String? gender,
-    int? age,
+    DateTime? dateOfBirth,
     List<Role>? roles,
   }) {
     return User(
@@ -101,7 +114,7 @@ class User {
       roles: roles ?? this.roles,
       phone: phone ?? this.phone,
       gender: gender ?? this.gender,
-      age: age ?? this.age,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
     );
@@ -113,16 +126,18 @@ class CreateUserRequest {
   final String password;
   final String firstName;
   final String lastName;
-  final List<String> roles; // Changed from single role string to list of role names
+  final List<String> roles;
   final String? phone;
+  final DateTime? dateOfBirth;
 
   CreateUserRequest({
     required this.email,
     required this.password,
     required this.firstName,
     required this.lastName,
-    required this.roles, // Updated constructor
+    required this.roles,
     this.phone,
+    this.dateOfBirth,
   });
 
   factory CreateUserRequest.fromJson(Map<String, dynamic> json) {
@@ -131,8 +146,11 @@ class CreateUserRequest {
       password: json['password'] as String,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
-      roles: List<String>.from(json['roles'] as List), // Deserialize roles
+      roles: List<String>.from(json['roles'] as List),
       phone: json['phone'] as String?,
+      dateOfBirth: json['dateOfBirth'] != null
+          ? DateTime.parse(json['dateOfBirth'] as String)
+          : null,
     );
   }
 }

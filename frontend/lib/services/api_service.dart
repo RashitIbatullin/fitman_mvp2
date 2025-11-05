@@ -78,7 +78,6 @@ class ApiService {
               userData['lastName']?.toString() ??
               userData['last_name']?.toString() ??
               '',
-          middleName: userData['middleName']?.toString(),
           roles:
               (userData['roles'] as List<dynamic>?)
                   ?.map(
@@ -88,8 +87,8 @@ class ApiService {
               [],
           phone: userData['phone']?.toString(),
           gender: userData['gender']?.toString(),
-          age: userData['age'] != null
-              ? int.tryParse(userData['age'].toString())
+          dateOfBirth: userData['dateOfBirth'] != null
+              ? DateTime.parse(userData['dateOfBirth'].toString())
               : null,
           sendNotification: userData['sendNotification']?.toString() == 'true',
           hourNotification: userData['hourNotification'] != null
@@ -136,7 +135,7 @@ class ApiService {
     List<String> roles,
     String? phone,
     String? gender,
-    int? age,
+    DateTime? dateOfBirth,
   ) async {
     try {
       final response = await http.post(
@@ -150,7 +149,7 @@ class ApiService {
           'roles': roles,
           'phone': phone,
           'gender': gender,
-          'age': age,
+          'dateOfBirth': dateOfBirth?.toIso8601String(),
         }),
       );
 
@@ -191,8 +190,8 @@ class ApiService {
               [],
           phone: userData['phone']?.toString(),
           gender: userData['gender']?.toString(),
-          age: userData['age'] != null
-              ? int.tryParse(userData['age'].toString())
+          dateOfBirth: userData['dateOfBirth'] != null
+              ? DateTime.parse(userData['dateOfBirth'].toString())
               : null,
           sendNotification: userData['sendNotification']?.toString() == 'true',
           hourNotification: userData['hourNotification'] != null
@@ -316,8 +315,8 @@ class ApiService {
                 [],
             phone: userData['phone']?.toString(),
             gender: userData['gender']?.toString(),
-            age: userData['age'] != null
-                ? int.tryParse(userData['age'].toString())
+            dateOfBirth: userData['dateOfBirth'] != null
+                ? DateTime.parse(userData['dateOfBirth'].toString())
                 : null,
             sendNotification:
                 userData['sendNotification']?.toString() == 'true',

@@ -61,6 +61,9 @@ class UsersController {
       final password = data['password'] as String;
       final firstName = data['firstName'] as String;
       final lastName = data['lastName'] as String;
+      final gender = data['gender'] as String?;
+      final dateOfBirthString = data['dateOfBirth'] as String?;
+      final dateOfBirth = dateOfBirthString != null ? DateTime.parse(dateOfBirthString) : null;
 
       final passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
 
@@ -72,6 +75,8 @@ class UsersController {
         lastName: lastName,
         roles: [], // Будет заполнено в методе БД
         phone: phone,
+        gender: gender,
+        dateOfBirth: dateOfBirth,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -206,6 +211,9 @@ class UsersController {
         }
       }
 
+      final dateOfBirthString = data['dateOfBirth'] as String?;
+      final dateOfBirth = dateOfBirthString != null ? DateTime.parse(dateOfBirthString) : null;
+
       final updatedUser = await Database().updateUser(
         userId,
         email: email,
@@ -214,7 +222,7 @@ class UsersController {
         middleName: data['middleName'] as String?,
         phone: phone,
         gender: data['gender'] as String?,
-        age: data['age'] as int?,
+        dateOfBirth: dateOfBirth,
         updatedBy: updaterId,
       );
 

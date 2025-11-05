@@ -136,7 +136,7 @@ class Database {
     try {
       final conn = await connection;
       final results = await conn.execute('''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, age, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, created_at, updated_at
         FROM users
       ''');
 
@@ -160,7 +160,7 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, age, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, created_at, updated_at
         FROM users
         WHERE email = @email
         LIMIT 1
@@ -191,7 +191,7 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, age, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, created_at, updated_at
         FROM users
         WHERE phone = @phone
         LIMIT 1
@@ -222,7 +222,7 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, age, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, created_at, updated_at
         FROM users
         WHERE id = @id
         LIMIT 1
@@ -254,8 +254,8 @@ class Database {
       // 1. Вставить пользователя в таблицу users и получить его ID
       final userResult = await ctx.execute(
         Sql.named('''
-          INSERT INTO users (login, email, password_hash, first_name, last_name, phone, created_at, updated_at)
-          VALUES (@login, @email, @password_hash, @first_name, @last_name, @phone, @created_at, @updated_at)
+          INSERT INTO users (login, email, password_hash, first_name, last_name, phone, gender, date_of_birth, created_at, updated_at)
+          VALUES (@login, @email, @password_hash, @first_name, @last_name, @phone, @gender, @date_of_birth, @created_at, @updated_at)
           RETURNING id
         '''),
         parameters: {
@@ -265,6 +265,8 @@ class Database {
           'first_name': user.firstName,
           'last_name': user.lastName,
           'phone': user.phone,
+          'gender': user.gender == 'мужской' ? 0 : 1,
+          'date_of_birth': user.dateOfBirth,
           'created_at': user.createdAt,
           'updated_at': user.updatedAt,
         },
@@ -350,7 +352,7 @@ class Database {
         String? middleName,
         String? phone,
         String? gender,
-        int? age,
+        DateTime? dateOfBirth,
         int? updatedBy,
       }) async {
     try {
@@ -384,9 +386,9 @@ class Database {
         setParts.add('gender = @gender');
         parameters['gender'] = gender == 'мужской' ? 0 : 1;
       }
-      if (age != null) {
-        setParts.add('age = @age');
-        parameters['age'] = age;
+      if (dateOfBirth != null) {
+        setParts.add('date_of_birth = @dateOfBirth');
+        parameters['dateOfBirth'] = dateOfBirth;
       }
 
       if (setParts.isEmpty) {
@@ -1101,7 +1103,7 @@ class Database {
             first_name VARCHAR(255),
             middle_name VARCHAR(255),
             gender SMALLINT,
-            age INTEGER,
+            date_of_birth DATE,
             photo_url VARCHAR(255),
             company_id BIGINT DEFAULT -1,
             created_at TIMESTAMPTZ DEFAULT NOW(),

@@ -11,13 +11,24 @@ class User {
   final List<Role> roles;
   final String? phone;
   final String? gender;
-  final int? age;
+  final DateTime? dateOfBirth;
   final bool sendNotification;
   final int hourNotification;
   final bool trackCalories;
   final double coeffActivity;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  int? get age {
+    if (dateOfBirth == null) return null;
+    final now = DateTime.now();
+    int age = now.year - dateOfBirth!.year;
+    if (now.month < dateOfBirth!.month ||
+        (now.month == dateOfBirth!.month && now.day < dateOfBirth!.day)) {
+      age--;
+    }
+    return age;
+  }
 
   User({
     required this.id,
@@ -30,7 +41,7 @@ class User {
     required this.roles,
     this.phone,
     this.gender,
-    this.age,
+    this.dateOfBirth,
     this.sendNotification = true,
     this.hourNotification = 1,
     this.trackCalories = true,
@@ -55,7 +66,7 @@ class User {
           [],
       phone: json['phone'],
       gender: json['gender'],
-      age: json['age'],
+      dateOfBirth: json['dateOfBirth'] != null ? DateTime.parse(json['dateOfBirth']) : null,
       sendNotification: json['sendNotification'] ?? true,
       hourNotification: json['hourNotification'] ?? 1,
       trackCalories: json['trackCalories'] ?? true,
@@ -73,10 +84,9 @@ class User {
       'lastName': lastName,
       'middleName': middleName,
       'photo_url': photoUrl,
-      'roles': roles.map((r) => r.toJson()).toList(),
       'phone': phone,
       'gender': gender,
-      'age': age,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
       'sendNotification': sendNotification,
       'hourNotification': hourNotification,
       'trackCalories': trackCalories,
@@ -124,7 +134,7 @@ class CreateUserRequest {
   final List<String> roles;
   final String? phone;
   final String? gender;
-  final int? age;
+  final DateTime? dateOfBirth;
   final bool sendNotification;
   final int hourNotification;
   final bool trackCalories;
@@ -139,7 +149,7 @@ class CreateUserRequest {
     required this.roles,
     this.phone,
     this.gender,
-    this.age,
+    this.dateOfBirth,
     this.sendNotification = true,
     this.hourNotification = 1,
     this.trackCalories = true,
@@ -156,7 +166,7 @@ class CreateUserRequest {
       'roles': roles,
       'phone': phone,
       'gender': gender,
-      'age': age,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
       'sendNotification': sendNotification,
       'hourNotification': hourNotification,
       'trackCalories': trackCalories,
@@ -173,7 +183,7 @@ class UpdateUserRequest {
   final String? middleName;
   final String? phone;
   final String? gender;
-  final int? age;
+  final DateTime? dateOfBirth;
 
   UpdateUserRequest({
     required this.id,
@@ -183,7 +193,7 @@ class UpdateUserRequest {
     this.middleName,
     this.phone,
     this.gender,
-    this.age,
+    this.dateOfBirth,
   });
 
   Map<String, dynamic> toJson() {
@@ -195,7 +205,7 @@ class UpdateUserRequest {
       'middleName': middleName,
       'phone': phone,
       'gender': gender,
-      'age': age,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
     };
   }
 }

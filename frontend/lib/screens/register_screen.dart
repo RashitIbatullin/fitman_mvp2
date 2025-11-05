@@ -18,7 +18,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _ageController = TextEditingController();
+  final _dateOfBirthController = TextEditingController();
   String _selectedRole = 'client';
   String? _selectedGender;
 
@@ -137,20 +137,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _ageController,
+                controller: _dateOfBirthController,
                 decoration: const InputDecoration(
-                  labelText: 'Возраст (необязательно)',
+                  labelText: 'Дата рождения (необязательно)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.calendar_today),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (int.tryParse(value) == null) {
-                      return 'Введите корректный возраст';
-                    }
+                readOnly: true,
+                onTap: () async {
+                  final selectedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                  );
+                  if (selectedDate != null) {
+                    _dateOfBirthController.text = selectedDate.toIso8601String().split('T').first;
                   }
-                  return null;
                 },
               ),
               const SizedBox(height: 16),
@@ -263,8 +266,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ? _phoneController.text.trim()
                 : null,
             _selectedGender,
-            _ageController.text.trim().isNotEmpty
-                ? int.tryParse(_ageController.text.trim())
+            _dateOfBirthController.text.trim().isNotEmpty
+                ? DateTime.parse(_dateOfBirthController.text.trim())
                 : null,
           );
     }
@@ -278,7 +281,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _phoneController.dispose();
-    _ageController.dispose();
+    _dateOfBirthController.dispose();
     super.dispose();
   }
 }

@@ -22,8 +22,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
   final _lastNameController = TextEditingController();
   final _middleNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _ageController = TextEditingController();
-
+  final _dateOfBirthController = TextEditingController();
 
   final List<String> _selectedRoleNames = [];
   String? _selectedGender;
@@ -106,8 +105,8 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             ? _phoneController.text.trim()
             : null,
         gender: _selectedGender,
-        age: _ageController.text.trim().isNotEmpty
-            ? int.tryParse(_ageController.text.trim())
+        dateOfBirth: _dateOfBirthController.text.trim().isNotEmpty
+            ? DateTime.parse(_dateOfBirthController.text.trim())
             : null,
         sendNotification: _sendNotification,
         hourNotification: _hourNotification,
@@ -286,13 +285,24 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: _ageController,
+              controller: _dateOfBirthController,
               decoration: const InputDecoration(
-                labelText: 'Возраст',
+                labelText: 'Дата рождения',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.cake),
+                prefixIcon: Icon(Icons.calendar_today),
               ),
-              keyboardType: TextInputType.number,
+              readOnly: true,
+              onTap: () async {
+                final selectedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime.now(),
+                );
+                if (selectedDate != null) {
+                  _dateOfBirthController.text = selectedDate.toIso8601String().split('T').first;
+                }
+              },
             ),
 
           ],
@@ -456,7 +466,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
     _lastNameController.dispose();
     _middleNameController.dispose();
     _phoneController.dispose();
-    _ageController.dispose();
+    _dateOfBirthController.dispose();
     super.dispose();
   }
 }

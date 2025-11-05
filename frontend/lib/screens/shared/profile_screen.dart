@@ -40,6 +40,7 @@ class ProfileScreen extends StatelessWidget {
             _buildInfoRow(label: 'Email', value: user.email),
             _buildInfoRow(label: 'Телефон', value: user.phone ?? 'не указан'),
             _buildInfoRow(label: 'Пол', value: user.gender ?? 'не указан'),
+            _buildInfoRow(label: 'Дата рождения', value: user.dateOfBirth != null ? '${user.dateOfBirth!.day}.${user.dateOfBirth!.month}.${user.dateOfBirth!.year}' : 'не указана'),
             _buildInfoRow(label: 'Возраст', value: user.age?.toString() ?? 'не указан'),
             const Divider(height: 30),
             // Требование 9.1.4, пункты 2 и 3

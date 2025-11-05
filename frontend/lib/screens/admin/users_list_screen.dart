@@ -401,6 +401,14 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                                       color: Colors.grey,
                                     ),
                                     Text(
+                                      'Дата рождения: ${user.dateOfBirth != null ? '${user.dateOfBirth!.day}.${user.dateOfBirth!.month}.${user.dateOfBirth!.year}' : 'Н/Д'}',
+                                    ),
+                                    const VerticalDivider(
+                                      width: 10,
+                                      thickness: 1,
+                                      color: Colors.grey,
+                                    ),
+                                    Text(
                                       'Возраст: ${user.age?.toString() ?? 'Н/Д'}',
                                     ),
                                   ],
