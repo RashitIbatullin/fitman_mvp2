@@ -29,8 +29,12 @@ class ClientDashboard extends ConsumerWidget {
     final dashboardData = ref.watch(dashboardDataProvider);
     final selectedIndex = ref.watch(_clientDashboardIndexProvider);
 
+    if (user == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final List<String> titles = [
-      'Главное',
+      user.fullName, // Используем ФИО пользователя
       'Профиль',
       'Тренер',
       'Инструктор',
@@ -40,10 +44,6 @@ class ClientDashboard extends ConsumerWidget {
       'Калории',
       'Прогресс',
     ];
-
-    if (user == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
 
     final List<Widget> views = [
       // Главное - это основное содержимое дашборда
@@ -59,7 +59,7 @@ class ClientDashboard extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildAchievementsWidget(context, data.achievements),
             const SizedBox(height: 16),
-            _buildQuickMenu(context),
+            _buildQuickMenu(context, ref),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -303,19 +303,14 @@ class ClientDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickMenu(BuildContext context) {
+  Widget _buildQuickMenu(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
         Expanded(
           child: Card(
             child: InkWell(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SessionsScreen(),
-                  ),
-                );
+                ref.read(_clientDashboardIndexProvider.notifier).state = 6;
               },
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
