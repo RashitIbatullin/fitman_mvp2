@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:fitman_app/screens/client_dashboard.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -25,7 +26,8 @@ class AuthState {
 
 // 2. Notifier управляет единым состоянием AuthState
 class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
-  AuthNotifier() : super(const AsyncValue.loading()) {
+  final Ref _ref;
+  AuthNotifier(this._ref) : super(const AsyncValue.loading()) {
     _loadStoredUser();
   }
 
@@ -85,6 +87,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       await ApiService.clearToken();
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_data');
+      _ref.read(clientDashboardIndexProvider.notifier).state = 0;
       state = AsyncValue.data(const AuthState(user: null, selectedRole: null));
       print('[AuthNotifier] Logout successful.');
       print('[AuthNotifier] State after logout: ${state.value}');
@@ -160,5 +163,5 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
 // 3. Провайдер теперь предоставляет AsyncValue<AuthState>
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<AuthState>>(
-  (ref) => AuthNotifier(),
+  (ref) => AuthNotifier(ref),
 );

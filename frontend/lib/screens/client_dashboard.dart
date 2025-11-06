@@ -16,7 +16,7 @@ import 'client/sessions_screen.dart';
 import 'client/calorie_tracking_screen.dart';
 import 'client/progress_screen.dart';
 
-final _clientDashboardIndexProvider = StateProvider<int>((ref) => 0);
+final clientDashboardIndexProvider = StateProvider<int>((ref) => 0);
 
 class ClientDashboard extends ConsumerWidget {
   final User? client;
@@ -27,7 +27,8 @@ class ClientDashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = client ?? ref.watch(authProvider).value?.user;
     final dashboardData = ref.watch(dashboardDataProvider);
-    final selectedIndex = ref.watch(_clientDashboardIndexProvider);
+    final selectedIndex = ref.watch(clientDashboardIndexProvider);
+    final canPop = Navigator.of(context).canPop();
 
     if (user == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -77,6 +78,7 @@ class ClientDashboard extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: canPop ? const BackButton() : null,
         title: Text(titles[selectedIndex]),
         actions: [
           IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
@@ -110,52 +112,117 @@ class ClientDashboard extends ConsumerWidget {
                 });
               },
             ),
+          if (canPop)
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+              ),
+            ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+              ),
+              child: Text(
+                user.fullName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Главное'),
+              selected: selectedIndex == 0,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 0;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.account_circle),
+              title: const Text('Профиль'),
+              selected: selectedIndex == 1,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 1;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.sports_baseball),
+              title: const Text('Тренер'),
+              selected: selectedIndex == 2,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 2;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.sports_handball),
+              title: const Text('Инструктор'),
+              selected: selectedIndex == 3,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 3;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.business_center),
+              title: const Text('Менеджер'),
+              selected: selectedIndex == 4,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 4;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.accessibility),
+              title: const Text('Антропометрия'),
+              selected: selectedIndex == 5,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 5;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.fitness_center),
+              title: const Text('Занятия'),
+              selected: selectedIndex == 6,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 6;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.track_changes),
+              title: const Text('Калории'),
+              selected: selectedIndex == 7,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 7;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.show_chart),
+              title: const Text('Прогресс'),
+              selected: selectedIndex == 8,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 8;
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
       body: IndexedStack(index: selectedIndex, children: views),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главное'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Профиль',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_baseball),
-            label: 'Тренер',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_handball),
-            label: 'Инструктор',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.business_center),
-            label: 'Менеджер',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.accessibility),
-            label: 'Антропометрия',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: 'Занятия',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.track_changes),
-            label: 'Калории',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
-            label: 'Прогресс',
-          ),
-        ],
-        currentIndex: selectedIndex,
-        selectedItemColor: Colors.amber[800],
-        unselectedItemColor: Colors.grey,
-        onTap: (index) =>
-            ref.read(_clientDashboardIndexProvider.notifier).state = index,
-        type: BottomNavigationBarType.fixed,
-      ),
     );
   }
 
@@ -310,7 +377,7 @@ class ClientDashboard extends ConsumerWidget {
           child: Card(
             child: InkWell(
               onTap: () {
-                ref.read(_clientDashboardIndexProvider.notifier).state = 6;
+                ref.read(clientDashboardIndexProvider.notifier).state = 6;
               },
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
