@@ -1,9 +1,14 @@
 import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/services/api_service.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_front.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 
 class ProfileScreen extends ConsumerStatefulWidget {
   final User user;
@@ -16,11 +21,38 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late String? _photoUrl;
+  final GlobalKey _repaintBoundaryKey = GlobalKey();
+  final TransformationController _transformationController = TransformationController();
 
   @override
   void initState() {
     super.initState();
     _photoUrl = widget.user.photoUrl;
+  }
+
+  Future<void> _saveAvatar() async {
+    try {
+      RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final response = await ApiService.uploadAvatar(pngBytes, 'avatar.png', widget.user.id);
+      if (!mounted) return;
+
+      setState(() {
+        _photoUrl = response['photoUrl'];
+        _transformationController.value = Matrix4.identity();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Аватар успешно сохранен')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка сохранения аватара: $e')),
+      );
+    }
   }
 
   Future<void> _pickAndUploadAvatar() async {
@@ -63,21 +95,44 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Center(
           child: Column(
             children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: _photoUrl != null 
-                    ? NetworkImage(Uri.parse(ApiService.baseUrl).replace(path: _photoUrl).toString())
-                    : null,
-                child: _photoUrl == null
-                    ? const Icon(Icons.person, size: 50)
-                    : null,
+              RepaintBoundary(
+                key: _repaintBoundaryKey,
+                child: ClipOval(
+                  child: SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      boundaryMargin: EdgeInsets.all(double.infinity),
+                      minScale: 1,
+                      maxScale: 4,
+                      child: _photoUrl != null
+                          ? Image.network(
+                              Uri.parse(ApiService.baseUrl).replace(path: _photoUrl).toString(),
+                              fit: BoxFit.cover,
+                            )
+                          : const Icon(Icons.person, size: 50),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
-              if (canUploadPhoto)
-                ElevatedButton(
-                  onPressed: _pickAndUploadAvatar,
-                  child: const Text('Загрузить фото'),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (canUploadPhoto)
+                    ElevatedButton(
+                      onPressed: _pickAndUploadAvatar,
+                      child: const Text('Загрузить фото'),
+                    ),
+                  const SizedBox(width: 8),
+                  if (canUploadPhoto)
+                    ElevatedButton(
+                      onPressed: _photoUrl != null ? _saveAvatar : null,
+                      child: const Text('Сохранить'),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
