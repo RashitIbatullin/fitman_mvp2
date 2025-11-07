@@ -1,18 +1,20 @@
+import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_front.dart';
 import 'package:file_picker/file_picker.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   final User user;
 
   const ProfileScreen({super.key, required this.user});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late String? _photoUrl;
 
   @override
@@ -51,6 +53,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final currentUser = authState.value?.user;
+    final canUploadPhoto = currentUser != null && !currentUser.roles.any((role) => role.name == 'client');
+
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: <Widget>[
@@ -67,10 +73,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : null,
               ),
               const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: _pickAndUploadAvatar,
-                child: const Text('Загрузить фото'),
-              ),
+              if (canUploadPhoto)
+                ElevatedButton(
+                  onPressed: _pickAndUploadAvatar,
+                  child: const Text('Загрузить фото'),
+                ),
             ],
           ),
         ),

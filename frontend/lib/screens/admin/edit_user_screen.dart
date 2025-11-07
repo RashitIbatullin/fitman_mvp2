@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../models/user_front.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 
 class EditUserScreen extends ConsumerStatefulWidget {
@@ -126,6 +127,10 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final currentUser = authState.value?.user;
+    final canUploadPhoto = currentUser != null && !currentUser.roles.any((role) => role.name == 'client');
+
     return Scaffold(
       appBar: AppBar(title: Text('Редактирование: ${widget.user.shortName}')),
       body: Padding(
@@ -134,8 +139,10 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              _buildAvatarSection(),
-              const SizedBox(height: 16),
+              if (canUploadPhoto) ...[
+                _buildAvatarSection(),
+                const SizedBox(height: 16),
+              ],
               _buildBasicInfoSection(),
               const SizedBox(height: 20),
               if (widget.user.roles.any((r) => r.name == 'client'))
