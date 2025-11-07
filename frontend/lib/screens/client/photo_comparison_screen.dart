@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/gestures.dart';
 import 'package:fitman_app/widgets/image_comparison_slider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fitman_app/services/api_service.dart';
@@ -5,8 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 class DashedCrosshairPainter extends CustomPainter {
   @override
@@ -45,8 +46,6 @@ class DashedCrosshairPainter extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
-
-
 class PhotoComparisonScreen extends ConsumerStatefulWidget {
   final int? clientId;
   final String? initialStartPhotoUrl;
@@ -76,6 +75,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
 
   final GlobalKey _startPhotoKey = GlobalKey();
   final GlobalKey _finishPhotoKey = GlobalKey();
+
   final TransformationController _startController = TransformationController();
   final TransformationController _finishController = TransformationController();
 
@@ -88,16 +88,18 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     _finishPhotoDateTime = widget.initialFinishPhotoDateTime;
   }
 
-  Future<void> _savePhoto(GlobalKey key, TransformationController controller, String type) async {
+  Future<void> _savePhoto(GlobalKey key, String type) async {
     try {
       RenderRepaintBoundary boundary = key.currentContext!.findRenderObject() as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
+      final String fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}.png';
+
       final responseData = await ApiService.uploadAnthropometryPhoto(
         pngBytes,
-        'photo.png',
+        fileName,
         type,
         clientId: widget.clientId,
         photoDateTime: DateTime.now(),
@@ -112,11 +114,12 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
         if (type == 'start') {
           _startPhotoUrl = newUrl;
           _startPhotoDateTime = newDateTime;
+          _startController.value = Matrix4.identity();
         } else {
           _finishPhotoUrl = newUrl;
           _finishPhotoDateTime = newDateTime;
+          _finishController.value = Matrix4.identity();
         }
-        controller.value = Matrix4.identity();
       });
     } catch (e) {
       // Handle error
@@ -185,44 +188,43 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
       children: [
         Text(title, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
-        RepaintBoundary(
-          key: key,
-          child: Container(
-            height: 300, // Larger photo
-            width: double.infinity,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  if (photoUrl != null)
-                    InteractiveViewer(
-                      transformationController: controller,
-                      boundaryMargin: EdgeInsets.all(double.infinity),
-                      minScale: 1,
-                      maxScale: 4,
-                      child: Image.network(
-                        Uri.parse(ApiService.baseUrl).replace(path: photoUrl).toString(),
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Center(child: Icon(Icons.error, size: 50)),
-                      ),
-                    )
-                  else
-                    const Center(child: Text('Фото не загружено')),
-                  IgnorePointer(
-                    child: CustomPaint(
-                      size: Size.infinite,
-                      painter: DashedCrosshairPainter(),
-                    ),
-                  ),
-                ],
+        Container(
+          height: 300,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              RepaintBoundary(
+                key: key,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: photoUrl != null
+                      ? InteractiveViewer(
+                          transformationController: controller,
+                          boundaryMargin: EdgeInsets.all(double.infinity),
+                          minScale: 1,
+                          maxScale: 4,
+                          child: Image.network(
+                            Uri.parse(ApiService.baseUrl).replace(path: photoUrl).toString() + '?v=${DateTime.now().millisecondsSinceEpoch}',
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Center(child: Icon(Icons.error, size: 50)),
+                          ),
+                        )
+                      : const Center(child: Text('Фото не загружено')),
+                ),
               ),
-            ),
+              IgnorePointer(
+                child: CustomPaint(
+                  size: Size.infinite,
+                  painter: DashedCrosshairPainter(),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
@@ -239,7 +241,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
             const SizedBox(width: 8),
             if (canUploadPhoto)
               ElevatedButton(
-                onPressed: photoUrl != null ? () => _savePhoto(key, controller, type) : null,
+                onPressed: photoUrl != null ? () => _savePhoto(key, type) : null,
                 child: const Text('Сохранить'),
               ),
           ],
@@ -328,3 +330,4 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     );
   }
 }
+
