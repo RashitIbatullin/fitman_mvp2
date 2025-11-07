@@ -2,8 +2,50 @@ import 'package:fitman_app/widgets/image_comparison_slider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+class DashedCrosshairPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1;
+
+    const dashWidth = 5;
+    const dashSpace = 5;
+
+    // Horizontal line
+    double startX = 0;
+    while (startX < size.width) {
+      canvas.drawLine(
+        Offset(startX, size.height / 2),
+        Offset(startX + dashWidth, size.height / 2),
+        paint,
+      );
+      startX += dashWidth + dashSpace;
+    }
+
+    // Vertical line
+    double startY = 0;
+    while (startY < size.height) {
+      canvas.drawLine(
+        Offset(size.width / 2, startY),
+        Offset(size.width / 2, startY + dashWidth),
+        paint,
+      );
+      startY += dashWidth + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+
 
 class PhotoComparisonScreen extends ConsumerStatefulWidget {
   final int? clientId;
@@ -32,6 +74,11 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   late DateTime? _startPhotoDateTime;
   late DateTime? _finishPhotoDateTime;
 
+  final GlobalKey _startPhotoKey = GlobalKey();
+  final GlobalKey _finishPhotoKey = GlobalKey();
+  final TransformationController _startController = TransformationController();
+  final TransformationController _finishController = TransformationController();
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +87,43 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     _startPhotoDateTime = widget.initialStartPhotoDateTime;
     _finishPhotoDateTime = widget.initialFinishPhotoDateTime;
   }
+
+  Future<void> _savePhoto(GlobalKey key, TransformationController controller, String type) async {
+    try {
+      RenderRepaintBoundary boundary = key.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final responseData = await ApiService.uploadAnthropometryPhoto(
+        pngBytes,
+        'photo.png',
+        type,
+        clientId: widget.clientId,
+        photoDateTime: DateTime.now(),
+      );
+
+      final newUrl = responseData['url'];
+      final newDateTime = responseData['photo_date_time'] != null
+          ? DateTime.parse(responseData['photo_date_time'])
+          : DateTime.now();
+
+      setState(() {
+        if (type == 'start') {
+          _startPhotoUrl = newUrl;
+          _startPhotoDateTime = newDateTime;
+        } else {
+          _finishPhotoUrl = newUrl;
+          _finishPhotoDateTime = newDateTime;
+        }
+        controller.value = Matrix4.identity();
+      });
+    } catch (e) {
+      // Handle error
+      print('[_savePhoto] Image save failed: $e');
+    }
+  }
+
     Future<void> _pickAndUploadImage(String type) async {
       print('[_pickAndUploadImage] Starting photo pick for type: $type');
       FilePickerResult? result =
@@ -84,7 +168,13 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     }
 
   Widget _buildPhotoSection(
-      String? photoUrl, DateTime? photoDateTime, String title, String type, bool canUploadPhoto) {
+      String? photoUrl,
+      DateTime? photoDateTime,
+      String title,
+      String type,
+      bool canUploadPhoto,
+      GlobalKey key,
+      TransformationController controller) {
     // Simple date formatting, for better formatting, use the intl package
     final formattedDate = photoDateTime != null
         ? '${photoDateTime.day.toString().padLeft(2, '0')}.${photoDateTime.month.toString().padLeft(2, '0')}.${photoDateTime.year} ${photoDateTime.hour.toString().padLeft(2, '0')}:${photoDateTime.minute.toString().padLeft(2, '0')}'
@@ -95,30 +185,65 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
       children: [
         Text(title, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
-        Container(
-          height: 300, // Larger photo
-          width: double.infinity,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(8),
+        RepaintBoundary(
+          key: key,
+          child: Container(
+            height: 300, // Larger photo
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (photoUrl != null)
+                    InteractiveViewer(
+                      transformationController: controller,
+                      boundaryMargin: EdgeInsets.all(double.infinity),
+                      minScale: 1,
+                      maxScale: 4,
+                      child: Image.network(
+                        Uri.parse(ApiService.baseUrl).replace(path: photoUrl).toString(),
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(child: Icon(Icons.error, size: 50)),
+                      ),
+                    )
+                  else
+                    const Center(child: Text('Фото не загружено')),
+                  IgnorePointer(
+                    child: CustomPaint(
+                      size: Size.infinite,
+                      painter: DashedCrosshairPainter(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          child: photoUrl != null
-              ? Image.network(
-                  Uri.parse(ApiService.baseUrl).replace(path: photoUrl).toString(),
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Center(child: Icon(Icons.error, size: 50)),
-                )
-              : const Center(child: Text('Фото не загружено')),
         ),
         const SizedBox(height: 8),
         Text(formattedDate),
         const SizedBox(height: 8),
-        if (canUploadPhoto)
-          ElevatedButton(
-            onPressed: () => _pickAndUploadImage(type),
-            child: const Text('Загрузить фото'),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (canUploadPhoto)
+              ElevatedButton(
+                onPressed: () => _pickAndUploadImage(type),
+                child: const Text('Загрузить фото'),
+              ),
+            const SizedBox(width: 8),
+            if (canUploadPhoto)
+              ElevatedButton(
+                onPressed: photoUrl != null ? () => _savePhoto(key, controller, type) : null,
+                child: const Text('Сохранить'),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -187,12 +312,12 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                 children: [
                   Expanded(
                     child: _buildPhotoSection(
-                        _startPhotoUrl, _startPhotoDateTime, 'Начало', 'start', canUploadPhoto),
+                        _startPhotoUrl, _startPhotoDateTime, 'Начало', 'start', canUploadPhoto, _startPhotoKey, _startController),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildPhotoSection(_finishPhotoUrl,
-                        _finishPhotoDateTime, 'Окончание', 'finish', canUploadPhoto),
+                        _finishPhotoDateTime, 'Окончание', 'finish', canUploadPhoto, _finishPhotoKey, _finishController),
                   ),
                 ],
               ),
