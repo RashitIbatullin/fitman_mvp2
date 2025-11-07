@@ -73,11 +73,8 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   late DateTime? _startPhotoDateTime;
   late DateTime? _finishPhotoDateTime;
 
-  final GlobalKey _startPhotoKey = GlobalKey();
-  final GlobalKey _finishPhotoKey = GlobalKey();
-
-  final TransformationController _startController = TransformationController();
-  final TransformationController _finishController = TransformationController();
+  final GlobalKey<_PhotoViewState> _startPhotoViewKey = GlobalKey();
+  final GlobalKey<_PhotoViewState> _finishPhotoViewKey = GlobalKey();
 
   @override
   void initState() {
@@ -88,43 +85,16 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     _finishPhotoDateTime = widget.initialFinishPhotoDateTime;
   }
 
-  Future<void> _savePhoto(GlobalKey key, String type) async {
-    try {
-      RenderRepaintBoundary boundary = key.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      final String fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}.png';
-
-      final responseData = await ApiService.uploadAnthropometryPhoto(
-        pngBytes,
-        fileName,
-        type,
-        clientId: widget.clientId,
-        photoDateTime: DateTime.now(),
-      );
-
-      final newUrl = responseData['url'];
-      final newDateTime = responseData['photo_date_time'] != null
-          ? DateTime.parse(responseData['photo_date_time'])
-          : DateTime.now();
-
-      setState(() {
-        if (type == 'start') {
-          _startPhotoUrl = newUrl;
-          _startPhotoDateTime = newDateTime;
-          _startController.value = Matrix4.identity();
-        } else {
-          _finishPhotoUrl = newUrl;
-          _finishPhotoDateTime = newDateTime;
-          _finishController.value = Matrix4.identity();
-        }
-      });
-    } catch (e) {
-      // Handle error
-      print('[_savePhoto] Image save failed: $e');
-    }
+  void _onPhotoSaved(String type, String newUrl, DateTime newDateTime) {
+    setState(() {
+      if (type == 'start') {
+        _startPhotoUrl = newUrl;
+        _startPhotoDateTime = newDateTime;
+      } else {
+        _finishPhotoUrl = newUrl;
+        _finishPhotoDateTime = newDateTime;
+      }
+    });
   }
 
     Future<void> _pickAndUploadImage(String type) async {
@@ -176,8 +146,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
       String title,
       String type,
       bool canUploadPhoto,
-      GlobalKey key,
-      TransformationController controller) {
+      GlobalKey<_PhotoViewState> key) {
     // Simple date formatting, for better formatting, use the intl package
     final formattedDate = photoDateTime != null
         ? '${photoDateTime.day.toString().padLeft(2, '0')}.${photoDateTime.month.toString().padLeft(2, '0')}.${photoDateTime.year} ${photoDateTime.hour.toString().padLeft(2, '0')}:${photoDateTime.minute.toString().padLeft(2, '0')}'
@@ -188,44 +157,12 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
       children: [
         Text(title, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
-        Container(
-          height: 300,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              RepaintBoundary(
-                key: key,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: photoUrl != null
-                      ? InteractiveViewer(
-                          transformationController: controller,
-                          boundaryMargin: EdgeInsets.all(double.infinity),
-                          minScale: 1,
-                          maxScale: 4,
-                          child: Image.network(
-                            Uri.parse(ApiService.baseUrl).replace(path: photoUrl).toString() + '?v=${DateTime.now().millisecondsSinceEpoch}',
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Center(child: Icon(Icons.error, size: 50)),
-                          ),
-                        )
-                      : const Center(child: Text('Фото не загружено')),
-                ),
-              ),
-              IgnorePointer(
-                child: CustomPaint(
-                  size: Size.infinite,
-                  painter: DashedCrosshairPainter(),
-                ),
-              ),
-            ],
-          ),
+        _PhotoView(
+          key: key,
+          photoUrl: photoUrl,
+          type: type,
+          clientId: widget.clientId,
+          onPhotoSaved: _onPhotoSaved,
         ),
         const SizedBox(height: 8),
         Text(formattedDate),
@@ -241,7 +178,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
             const SizedBox(width: 8),
             if (canUploadPhoto)
               ElevatedButton(
-                onPressed: photoUrl != null ? () => _savePhoto(key, type) : null,
+                onPressed: photoUrl != null ? () => key.currentState?.save() : null,
                 child: const Text('Сохранить'),
               ),
           ],
@@ -313,13 +250,13 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: _buildPhotoSection(
-                        _startPhotoUrl, _startPhotoDateTime, 'Начало', 'start', canUploadPhoto, _startPhotoKey, _startController),
+                    child: _buildPhotoSection(_finishPhotoUrl,
+                        _finishPhotoDateTime, 'Окончание', 'finish', canUploadPhoto, _finishPhotoViewKey),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildPhotoSection(_finishPhotoUrl,
-                        _finishPhotoDateTime, 'Окончание', 'finish', canUploadPhoto, _finishPhotoKey, _finishController),
+                    child: _buildPhotoSection(
+                        _startPhotoUrl, _startPhotoDateTime, 'Начало', 'start', canUploadPhoto, _startPhotoViewKey),
                   ),
                 ],
               ),
@@ -331,3 +268,144 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   }
 }
 
+class _PhotoView extends StatefulWidget {
+  final String? photoUrl;
+  final String type;
+  final int? clientId;
+  final void Function(String type, String newUrl, DateTime newDateTime) onPhotoSaved;
+
+  const _PhotoView({
+    super.key,
+    this.photoUrl,
+    required this.type,
+    this.clientId,
+    required this.onPhotoSaved,
+  });
+
+  @override
+  _PhotoViewState createState() => _PhotoViewState();
+}
+
+class _PhotoViewState extends State<_PhotoView> {
+  double _scale = 1.0;
+  Offset _offset = Offset.zero;
+  double _initialScale = 1.0;
+  Offset _initialFocalPoint = Offset.zero;
+  bool _showCrosshairs = true;
+  final GlobalKey _repaintBoundaryKey = GlobalKey();
+
+  Future<void> save() async {
+    setState(() {
+      _showCrosshairs = false;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 20));
+
+    try {
+      RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final String fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}.png';
+
+      final responseData = await ApiService.uploadAnthropometryPhoto(
+        pngBytes,
+        fileName,
+        widget.type,
+        clientId: widget.clientId,
+        photoDateTime: DateTime.now(),
+      );
+
+      final newUrl = responseData['url'];
+      final newDateTime = responseData['photo_date_time'] != null
+          ? DateTime.parse(responseData['photo_date_time'])
+          : DateTime.now();
+
+      widget.onPhotoSaved(widget.type, newUrl, newDateTime);
+
+      setState(() {
+        _scale = 1.0;
+        _offset = Offset.zero;
+      });
+
+    } catch (e) {
+      // Handle error
+      print('[_savePhoto] Image save failed: $e');
+    } finally {
+      setState(() {
+        _showCrosshairs = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 300,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Listener(
+          onPointerSignal: (pointerSignal) {
+            if (pointerSignal is PointerScrollEvent) {
+              setState(() {
+                _scale -= pointerSignal.scrollDelta.dy / 1000.0;
+              });
+            }
+          },
+          child: GestureDetector(
+            onScaleStart: (details) {
+              setState(() {
+                _showCrosshairs = true;
+              });
+              _initialFocalPoint = details.focalPoint;
+              _initialScale = _scale;
+            },
+            onScaleUpdate: (details) {
+              setState(() {
+                _scale = _initialScale * details.scale;
+                _offset += details.focalPoint - _initialFocalPoint;
+                _initialFocalPoint = details.focalPoint;
+              });
+            },
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (widget.photoUrl != null)
+                  RepaintBoundary(
+                    key: _repaintBoundaryKey,
+                    child: Transform.scale(
+                      scale: _scale,
+                      child: Transform.translate(
+                        offset: _offset,
+                        child: Image.network(
+                          '${Uri.parse(ApiService.baseUrl).replace(path: widget.photoUrl!).toString()}?v=${DateTime.now().millisecondsSinceEpoch}',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(child: Icon(Icons.error, size: 50)),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  const Center(child: Text('Фото не загружено')),
+                if (_showCrosshairs)
+                  IgnorePointer(
+                    child: CustomPaint(
+                      size: Size.infinite,
+                      painter: DashedCrosshairPainter(),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
