@@ -64,53 +64,7 @@ class ApiService {
           throw Exception('No token received from server');
         }
 
-        final user = User(
-          id: userData['id'] is int
-              ? userData['id']
-              : int.parse(userData['id']?.toString() ?? '0'),
-          email: userData['email']?.toString() ?? email,
-          passwordHash: userData['passwordHash']?.toString() ?? '',
-          firstName:
-              userData['firstName']?.toString() ??
-              userData['first_name']?.toString() ??
-              'User',
-          lastName:
-              userData['lastName']?.toString() ??
-              userData['last_name']?.toString() ??
-              '',
-          roles:
-              (userData['roles'] as List<dynamic>?)
-                  ?.map(
-                    (roleMap) => Role.fromJson(roleMap as Map<String, dynamic>),
-                  )
-                  .toList() ??
-              [],
-          phone: userData['phone']?.toString(),
-          gender: userData['gender']?.toString(),
-          dateOfBirth: userData['dateOfBirth'] != null
-              ? DateTime.parse(userData['dateOfBirth'].toString())
-              : null,
-          sendNotification: userData['sendNotification']?.toString() == 'true',
-          hourNotification: userData['hourNotification'] != null
-              ? int.tryParse(userData['hourNotification'].toString()) ?? 1
-              : 1,
-          trackCalories: userData['trackCalories']?.toString() == 'true',
-          coeffActivity: userData['coeffActivity'] != null
-              ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2
-              : 1.2,
-          createdAt: userData['createdAt'] is DateTime
-              ? userData['createdAt']
-              : DateTime.parse(
-                  userData['createdAt']?.toString() ??
-                      DateTime.now().toIso8601String(),
-                ),
-          updatedAt: userData['updatedAt'] is DateTime
-              ? userData['updatedAt']
-              : DateTime.parse(
-                  userData['updatedAt']?.toString() ??
-                      DateTime.now().toIso8601String(),
-                ),
-        );
+        final user = User.fromJson(userData);
 
         return AuthResponse(token: token, user: user);
       } else {
@@ -166,54 +120,7 @@ class ApiService {
           throw Exception('No token received from server');
         }
 
-        final user = User(
-          id: userData['id'] is int
-              ? userData['id']
-              : int.parse(userData['id']?.toString() ?? '0'),
-          email: userData['email']?.toString() ?? email,
-          passwordHash: userData['passwordHash']?.toString() ?? '',
-          firstName:
-              userData['firstName']?.toString() ??
-              userData['first_name']?.toString() ??
-              firstName,
-          lastName:
-              userData['lastName']?.toString() ??
-              userData['last_name']?.toString() ??
-              lastName,
-          middleName: userData['middleName']?.toString(),
-          roles:
-              (userData['roles'] as List<dynamic>?)
-                  ?.map(
-                    (roleMap) => Role.fromJson(roleMap as Map<String, dynamic>),
-                  )
-                  .toList() ??
-              [],
-          phone: userData['phone']?.toString(),
-          gender: userData['gender']?.toString(),
-          dateOfBirth: userData['dateOfBirth'] != null
-              ? DateTime.parse(userData['dateOfBirth'].toString())
-              : null,
-          sendNotification: userData['sendNotification']?.toString() == 'true',
-          hourNotification: userData['hourNotification'] != null
-              ? int.tryParse(userData['hourNotification'].toString()) ?? 1
-              : 1,
-          trackCalories: userData['trackCalories']?.toString() == 'true',
-          coeffActivity: userData['coeffActivity'] != null
-              ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2
-              : 1.2,
-          createdAt: userData['createdAt'] is DateTime
-              ? userData['createdAt']
-              : DateTime.parse(
-                  userData['createdAt']?.toString() ??
-                      DateTime.now().toIso8601String(),
-                ),
-          updatedAt: userData['updatedAt'] is DateTime
-              ? userData['updatedAt']
-              : DateTime.parse(
-                  userData['updatedAt']?.toString() ??
-                      DateTime.now().toIso8601String(),
-                ),
-        );
+        final user = User.fromJson(userData);
 
         return AuthResponse(token: token, user: user);
       } else {
@@ -295,48 +202,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final users = data['users'] as List;
-        return users.map((userData) {
-          return User(
-            id: userData['id'] is int
-                ? userData['id']
-                : int.parse(userData['id']?.toString() ?? '0'),
-            email: userData['email']?.toString() ?? '',
-            passwordHash: userData['passwordHash']?.toString() ?? '',
-            firstName: userData['firstName']?.toString() ?? '',
-            lastName: userData['lastName']?.toString() ?? '',
-            middleName: userData['middleName']?.toString(),
-            roles:
-                (userData['roles'] as List<dynamic>?)
-                    ?.map(
-                      (roleMap) =>
-                          Role.fromJson(roleMap as Map<String, dynamic>),
-                    )
-                    .toList() ??
-                [],
-            phone: userData['phone']?.toString(),
-            gender: userData['gender']?.toString(),
-            dateOfBirth: userData['dateOfBirth'] != null
-                ? DateTime.parse(userData['dateOfBirth'].toString())
-                : null,
-            sendNotification:
-                userData['sendNotification']?.toString() == 'true',
-            hourNotification: userData['hourNotification'] != null
-                ? int.tryParse(userData['hourNotification'].toString()) ?? 1
-                : 1,
-            trackCalories: userData['trackCalories']?.toString() == 'true',
-            coeffActivity: userData['coeffActivity'] != null
-                ? double.tryParse(userData['coeffActivity'].toString()) ?? 1.2
-                : 1.2,
-            createdAt: DateTime.parse(
-              userData['createdAt']?.toString() ??
-                  DateTime.now().toIso8601String(),
-            ),
-            updatedAt: DateTime.parse(
-              userData['updatedAt']?.toString() ??
-                  DateTime.now().toIso8601String(),
-            ),
-          );
-        }).toList();
+        return users.map((userData) => User.fromJson(userData)).toList();
       } else {
         throw Exception(
           'Failed to load users with status ${response.statusCode}',
@@ -1031,6 +897,44 @@ class ApiService {
       }
     } catch (e) {
       print('Upload anthropometry photo error: $e');
+      rethrow;
+    }
+  }
+
+  // Загрузка аватара пользователя
+  static Future<Map<String, dynamic>> uploadAvatar(
+    List<int> photoBytes,
+    String fileName,
+    int userId,
+  ) async {
+    try {
+      final url = '$baseUrl/api/users/$userId/avatar';
+      
+      var request = http.MultipartRequest('POST', Uri.parse(url));
+      request.headers.addAll({
+        'Authorization': 'Bearer $currentToken',
+      });
+
+      request.files.add(http.MultipartFile.fromBytes(
+        'photo',
+        photoBytes,
+        filename: fileName,
+      ));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        return jsonDecode(responseBody) as Map<String, dynamic>;
+      } else {
+        final responseBody = await response.stream.bytesToString();
+        final errorData = jsonDecode(responseBody);
+        throw Exception(
+          errorData['error'] ?? 'Failed to upload avatar with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Upload avatar error: $e');
       rethrow;
     }
   }

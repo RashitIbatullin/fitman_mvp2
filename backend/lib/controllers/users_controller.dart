@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shelf/shelf.dart';
+import 'package:shelf_multipart/shelf_multipart.dart';
 import 'package:bcrypt/bcrypt.dart';
 import '../config/database.dart';
 import '../models/user_back.dart';
@@ -395,6 +397,68 @@ class UsersController {
     } catch (e) {
       print('Reset password error: $e');
       return Response(500, body: jsonEncode({'error': 'Internal server error'}));
+    }
+  }
+
+  // Загрузить аватар пользователя
+  static Future<Response> uploadAvatar(Request request, String id) async {
+    try {
+      final updater = request.context['user'] as Map<String, dynamic>?;
+      if (updater == null) {
+        return Response.unauthorized(jsonEncode({'error': 'Not authenticated'}));
+      }
+      final updaterId = updater['userId'] as int;
+
+      final userId = int.tryParse(id);
+      if (userId == null) {
+        return Response.badRequest(body: jsonEncode({'error': 'Invalid user ID'}));
+      }
+
+      String? fileName;
+      List<int>? fileBytes;
+
+      if (request.formData() case final form?) {
+        await for (final formData in form.formData) {
+          if (formData.name == 'photo') {
+            fileName = formData.filename;
+            fileBytes = await formData.part.readBytes();
+          }
+        }
+      } else {
+        return Response.badRequest(body: jsonEncode({'error': 'Not a multipart/form-data request'}));
+      }
+
+      if (fileName == null || fileBytes == null) {
+        return Response.badRequest(body: jsonEncode({'error': 'Missing photo file in form-data'}));
+      }
+
+      // Создаем директорию, если ее нет
+      final uploadDir = Directory('C:/Android/PROJ/fitman_mvp2/uploads/avatars');
+      if (!await uploadDir.exists()) {
+        await uploadDir.create(recursive: true);
+      }
+
+      // Генерируем уникальное имя файла, чтобы избежать коллизий
+      final extension = fileName.split('.').last;
+      final uniqueFileName = 'user_${userId}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final filePath = '${uploadDir.path}/$uniqueFileName';
+      
+      final file = File(filePath);
+      await file.writeAsBytes(fileBytes);
+
+      // URL для доступа к файлу с клиента
+      final photoUrl = '/uploads/avatars/$uniqueFileName';
+
+      await Database().updateUserPhotoUrl(userId, photoUrl, updaterId);
+
+      return Response.ok(jsonEncode({
+        'message': 'Avatar uploaded successfully',
+        'photoUrl': photoUrl,
+      }));
+    } catch (e, s) {
+      print('Upload avatar error: $e');
+      print(s);
+      return Response.internalServerError(body: jsonEncode({'error': 'Internal server error'}));
     }
   }
 }

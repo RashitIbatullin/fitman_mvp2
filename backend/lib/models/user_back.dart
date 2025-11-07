@@ -7,6 +7,7 @@ class User {
   final String firstName;
   final String lastName;
   final String? middleName;
+  final String? photoUrl; // <-- ДОБАВЛЕНО
   final List<Role> roles;
   final String? phone;
   final String? gender;
@@ -32,6 +33,7 @@ class User {
     required this.firstName,
     required this.lastName,
     this.middleName,
+    this.photoUrl, // <-- ДОБАВЛЕНО
     required this.roles,
     this.phone,
     this.gender,
@@ -48,6 +50,7 @@ class User {
       firstName: map['first_name'].toString(),
       lastName: map['last_name'].toString(),
       middleName: map['middle_name']?.toString(),
+      photoUrl: map['photo_url']?.toString(), // <-- ДОБАВЛЕНО
       roles: [], // Roles will be fetched separately and populated
       phone: map['phone']?.toString(),
       gender: map['gender'] != null ? (map['gender'] == 0 ? 'мужской' : 'женский') : null,
@@ -70,6 +73,7 @@ class User {
       'firstName': firstName,
       'lastName': lastName,
       'middleName': middleName,
+      'photo_url': photoUrl, // <-- ДОБАВЛЕНО
       'roles': roles.map((r) => r.toJson()).toList(),
       'phone': phone,
       'gender': gender,
@@ -86,6 +90,7 @@ class User {
       'firstName': firstName,
       'lastName': lastName,
       'middleName': middleName,
+      'photo_url': photoUrl, // <-- ДОБАВЛЕНО
       'roles': roles.map((r) => r.toJson()).toList(),
       'phone': phone,
       'gender': gender,
@@ -99,6 +104,7 @@ class User {
     String? firstName,
     String? lastName,
     String? middleName,
+    String? photoUrl, // <-- ДОБАВЛЕНО
     String? phone,
     String? gender,
     DateTime? dateOfBirth,
@@ -111,6 +117,7 @@ class User {
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       middleName: middleName ?? this.middleName,
+      photoUrl: photoUrl ?? this.photoUrl, // <-- ДОБАВЛЕЛЕНО
       roles: roles ?? this.roles,
       phone: phone ?? this.phone,
       gender: gender ?? this.gender,

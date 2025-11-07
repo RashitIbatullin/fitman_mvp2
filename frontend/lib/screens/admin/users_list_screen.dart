@@ -54,7 +54,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     _searchController.addListener(_filterUsers);
   }
 
-  void _navigateToDashboard(BuildContext context, User user, String roleName) {
+  Future<void> _navigateToDashboard(BuildContext context, User user, String roleName) async {
     Widget page;
     switch (roleName) {
       case 'admin':
@@ -74,7 +74,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       default:
         page = const UnknownRoleScreen();
     }
-    Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+    await Navigator.push(context, MaterialPageRoute(builder: (context) => page));
   }
 
   @override
@@ -362,13 +362,16 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: user.roles.isNotEmpty
-                              ? _getRoleColor(user.roles.first.name)
-                              : Colors.grey,
-                          child: Text(
-                            user.firstName.isNotEmpty ? user.firstName[0] : '?',
-                            style: const TextStyle(color: Colors.white),
-                          ),
+                          radius: 20,
+                          backgroundImage: user.photoUrl != null
+                              ? NetworkImage(Uri.parse(ApiService.baseUrl).replace(path: user.photoUrl!).toString())
+                              : null,
+                          child: user.photoUrl == null
+                              ? Text(
+                                  user.firstName.isNotEmpty ? user.firstName[0] : '?',
+                                  style: const TextStyle(color: Colors.white),
+                                )
+                              : null,
                         ),
 
                         title: Text(user.fullName),
@@ -544,27 +547,31 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                         ),
 
                         onTap: () async {
+                          // Сохраняем контекст перед асинхронным вызовом
+                          final context_ = context;
                           if (user.roles.length > 1) {
                             final selectedRole = await RoleDialogManager.show(
-                              context,
+                              context_,
                               user.roles,
                             );
                             if (selectedRole != null) {
-                              _navigateToDashboard(
-                                context,
+                              await _navigateToDashboard(
+                                context_,
                                 user,
                                 selectedRole.name,
                               );
                             }
                           } else if (user.roles.isNotEmpty) {
-                            _navigateToDashboard(
-                              context,
+                            await _navigateToDashboard(
+                              context_,
                               user,
                               user.roles.first.name,
                             );
                           } else {
-                            _navigateToDashboard(context, user, '');
+                            await _navigateToDashboard(context_, user, '');
                           }
+                          // Перезагружаем пользователей после возврата
+                          _loadUsers();
                         },
 
                         onLongPress: () {

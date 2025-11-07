@@ -109,6 +109,46 @@ class User {
         : '';
     return '$lastName ${firstName[0]}.$middleInitial';
   }
+
+  User copyWith({
+    int? id,
+    String? email,
+    String? passwordHash,
+    String? firstName,
+    String? lastName,
+    String? middleName,
+    String? photoUrl,
+    List<Role>? roles,
+    String? phone,
+    String? gender,
+    DateTime? dateOfBirth,
+    bool? sendNotification,
+    int? hourNotification,
+    bool? trackCalories,
+    double? coeffActivity,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      passwordHash: passwordHash ?? this.passwordHash,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      middleName: middleName ?? this.middleName,
+      photoUrl: photoUrl ?? this.photoUrl,
+      roles: roles ?? this.roles,
+      phone: phone ?? this.phone,
+      gender: gender ?? this.gender,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      sendNotification: sendNotification ?? this.sendNotification,
+      hourNotification: hourNotification ?? this.hourNotification,
+      trackCalories: trackCalories ?? this.trackCalories,
+      coeffActivity: coeffActivity ?? this.coeffActivity,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 class AuthResponse {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../models/user_front.dart';
 import '../../services/api_service.dart';
 
@@ -26,6 +27,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   bool _trackCalories = true;
   int _hourNotification = 1;
   double _coeffActivity = 1.2;
+  String? _photoUrl;
 
   bool _isLoading = false;
   String? _error;
@@ -45,6 +47,35 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     _trackCalories = user.trackCalories;
     _hourNotification = user.hourNotification;
     _coeffActivity = user.coeffActivity;
+    _photoUrl = user.photoUrl;
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+
+    if (result != null) {
+      final fileBytes = result.files.single.bytes;
+      final fileName = result.files.single.name;
+
+      if (fileBytes != null) {
+        try {
+          final response = await ApiService.uploadAvatar(fileBytes, fileName, widget.user.id);
+          if (!mounted) return;
+
+          setState(() {
+            _photoUrl = response['photoUrl'];
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Аватар успешно обновлен')),
+          );
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ошибка загрузки аватара: $e')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _updateUser() async {
@@ -103,6 +134,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              _buildAvatarSection(),
+              const SizedBox(height: 16),
               _buildBasicInfoSection(),
               const SizedBox(height: 20),
               if (widget.user.roles.any((r) => r.name == 'client'))
@@ -114,6 +147,28 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarSection() {
+    return Center(
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundImage: _photoUrl != null
+                ? NetworkImage(Uri.parse(ApiService.baseUrl).replace(path: _photoUrl).toString())
+                : null,
+            child: _photoUrl == null ? const Icon(Icons.person, size: 50) : null,
+          ),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            icon: const Icon(Icons.upload_file),
+            label: const Text('Загрузить фото'),
+            onPressed: _pickAndUploadAvatar,
+          ),
+        ],
       ),
     );
   }

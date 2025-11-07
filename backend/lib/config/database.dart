@@ -136,7 +136,7 @@ class Database {
     try {
       final conn = await connection;
       final results = await conn.execute('''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
         FROM users
       ''');
 
@@ -160,7 +160,7 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
         FROM users
         WHERE email = @email
         LIMIT 1
@@ -191,7 +191,7 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
         FROM users
         WHERE phone = @phone
         LIMIT 1
@@ -222,7 +222,7 @@ class Database {
       final conn = await connection;
 
       final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, created_at, updated_at
+        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
         FROM users
         WHERE id = @id
         LIMIT 1
@@ -857,6 +857,28 @@ class Database {
       );
     } catch (e) {
       print('❌ updateUserPassword error: $e');
+      rethrow;
+    }
+  }
+
+  // Обновить URL фото пользователя
+  Future<void> updateUserPhotoUrl(int userId, String photoUrl, int updaterId) async {
+    try {
+      final conn = await connection;
+      await conn.execute(
+        Sql.named('''
+          UPDATE users
+          SET photo_url = @photoUrl, updated_at = NOW(), updated_by = @updaterId
+          WHERE id = @userId
+        '''),
+        parameters: {
+          'photoUrl': photoUrl,
+          'updaterId': updaterId,
+          'userId': userId,
+        },
+      );
+    } catch (e) {
+      print('❌ updateUserPhotoUrl error: $e');
       rethrow;
     }
   }
