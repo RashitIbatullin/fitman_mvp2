@@ -52,6 +52,10 @@ class PhotoComparisonScreen extends ConsumerStatefulWidget {
   final String? initialFinishPhotoUrl;
   final DateTime? initialStartPhotoDateTime;
   final DateTime? initialFinishPhotoDateTime;
+  final String? initialStartProfilePhotoUrl;
+  final String? initialFinishProfilePhotoUrl;
+  final DateTime? initialStartProfilePhotoDateTime;
+  final DateTime? initialFinishProfilePhotoDateTime;
 
   const PhotoComparisonScreen({
     super.key,
@@ -60,6 +64,10 @@ class PhotoComparisonScreen extends ConsumerStatefulWidget {
     this.initialFinishPhotoUrl,
     this.initialStartPhotoDateTime,
     this.initialFinishPhotoDateTime,
+    this.initialStartProfilePhotoUrl,
+    this.initialFinishProfilePhotoUrl,
+    this.initialStartProfilePhotoDateTime,
+    this.initialFinishProfilePhotoDateTime,
   });
 
   @override
@@ -73,8 +81,15 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   late DateTime? _startPhotoDateTime;
   late DateTime? _finishPhotoDateTime;
 
+  late String? _startProfilePhotoUrl;
+  late String? _finishProfilePhotoUrl;
+  late DateTime? _startProfilePhotoDateTime;
+  late DateTime? _finishProfilePhotoDateTime;
+
   final GlobalKey<_PhotoViewState> _startPhotoViewKey = GlobalKey();
   final GlobalKey<_PhotoViewState> _finishPhotoViewKey = GlobalKey();
+  final GlobalKey<_PhotoViewState> _startProfilePhotoViewKey = GlobalKey();
+  final GlobalKey<_PhotoViewState> _finishProfilePhotoViewKey = GlobalKey();
 
   @override
   void initState() {
@@ -83,22 +98,33 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     _finishPhotoUrl = widget.initialFinishPhotoUrl;
     _startPhotoDateTime = widget.initialStartPhotoDateTime;
     _finishPhotoDateTime = widget.initialFinishPhotoDateTime;
+
+    _startProfilePhotoUrl = widget.initialStartProfilePhotoUrl;
+    _finishProfilePhotoUrl = widget.initialFinishProfilePhotoUrl;
+    _startProfilePhotoDateTime = widget.initialStartProfilePhotoDateTime;
+    _finishProfilePhotoDateTime = widget.initialFinishProfilePhotoDateTime;
   }
 
   void _onPhotoSaved(String type, String newUrl, DateTime newDateTime) {
     setState(() {
-      if (type == 'start') {
+      if (type == 'start_front') {
         _startPhotoUrl = newUrl;
         _startPhotoDateTime = newDateTime;
-      } else {
+      } else if (type == 'finish_front') {
         _finishPhotoUrl = newUrl;
         _finishPhotoDateTime = newDateTime;
+      } else if (type == 'start_profile') {
+        _startProfilePhotoUrl = newUrl;
+        _startProfilePhotoDateTime = newDateTime;
+      } else if (type == 'finish_profile') {
+        _finishProfilePhotoUrl = newUrl;
+        _finishProfilePhotoDateTime = newDateTime;
       }
     });
   }
 
-    Future<void> _pickAndUploadImage(String type) async {
-      print('[_pickAndUploadImage] Starting photo pick for type: $type');
+    Future<void> _pickAndUploadImage(String photoType) async {
+      print('[_pickAndUploadImage] Starting photo pick for type: $photoType');
       FilePickerResult? result =
           await FilePicker.platform.pickFiles(type: FileType.image);
           //print('[_pickAndUploadImage] FilePicker result: $result');
@@ -113,7 +139,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                     final responseData = await ApiService.uploadAnthropometryPhoto(
                       fileBytes,
                       fileName,
-                      type,
+                      photoType,
                       clientId: widget.clientId,
                       photoDateTime: null, // Path is not available on web, so we can't get lastModified
                     );            print('[_pickAndUploadImage] ApiService response: $responseData');
@@ -124,12 +150,18 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                 : DateTime.now();
   
             setState(() {
-              if (type == 'start') {
+              if (photoType == 'start_front') {
                 _startPhotoUrl = newUrl;
                 _startPhotoDateTime = newDateTime;
-              } else {
+              } else if (photoType == 'finish_front') {
                 _finishPhotoUrl = newUrl;
                 _finishPhotoDateTime = newDateTime;
+              } else if (photoType == 'start_profile') {
+                _startProfilePhotoUrl = newUrl;
+                _startProfilePhotoDateTime = newDateTime;
+              } else if (photoType == 'finish_profile') {
+                _finishProfilePhotoUrl = newUrl;
+                _finishProfilePhotoDateTime = newDateTime;
               }
             });
           } catch (e) {
@@ -187,6 +219,26 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     );
   }
 
+  void _navigateToComparisonScreen(String? startPhotoUrl, String? finishPhotoUrl, String title) {
+    if (startPhotoUrl != null && finishPhotoUrl != null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return Scaffold(
+          appBar: AppBar(title: Text(title)),
+          body: ImageComparisonSlider(
+            before: Image.network(
+              Uri.parse(ApiService.baseUrl).replace(path: startPhotoUrl).toString(),
+              fit: BoxFit.contain,
+            ),
+            after: Image.network(
+              Uri.parse(ApiService.baseUrl).replace(path: finishPhotoUrl).toString(),
+              fit: BoxFit.contain,
+            ),
+          ),
+        );
+      }));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -203,6 +255,10 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
           'finishPhotoUrl': _finishPhotoUrl,
           'startPhotoDateTime': _startPhotoDateTime,
           'finishPhotoDateTime': _finishPhotoDateTime,
+          'startProfilePhotoUrl': _startProfilePhotoUrl,
+          'finishProfilePhotoUrl': _finishProfilePhotoUrl,
+          'startProfilePhotoDateTime': _startProfilePhotoDateTime,
+          'finishProfilePhotoDateTime': _finishProfilePhotoDateTime,
         });
       },
       child: Scaffold(
@@ -213,35 +269,22 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // Front photos comparison section
               if (_startPhotoUrl != null && _finishPhotoUrl != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) {
-                        return Scaffold(
-                          appBar: AppBar(title: const Text('Сравнение')),
-                          body: ImageComparisonSlider(
-                            before: Image.network(
-                              Uri.parse(ApiService.baseUrl).replace(path: _startPhotoUrl!).toString(),
-                              fit: BoxFit.contain,
-                            ),
-                            after: Image.network(
-                              Uri.parse(ApiService.baseUrl).replace(path: _finishPhotoUrl!).toString(),
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        );
-                      }));
+                      _navigateToComparisonScreen(_startPhotoUrl, _finishPhotoUrl, 'Сравнение анфас');
                     },
-                    child: const Text('Сравнить'),
+                    child: const Text('Сравнить анфас'),
                   ),
                 )
               else
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20.0),
                   child: Text(
-                    'Загрузите обе фотографии ("Начало" и "Окончание"), чтобы увидеть сравнение.',
+                    'Загрузите обе фотографии ("Анфас начало" и "Анфас окончание"), чтобы увидеть сравнение.',
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -250,13 +293,48 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: _buildPhotoSection(_finishPhotoUrl,
-                        _finishPhotoDateTime, 'Окончание', 'finish', canUploadPhoto, _finishPhotoViewKey),
+                    child: _buildPhotoSection(
+                        _startPhotoUrl, _startPhotoDateTime, 'Анфас начало', 'start_front', canUploadPhoto, _startPhotoViewKey),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
+                    child: _buildPhotoSection(_finishPhotoUrl,
+                        _finishPhotoDateTime, 'Анфас окончание', 'finish_front', canUploadPhoto, _finishPhotoViewKey),
+                  ),
+                ],
+              ),
+              const Divider(height: 32),
+              // Profile photos comparison section
+              if (_startProfilePhotoUrl != null && _finishProfilePhotoUrl != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _navigateToComparisonScreen(_startProfilePhotoUrl, _finishProfilePhotoUrl, 'Сравнение профиль');
+                    },
+                    child: const Text('Сравнить профиль'),
+                  ),
+                )
+              else
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Text(
+                    'Загрузите обе фотографии ("Профиль начало" и "Профиль окончание"), чтобы увидеть сравнение.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              const Divider(height: 32),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
                     child: _buildPhotoSection(
-                        _startPhotoUrl, _startPhotoDateTime, 'Начало', 'start', canUploadPhoto, _startPhotoViewKey),
+                        _startProfilePhotoUrl, _startProfilePhotoDateTime, 'Профиль начало', 'start_profile', canUploadPhoto, _startProfilePhotoViewKey),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildPhotoSection(_finishProfilePhotoUrl,
+                        _finishProfilePhotoDateTime, 'Профиль окончание', 'finish_profile', canUploadPhoto, _finishProfilePhotoViewKey),
                   ),
                 ],
               ),

@@ -893,17 +893,20 @@ class Database {
         parameters: {'clientId': clientId},
       );
       final startResult = await conn.execute(
-        Sql.named('SELECT * FROM anthropometry_start WHERE user_id = @clientId'),
+        Sql.named('SELECT *, profile_photo, profile_photo_date_time FROM anthropometry_start WHERE user_id = @clientId'),
         parameters: {'clientId': clientId},
       );
       final finishResult = await conn.execute(
-        Sql.named('SELECT * FROM anthropometry_finish WHERE user_id = @clientId'),
+        Sql.named('SELECT *, profile_photo, profile_photo_date_time FROM anthropometry_finish WHERE user_id = @clientId'),
         parameters: {'clientId': clientId},
       );
 
       final fixedData = fixedResult.isNotEmpty ? _convertDateTimeToString(fixedResult.first.toColumnMap()) : {};
       final startData = startResult.isNotEmpty ? _convertDateTimeToString(startResult.first.toColumnMap()) : {};
       final finishData = finishResult.isNotEmpty ? _convertDateTimeToString(finishResult.first.toColumnMap()) : {};
+
+      print('[getAnthropometryData] startData: $startData');
+      print('[getAnthropometryData] finishData: $finishData');
 
       return {
         'fixed': fixedData,
@@ -931,13 +934,41 @@ class Database {
   Future<void> updateAnthropometryPhoto(int clientId, String photoUrl, String type, DateTime? photoDateTime, int creatorId) async {
     try {
       final conn = await connection;
-      final tableName = type == 'start' ? 'anthropometry_start' : 'anthropometry_finish';
+      String tableName;
+      String photoColumn;
+      String photoDateTimeColumn;
+
+      switch (type) {
+        case 'start_front':
+          tableName = 'anthropometry_start';
+          photoColumn = 'photo';
+          photoDateTimeColumn = 'photo_date_time';
+          break;
+        case 'finish_front':
+          tableName = 'anthropometry_finish';
+          photoColumn = 'photo';
+          photoDateTimeColumn = 'photo_date_time';
+          break;
+        case 'start_profile':
+          tableName = 'anthropometry_start';
+          photoColumn = 'profile_photo';
+          photoDateTimeColumn = 'profile_photo_date_time';
+          break;
+        case 'finish_profile':
+          tableName = 'anthropometry_finish';
+          photoColumn = 'profile_photo';
+          photoDateTimeColumn = 'profile_photo_date_time';
+          break;
+        default:
+          throw ArgumentError('Invalid photo type: $type');
+      }
+
       await conn.execute(
         Sql.named('''
-          INSERT INTO $tableName (user_id, photo, photo_date_time, created_by, updated_by)
+          INSERT INTO $tableName (user_id, $photoColumn, $photoDateTimeColumn, created_by, updated_by)
           VALUES (@clientId, @photoUrl, @photoDateTime, @creatorId, @creatorId)
           ON CONFLICT (user_id) DO UPDATE
-          SET photo = @photoUrl, photo_date_time = @photoDateTime, updated_at = NOW(), updated_by = @creatorId
+          SET $photoColumn = @photoUrl, $photoDateTimeColumn = @photoDateTime, updated_at = NOW(), updated_by = @creatorId
         '''),
         parameters: {
           'photoUrl': photoUrl,

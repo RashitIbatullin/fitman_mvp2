@@ -41,6 +41,10 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
   String? _finishPhotoUrl;
   DateTime? _startPhotoDateTime;
   DateTime? _finishPhotoDateTime;
+  String? _startProfilePhotoUrl;
+  String? _finishProfilePhotoUrl;
+  DateTime? _startProfilePhotoDateTime;
+  DateTime? _finishProfilePhotoDateTime;
   bool _isFixedEditing = false;
   bool _isStartEditing = false;
   bool _isFinishEditing = false;
@@ -181,6 +185,10 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
             _finishPhotoUrl = data.finish.photo;
             _startPhotoDateTime = data.start.photoDateTime;
             _finishPhotoDateTime = data.finish.photoDateTime;
+            _startProfilePhotoUrl = data.start.profilePhoto;
+            _finishProfilePhotoUrl = data.finish.profilePhoto;
+            _startProfilePhotoDateTime = data.start.profilePhotoDateTime;
+            _finishProfilePhotoDateTime = data.finish.profilePhotoDateTime;
             _controllersInitialized = true;
           }
 
@@ -208,6 +216,10 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                             initialFinishPhotoUrl: _finishPhotoUrl,
                             initialStartPhotoDateTime: _startPhotoDateTime,
                             initialFinishPhotoDateTime: _finishPhotoDateTime,
+                            initialStartProfilePhotoUrl: _startProfilePhotoUrl,
+                            initialFinishProfilePhotoUrl: _finishProfilePhotoUrl,
+                            initialStartProfilePhotoDateTime: _startProfilePhotoDateTime,
+                            initialFinishProfilePhotoDateTime: _finishProfilePhotoDateTime,
                           ),
                         ),
                       );
@@ -218,6 +230,10 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                           _finishPhotoUrl = result['finishPhotoUrl'];
                           _startPhotoDateTime = result['startPhotoDateTime'];
                           _finishPhotoDateTime = result['finishPhotoDateTime'];
+                          _startProfilePhotoUrl = result['startProfilePhotoUrl'];
+                          _finishProfilePhotoUrl = result['finishProfilePhotoUrl'];
+                          _startProfilePhotoDateTime = result['startProfilePhotoDateTime'];
+                          _finishProfilePhotoDateTime = result['finishProfilePhotoDateTime'];
                         });
                       }
                     },

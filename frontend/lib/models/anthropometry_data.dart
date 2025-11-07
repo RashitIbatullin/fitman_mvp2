@@ -46,6 +46,8 @@ class AnthropometryMeasurements {
   final int? hipsCirc;
   final String? photo;
   final DateTime? photoDateTime;
+  final String? profilePhoto;
+  final DateTime? profilePhotoDateTime;
 
   AnthropometryMeasurements({
     this.weight,
@@ -55,6 +57,8 @@ class AnthropometryMeasurements {
     this.hipsCirc,
     this.photo,
     this.photoDateTime,
+    this.profilePhoto,
+    this.profilePhotoDateTime,
   });
 
   factory AnthropometryMeasurements.fromJson(Map<String, dynamic> json) {
@@ -67,6 +71,10 @@ class AnthropometryMeasurements {
       photo: json['photo'],
       photoDateTime: json['photo_date_time'] != null
           ? DateTime.parse(json['photo_date_time'])
+          : null,
+      profilePhoto: json['profile_photo'],
+      profilePhotoDateTime: json['profile_photo_date_time'] != null
+          ? DateTime.parse(json['profile_photo_date_time'])
           : null,
     );
   }
