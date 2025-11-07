@@ -138,6 +138,7 @@ class Database {
       final results = await conn.execute('''
         SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
         FROM users
+        ORDER BY last_name, first_name
       ''');
 
       final users = <User>[];
