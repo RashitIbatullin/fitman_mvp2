@@ -1,14 +1,15 @@
-import '../models/role.dart';
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/role.dart';
 import '../models/schedule_item.dart';
 import '../models/user_front.dart';
 import '../models/work_schedule.dart';
 import '../models/client_schedule_preference.dart'; // Import ClientSchedulePreference
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080';
+  static final String baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
   static String? _token;
 
   static String? get currentToken => _token; // Public getter for debugging

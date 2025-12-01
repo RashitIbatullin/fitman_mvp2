@@ -3,16 +3,9 @@ class AppConfig {
   static const String jwtSecret = 'fitman-super-secret-key-2024-mvp1';
   static const int jwtExpiryHours = 24;
   
-  // Настройки базы данных
-  static const String dbHost = 'localhost';
-  static const int dbPort = 5432;
-  static const String dbName = 'fitman_mvp2';
-  static const String dbUser = 'postgres';
-  static const String dbPassword = 'postgres';
-  
-  // Настройки сервера
+  // Настройки сервера бэкенда
   static const int serverPort = 8080;
-  static const String serverHost = 'localhost';
+  static const String serverHost = '192.168.0.10';
   
   // Настройки безопасности
   static const int bcryptRounds = 12;
@@ -43,10 +36,5 @@ class AppConfig {
   // Валидация пароля
   static bool isValidPassword(String password) {
     return password.length >= minPasswordLength;
-  }
-  
-  // Получить настройки подключения к БД в виде строки
-  static String get databaseConnectionString {
-    return 'postgres://$dbUser:$dbPassword@$dbHost:$dbPort/$dbName';
   }
 }

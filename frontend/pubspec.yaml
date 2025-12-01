@@ -21,6 +21,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   json_annotation: ^4.9.0
+  flutter_dotenv: ^5.1.0
 
   file_picker: ^8.0.0
 
@@ -36,3 +37,4 @@ flutter:
   generate: true
   assets:
     - assets/images/
+    - .env

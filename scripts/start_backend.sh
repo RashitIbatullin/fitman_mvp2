@@ -32,7 +32,6 @@ dart pub get
 echo "🔨 Building application..."
 dart run build_runner build --delete-conflicting-outputs
 
-echo "🌐 Starting server on http://localhost:8080"
 echo "Press Ctrl+C to stop the server"
 echo "================================"
 
