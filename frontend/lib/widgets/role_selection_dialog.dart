@@ -6,6 +6,21 @@ class RoleSelectionDialog extends StatelessWidget {
 
   const RoleSelectionDialog({super.key, required this.roles});
 
+  // Helper function to map role name to a constant IconData
+  IconData _getIconForRole(String roleName) {
+    switch (roleName.toLowerCase()) {
+      case 'admin':
+        return Icons.admin_panel_settings;
+      case 'instructor':
+        return Icons.fitness_center;
+      case 'client':
+        return Icons.person;
+      // Add other roles here
+      default:
+        return Icons.person;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -15,14 +30,7 @@ class RoleSelectionDialog extends StatelessWidget {
           children: roles.map((role) {
             return ListTile(
               title: Text(role.title),
-              leading: role.icon != null
-                  ? Icon(
-                      IconData(
-                        int.parse(role.icon!),
-                        fontFamily: 'MaterialIcons',
-                      ),
-                    )
-                  : const Icon(Icons.person),
+              leading: Icon(_getIconForRole(role.name)), // Using the helper function
               onTap: () {
                 Navigator.of(context).pop(role);
               },
