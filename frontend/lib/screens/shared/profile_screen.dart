@@ -163,7 +163,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildInfoRow(label: 'ID', value: widget.user.id.toString()),
-            _buildInfoRow(label: 'Полное имя', value: widget.user.fullName),
+            _buildInfoRow(label: 'ФИО', value: widget.user.fullName),
             _buildInfoRow(label: 'Email', value: widget.user.email),
             _buildInfoRow(label: 'Телефон', value: widget.user.phone ?? 'не указан'),
             _buildInfoRow(label: 'Пол', value: widget.user.gender ?? 'не указан'),

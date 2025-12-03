@@ -418,7 +418,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Текущий тип фигуры', style: Theme.of(context).textTheme.titleLarge),
+                          Text('Генетический тип фигуры', style: Theme.of(context).textTheme.titleLarge),
                           const SizedBox(height: 8),
                           Text(finishBodyShape ?? 'Недостаточно данных', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         ],

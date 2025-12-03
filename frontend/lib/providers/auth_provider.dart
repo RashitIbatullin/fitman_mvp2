@@ -33,24 +33,41 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
   Future<void> _loadStoredUser() async {
     try {
-      final token = await _getStoredToken();
-      if (token != null) {
-        final user = await _getStoredUser();
-        if (user != null) {
-          Role? selectedRole;
-          if (user.roles.length == 1) {
-            selectedRole = user.roles.first;
-          }
-          // При запуске, если ролей много, selectedRole остается null, что вызовет экран выбора
-          state = AsyncValue.data(
-            AuthState(user: user, selectedRole: selectedRole),
-          );
-          return;
-        }
+      // First, ensure the token is loaded from prefs into the ApiService
+      await ApiService.init();
+      
+      // If there's no token, we are not logged in.
+      if (ApiService.currentToken == null) {
+        state = AsyncValue.data(const AuthState(user: null, selectedRole: null));
+        return;
       }
+
+      // Validate the token and get fresh user data
+      final user = await ApiService.checkTokenAndGetUser();
+      
+      // If validation is successful, update user data in storage
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_data', jsonEncode(user.toJson()));
+
+      Role? selectedRole;
+      if (user.roles.length == 1) {
+        selectedRole = user.roles.first;
+      }
+      
+      state = AsyncValue.data(
+        AuthState(user: user, selectedRole: selectedRole),
+      );
+
+    } catch (e) {
+      // This catch block is CRUCIAL. If checkTokenAndGetUser fails (e.g., 401 error),
+      // we land here. We must log out the user.
+      print('[_loadStoredUser] Token validation failed: $e. Logging out.');
+      // Don't call logout() directly as it might cause state issues during build.
+      // Just set the state to unauthenticated. The logout method will clear storage.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('user_data');
       state = AsyncValue.data(const AuthState(user: null, selectedRole: null));
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
     }
   }
 
@@ -100,21 +117,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   // Метод для установки роли, выбранной на экране RoleSelectionScreen
   void setSelectedRole(Role role) {
     state = state.whenData((value) => value.copyWith(selectedRole: role));
-  }
-
-  // Вспомогательные методы
-  Future<String?> _getStoredToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
-  }
-
-  Future<User?> _getStoredUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('user_data');
-    if (userJson != null) {
-      return User.fromJson(jsonDecode(userJson));
-    }
-    return null;
   }
 
   Future<void> _storeAuthData(AuthResponse authResponse) async {

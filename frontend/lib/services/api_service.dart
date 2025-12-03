@@ -138,6 +138,33 @@ class ApiService {
     }
   }
 
+  static Future<User> checkTokenAndGetUser() async {
+    // Ensure the token is loaded before making the call
+    if (_token == null) await init();
+    if (_token == null) throw Exception('No token available');
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/auth/check'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // The /api/auth/check endpoint returns a map with an 'user' key
+        final user = User.fromJson(data['user']);
+        return user;
+      } else {
+        // This will be caught by AuthNotifier to trigger logout
+        throw Exception('Token validation failed with status ${response.statusCode}');
+      }
+    } catch (e) {
+      // Rethrow to be caught by AuthNotifier
+      print('Check token error: $e');
+      rethrow;
+    }
+  }
+
   // Создание пользователя (для админа)
   static Future<User> createUser(
     CreateUserRequest request,
