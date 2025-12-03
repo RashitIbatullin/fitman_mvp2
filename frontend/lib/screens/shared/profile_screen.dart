@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
@@ -55,14 +56,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
 
-    if (result != null) {
-      final fileBytes = result.files.single.bytes;
-      final fileName = result.files.single.name;
+      if (result != null) {
+        final platformFile = result.files.single;
+        final fileName = platformFile.name;
+        Uint8List? fileBytes;
 
-      if (fileBytes != null) {
-        try {
+        if (platformFile.bytes != null) {
+          fileBytes = platformFile.bytes;
+        } else if (platformFile.path != null) {
+          fileBytes = await File(platformFile.path!).readAsBytes();
+        }
+
+        if (fileBytes != null) {
           final response = await ApiService.uploadAvatar(fileBytes, fileName, widget.user.id);
           if (!mounted) return;
 
@@ -72,13 +80,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Аватар успешно обновлен')),
           );
-        } catch (e) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка загрузки аватара: $e')),
-          );
+        } else {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Не удалось прочитать файл.')),
+            );
         }
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при выборе файла: $e')),
+      );
     }
   }
 

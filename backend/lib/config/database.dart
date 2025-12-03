@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:postgres/postgres.dart';
 import 'package:dotenv/dotenv.dart';
 import '../models/user_back.dart';
@@ -33,33 +34,22 @@ class Database {
           _isConnecting = true;
           _connectionCompleter = Completer<void>();
 
-                                        try {
+            try {
 
-                                          // Загружаем переменные окружения
+              // Загружаем переменные окружения
+              final env = DotEnv()..load();
 
-                                          final env = DotEnv()..load();
+              // Создаем Endpoint для подключения
+              final endpoint = Endpoint(
+                host: env['DB_HOST'] ?? 'localhost',
+                port: int.tryParse(env['DB_PORT'] ?? '5432') ?? 5432,
+                database: env['DB_NAME'] ?? 'fitman_mvp2',
+                username: env['DB_USER'] ?? 'postgres',
+                password: env['DB_PASS'] ?? 'postgres',
 
+              );
 
-
-                                          // Создаем Endpoint для подключения
-
-                                          final endpoint = Endpoint(
-
-                                            host: env['DB_HOST'] ?? 'localhost',
-
-                                            port: int.tryParse(env['DB_PORT'] ?? '5432') ?? 5432,
-
-                                            database: env['DB_NAME'] ?? 'fitman_mvp2',
-
-                                            username: env['DB_USER'] ?? 'postgres',
-
-                                            password: env['DB_PASS'] ?? 'postgres',
-
-                                          );
-
-
-
-                                          print('🔄 Connecting to PostgreSQL database...');
+              print('🔄 Connecting to PostgreSQL database...');
             // Открываем соединение через статический метод
             _connection = await Connection.open(endpoint, settings: ConnectionSettings(sslMode: SslMode.disable));
             print('✅ Connected to PostgreSQL database');

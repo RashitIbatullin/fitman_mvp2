@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
@@ -123,32 +124,44 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     });
   }
 
-    Future<void> _pickAndUploadImage(String photoType) async {
-      print('[_pickAndUploadImage] Starting photo pick for type: $photoType');
+  Future<void> _pickAndUploadImage(String photoType) async {
+    print('[_pickAndUploadImage] Starting photo pick for type: $photoType');
+    try {
       FilePickerResult? result =
           await FilePicker.platform.pickFiles(type: FileType.image);
-          //print('[_pickAndUploadImage] FilePicker result: $result');
-          if (result != null) {
-          print('[_pickAndUploadImage] Number of files picked: ${result.files.length}');
-          final fileBytes = result.files.single.bytes;
-                final fileName = result.files.single.name;
-          
-                if (fileBytes != null) {
-                  try {
-                    print('[_pickAndUploadImage] Calling ApiService.uploadAnthropometryPhoto...');
-                    final responseData = await ApiService.uploadAnthropometryPhoto(
-                      fileBytes,
-                      fileName,
-                      photoType,
-                      clientId: widget.clientId,
-                      photoDateTime: null, // Path is not available on web, so we can't get lastModified
-                    );            print('[_pickAndUploadImage] ApiService response: $responseData');
-  
+
+      if (result != null) {
+        final platformFile = result.files.single;
+        final fileName = platformFile.name;
+        Uint8List? fileBytes;
+
+        // Check if we have bytes directly (web) or need to read from path (mobile)
+        if (platformFile.bytes != null) {
+          fileBytes = platformFile.bytes;
+          print('[_pickAndUploadImage] Got file bytes directly (web).');
+        } else if (platformFile.path != null) {
+          print('[_pickAndUploadImage] Reading file from path (mobile): ${platformFile.path}');
+          fileBytes = await File(platformFile.path!).readAsBytes();
+        }
+
+        if (fileBytes != null) {
+          print('[_pickAndUploadImage] File bytes acquired, proceeding with upload.');
+          try {
+            print('[_pickAndUploadImage] Calling ApiService.uploadAnthropometryPhoto...');
+            final responseData = await ApiService.uploadAnthropometryPhoto(
+              fileBytes,
+              fileName,
+              photoType,
+              clientId: widget.clientId,
+              photoDateTime: null, // Let backend decide the time
+            );
+            print('[_pickAndUploadImage] ApiService response: $responseData');
+
             final newUrl = responseData['url'];
             final newDateTime = responseData['photo_date_time'] != null
                 ? DateTime.parse(responseData['photo_date_time'])
                 : DateTime.now();
-  
+
             setState(() {
               if (photoType == 'start_front') {
                 _startPhotoUrl = newUrl;
@@ -165,12 +178,33 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
               }
             });
           } catch (e) {
-            // Handle error
             print('[_pickAndUploadImage] Image upload failed: $e');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Ошибка загрузки фото: $e')),
+              );
+            }
+          }
+        } else {
+          print('[_pickAndUploadImage] Could not read file bytes.');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Не удалось прочитать файл.')),
+            );
           }
         }
+      } else {
+        print('[_pickAndUploadImage] User canceled the file picker.');
+      }
+    } catch (e) {
+      print('[_pickAndUploadImage] Error during file picking: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка при выборе файла: $e')),
+        );
       }
     }
+  }
 
   Widget _buildPhotoSection(
       String? photoUrl,
