@@ -5,7 +5,7 @@ class AppConfig {
   
   // Настройки сервера бэкенда
   static const int serverPort = 8080;
-  static const String serverHost = '192.168.0.10';
+  static const String serverHost = '0.0.0.0';
   
   // Настройки безопасности
   static const int bcryptRounds = 12;
@@ -19,7 +19,10 @@ class AppConfig {
     'http://localhost:3000',
     'http://localhost:8080',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080'
+    'http://127.0.0.1:8080',
+    'http://192.168.0.100',
+    'http://192.168.0.100:8080',
+    'http://192.168.0.100:3000'
   ];
   
   // Валидация email

@@ -7,4 +7,4 @@ port: 8080
 # isolateCount: 1
 
 # The hostname to serve on.
-# host: localhost
+host: 0.0.0.0

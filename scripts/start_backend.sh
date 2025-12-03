@@ -35,5 +35,5 @@ dart run build_runner build --delete-conflicting-outputs
 echo "Press Ctrl+C to stop the server"
 echo "================================"
 
-# Запуск сервера
-dart bin/server.dart
+# Запуск сервера в режиме разработки с доступом по сети
+dart_frog dev --host 0.0.0.0

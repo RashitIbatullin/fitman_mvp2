@@ -9,7 +9,7 @@ import '../models/work_schedule.dart';
 import '../models/client_schedule_preference.dart'; // Import ClientSchedulePreference
 
 class ApiService {
-  static final String baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
+  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
   static String? _token;
 
   static String? get currentToken => _token; // Public getter for debugging
