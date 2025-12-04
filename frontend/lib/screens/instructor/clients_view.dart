@@ -37,7 +37,8 @@ class ClientsView extends ConsumerWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ClientDashboard(client: client),
+                    builder: (context) =>
+                        ClientDashboard(client: client, showBackButton: true),
                   ),
                 );
               },

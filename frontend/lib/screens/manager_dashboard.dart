@@ -11,7 +11,8 @@ import 'manager/schedule_view.dart';
 
 class ManagerDashboard extends ConsumerStatefulWidget {
   final User? manager;
-  const ManagerDashboard({super.key, this.manager});
+  final bool showBackButton;
+  const ManagerDashboard({super.key, this.manager, required this.showBackButton});
 
   @override
   ConsumerState<ManagerDashboard> createState() => _ManagerDashboardState();
@@ -58,6 +59,7 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: widget.showBackButton ? const BackButton() : Container(),
         title: Text(_titles[_selectedIndex]),
         actions: [
           if (widget.manager == null)

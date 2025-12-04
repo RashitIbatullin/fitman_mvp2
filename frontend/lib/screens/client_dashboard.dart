@@ -20,15 +20,15 @@ final clientDashboardIndexProvider = StateProvider<int>((ref) => 0);
 
 class ClientDashboard extends ConsumerWidget {
   final User? client;
+  final bool showBackButton;
 
-  const ClientDashboard({super.key, this.client});
+  const ClientDashboard({super.key, this.client, required this.showBackButton});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = client ?? ref.watch(authProvider).value?.user;
     final dashboardData = ref.watch(dashboardDataProvider);
     final selectedIndex = ref.watch(clientDashboardIndexProvider);
-    final canPop = Navigator.of(context).canPop();
 
     if (user == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -78,7 +78,7 @@ class ClientDashboard extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: canPop ? const BackButton() : null,
+        leading: showBackButton ? const BackButton() : null,
         title: Text(titles[selectedIndex]),
         actions: [
           IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
@@ -112,7 +112,7 @@ class ClientDashboard extends ConsumerWidget {
                 });
               },
             ),
-          if (canPop)
+          if (showBackButton)
             Builder(
               builder: (context) => IconButton(
                 icon: const Icon(Icons.menu),

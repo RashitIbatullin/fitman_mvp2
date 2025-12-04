@@ -6,7 +6,8 @@ import 'admin/users_list_screen.dart';
 import 'admin/catalogs_screen.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
-  const AdminDashboard({super.key});
+  final bool showBackButton;
+  const AdminDashboard({super.key, required this.showBackButton});
 
   @override
   ConsumerState<AdminDashboard> createState() => _AdminDashboardState();
@@ -49,6 +50,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: widget.showBackButton ? const BackButton() : Container(),
         title: Text(_titles[_selectedIndex]),
         actions: [
           IconButton(

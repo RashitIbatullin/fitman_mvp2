@@ -60,16 +60,16 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       case 'admin':
         return;
       case 'manager':
-        page = ManagerDashboard(manager: user);
+        page = ManagerDashboard(manager: user, showBackButton: true);
         break;
       case 'trainer':
-        page = TrainerDashboard(trainer: user);
+        page = TrainerDashboard(trainer: user, showBackButton: true);
         break;
       case 'instructor':
-        page = InstructorDashboard(instructor: user);
+        page = InstructorDashboard(instructor: user, showBackButton: true);
         break;
       case 'client':
-        page = ClientDashboard(client: user);
+        page = ClientDashboard(client: user, showBackButton: true);
         break;
       default:
         page = const UnknownRoleScreen();

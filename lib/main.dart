@@ -1,11 +1,15 @@
-import 'package:fitman_app/screens/auth_wrapper.dart';
+import 'package:fitman_app/screens/login_screen.dart';
 import 'package:fitman_app/utils/my_custom_scroll_behavior.dart';
+import 'package:fitman_app/widgets/auth_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fitman_app/services/api_service.dart';
+
+// Global key for the navigator
+final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +26,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Fitman MVP2',
+      navigatorKey: navigatorKey, // Assign the global key
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -40,7 +45,12 @@ class MyApp extends StatelessWidget {
       supportedLocales: const [
         Locale('ru', ''), // Russian
       ],
-      home: AuthWrapper(), // Используем AuthWrapper как главный экран
+      // The LoginScreen is now the base route.
+      home: const LoginScreen(),
+      // The AuthNavigator sits above the navigator and handles auth-based navigation.
+      builder: (context, child) {
+        return AuthNavigator(navigatorKey: navigatorKey, child: child!);
+      },
     );
   }
 }

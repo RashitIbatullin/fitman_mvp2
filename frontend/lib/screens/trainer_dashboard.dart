@@ -6,7 +6,8 @@ import 'package:fitman_app/screens/shared/profile_screen.dart';
 
 class TrainerDashboard extends ConsumerStatefulWidget {
   final User? trainer;
-  const TrainerDashboard({super.key, this.trainer});
+  final bool showBackButton;
+  const TrainerDashboard({super.key, this.trainer, required this.showBackButton});
 
   @override
   ConsumerState<TrainerDashboard> createState() => _TrainerDashboardState();
@@ -45,6 +46,7 @@ class _TrainerDashboardState extends ConsumerState<TrainerDashboard> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: widget.showBackButton ? const BackButton() : Container(),
         title: Text(_titles[_selectedIndex]),
         actions: [
           IconButton(
