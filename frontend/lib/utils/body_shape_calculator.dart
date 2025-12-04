@@ -1,6 +1,9 @@
 String? calculateBodyShape({
+  //обхват плеч
   required int? shouldersCirc,
+  //обхват талии
   required int? waistCirc,
+  //обхват бедер
   required int? hipsCirc,
 }) {
   if (shouldersCirc == null || waistCirc == null || hipsCirc == null || shouldersCirc == 0 || hipsCirc == 0) {

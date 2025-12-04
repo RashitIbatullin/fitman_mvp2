@@ -526,7 +526,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Генетический тип фигуры',
+                            'Тип фигуры',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
@@ -800,9 +800,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                   ? _startHipsCircController.text
                   : null,
             ),
-            if (whtrRatio != null &&
-                (bodyShape == 'Яблоко' ||
-                    bodyShape == 'Перевернутый треугольник')) ...[
+            if (whtrRatio != null) ...[
               const SizedBox(height: 8),
               Text('WHtR: ${whtrRatio.toStringAsFixed(2)}'),
               const SizedBox(height: 8),
