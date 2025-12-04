@@ -7,7 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/utils/body_shape_calculator.dart';
 
-final anthropometryProvider = FutureProvider.family<AnthropometryData, int?>((ref, clientId) async {
+import '../../models/user_front.dart';
+
+final anthropometryProvider = FutureProvider.family<AnthropometryData, int?>((
+  ref,
+  clientId,
+) async {
   final authUser = ref.watch(authProvider).value?.user;
   if (authUser == null) {
     throw Exception('User not authenticated');
@@ -33,7 +38,8 @@ class AnthropometryScreen extends ConsumerStatefulWidget {
   const AnthropometryScreen({super.key, this.clientId});
 
   @override
-  ConsumerState<AnthropometryScreen> createState() => _AnthropometryScreenState();
+  ConsumerState<AnthropometryScreen> createState() =>
+      _AnthropometryScreenState();
 }
 
 class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
@@ -129,36 +135,52 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
     });
   }
 
-  void _initializeControllers(AnthropometryFixed fixed,
-      AnthropometryMeasurements start, AnthropometryMeasurements finish) {
-    _heightController =
-        TextEditingController(text: fixed.height?.toString() ?? '');
-    _wristCircController =
-        TextEditingController(text: fixed.wristCirc?.toString() ?? '');
-    _ankleCircController =
-        TextEditingController(text: fixed.ankleCirc?.toString() ?? '');
+  void _initializeControllers(
+    AnthropometryFixed fixed,
+    AnthropometryMeasurements start,
+    AnthropometryMeasurements finish,
+  ) {
+    _heightController = TextEditingController(
+      text: fixed.height?.toString() ?? '',
+    );
+    _wristCircController = TextEditingController(
+      text: fixed.wristCirc?.toString() ?? '',
+    );
+    _ankleCircController = TextEditingController(
+      text: fixed.ankleCirc?.toString() ?? '',
+    );
 
-    _startWeightController =
-        TextEditingController(text: start.weight?.toString() ?? '');
-    _startShouldersCircController =
-        TextEditingController(text: start.shouldersCirc?.toString() ?? '');
-    _startBreastCircController =
-        TextEditingController(text: start.breastCirc?.toString() ?? '');
-    _startWaistCircController =
-        TextEditingController(text: start.waistCirc?.toString() ?? '');
-    _startHipsCircController =
-        TextEditingController(text: start.hipsCirc?.toString() ?? '');
+    _startWeightController = TextEditingController(
+      text: start.weight?.toString() ?? '',
+    );
+    _startShouldersCircController = TextEditingController(
+      text: start.shouldersCirc?.toString() ?? '',
+    );
+    _startBreastCircController = TextEditingController(
+      text: start.breastCirc?.toString() ?? '',
+    );
+    _startWaistCircController = TextEditingController(
+      text: start.waistCirc?.toString() ?? '',
+    );
+    _startHipsCircController = TextEditingController(
+      text: start.hipsCirc?.toString() ?? '',
+    );
 
-    _finishWeightController =
-        TextEditingController(text: finish.weight?.toString() ?? '');
-    _finishShouldersCircController =
-        TextEditingController(text: finish.shouldersCirc?.toString() ?? '');
-    _finishBreastCircController =
-        TextEditingController(text: finish.breastCirc?.toString() ?? '');
-    _finishWaistCircController =
-        TextEditingController(text: finish.waistCirc?.toString() ?? '');
-    _finishHipsCircController =
-        TextEditingController(text: finish.hipsCirc?.toString() ?? '');
+    _finishWeightController = TextEditingController(
+      text: finish.weight?.toString() ?? '',
+    );
+    _finishShouldersCircController = TextEditingController(
+      text: finish.shouldersCirc?.toString() ?? '',
+    );
+    _finishBreastCircController = TextEditingController(
+      text: finish.breastCirc?.toString() ?? '',
+    );
+    _finishWaistCircController = TextEditingController(
+      text: finish.waistCirc?.toString() ?? '',
+    );
+    _finishHipsCircController = TextEditingController(
+      text: finish.hipsCirc?.toString() ?? '',
+    );
 
     _startBodyShape = calculateBodyShape(
       shouldersCirc: start.shouldersCirc,
@@ -174,7 +196,10 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
     final user = authState.value?.user;
 
     // A user is not a client if they don't have the client role, or have more than one role.
-    final canEdit = user != null && (!user.roles.any((role) => role.name == 'client') || user.roles.length > 1);
+    final canEdit =
+        user != null &&
+        (!user.roles.any((role) => role.name == 'client') ||
+            user.roles.length > 1);
 
     return Scaffold(
       body: anthropometryData.when(
@@ -217,9 +242,12 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                             initialStartPhotoDateTime: _startPhotoDateTime,
                             initialFinishPhotoDateTime: _finishPhotoDateTime,
                             initialStartProfilePhotoUrl: _startProfilePhotoUrl,
-                            initialFinishProfilePhotoUrl: _finishProfilePhotoUrl,
-                            initialStartProfilePhotoDateTime: _startProfilePhotoDateTime,
-                            initialFinishProfilePhotoDateTime: _finishProfilePhotoDateTime,
+                            initialFinishProfilePhotoUrl:
+                                _finishProfilePhotoUrl,
+                            initialStartProfilePhotoDateTime:
+                                _startProfilePhotoDateTime,
+                            initialFinishProfilePhotoDateTime:
+                                _finishProfilePhotoDateTime,
                           ),
                         ),
                       );
@@ -230,10 +258,14 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                           _finishPhotoUrl = result['finishPhotoUrl'];
                           _startPhotoDateTime = result['startPhotoDateTime'];
                           _finishPhotoDateTime = result['finishPhotoDateTime'];
-                          _startProfilePhotoUrl = result['startProfilePhotoUrl'];
-                          _finishProfilePhotoUrl = result['finishProfilePhotoUrl'];
-                          _startProfilePhotoDateTime = result['startProfilePhotoDateTime'];
-                          _finishProfilePhotoDateTime = result['finishProfilePhotoDateTime'];
+                          _startProfilePhotoUrl =
+                              result['startProfilePhotoUrl'];
+                          _finishProfilePhotoUrl =
+                              result['finishProfilePhotoUrl'];
+                          _startProfilePhotoDateTime =
+                              result['startProfilePhotoDateTime'];
+                          _finishProfilePhotoDateTime =
+                              result['finishProfilePhotoDateTime'];
                         });
                       }
                     },
@@ -256,9 +288,15 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                     () => setState(() => _isFixedEditing = true),
                     () async {
                       if (_formKey.currentState!.validate()) {
-                        final currentHeight = int.tryParse(_heightController.text);
-                        final currentWristCirc = int.tryParse(_wristCircController.text);
-                        final currentAnkleCirc = int.tryParse(_ankleCircController.text);
+                        final currentHeight = int.tryParse(
+                          _heightController.text,
+                        );
+                        final currentWristCirc = int.tryParse(
+                          _wristCircController.text,
+                        );
+                        final currentAnkleCirc = int.tryParse(
+                          _ankleCircController.text,
+                        );
 
                         try {
                           await ApiService.updateAnthropometryFixed(
@@ -267,24 +305,37 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                             wristCirc: currentWristCirc ?? 0,
                             ankleCirc: currentAnkleCirc ?? 0,
                           );
-                          ref.invalidate(anthropometryProvider(widget.clientId));
+                          ref.invalidate(
+                            anthropometryProvider(widget.clientId),
+                          );
                           setState(() {
                             _isFixedEditing = false;
                           });
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Фиксированные данные успешно обновлены!')),
+                            const SnackBar(
+                              content: Text(
+                                'Фиксированные данные успешно обновлены!',
+                              ),
+                            ),
                           );
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Ошибка при сохранении фиксированных данных: $e')),
+                            SnackBar(
+                              content: Text(
+                                'Ошибка при сохранении фиксированных данных: $e',
+                              ),
+                            ),
                           );
                         }
                       }
                     },
                     () {
-                      _heightController.text = data.fixed.height?.toString() ?? '';
-                      _wristCircController.text = data.fixed.wristCirc?.toString() ?? '';
-                      _ankleCircController.text = data.fixed.ankleCirc?.toString() ?? '';
+                      _heightController.text =
+                          data.fixed.height?.toString() ?? '';
+                      _wristCircController.text =
+                          data.fixed.wristCirc?.toString() ?? '';
+                      _ankleCircController.text =
+                          data.fixed.ankleCirc?.toString() ?? '';
                       setState(() {
                         _isFixedEditing = false;
                       });
@@ -311,11 +362,21 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                           () => setState(() => _isStartEditing = true),
                           () async {
                             if (_formKey.currentState!.validate()) {
-                              final currentWeight = double.tryParse(_startWeightController.text);
-                              final currentShouldersCirc = int.tryParse(_startShouldersCircController.text);
-                              final currentBreastCirc = int.tryParse(_startBreastCircController.text);
-                              final currentWaistCirc = int.tryParse(_startWaistCircController.text);
-                              final currentHipsCirc = int.tryParse(_startHipsCircController.text);
+                              final currentWeight = double.tryParse(
+                                _startWeightController.text,
+                              );
+                              final currentShouldersCirc = int.tryParse(
+                                _startShouldersCircController.text,
+                              );
+                              final currentBreastCirc = int.tryParse(
+                                _startBreastCircController.text,
+                              );
+                              final currentWaistCirc = int.tryParse(
+                                _startWaistCircController.text,
+                              );
+                              final currentHipsCirc = int.tryParse(
+                                _startHipsCircController.text,
+                              );
 
                               try {
                                 await ApiService.updateAnthropometryMeasurements(
@@ -327,28 +388,46 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                                   waistCirc: currentWaistCirc ?? 0,
                                   hipsCirc: currentHipsCirc ?? 0,
                                 );
-                                ref.invalidate(anthropometryProvider(widget.clientId));
+                                ref.invalidate(
+                                  anthropometryProvider(widget.clientId),
+                                );
                                 setState(() {
                                   _isStartEditing = false;
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Данные Начало успешно обновлены!')),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Данные Начало успешно обновлены!',
+                                    ),
+                                  ),
                                 );
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Ошибка при сохранении данных Начало: $e')),
+                                  SnackBar(
+                                    content: Text(
+                                      'Ошибка при сохранении данных Начало: $e',
+                                    ),
+                                  ),
                                 );
                               }
                             }
                           },
                           () {
-                            _startWeightController.text = data.start.weight?.toString() ?? '';
-                            _startShouldersCircController.text = data.start.shouldersCirc?.toString() ?? '';
-                            _startBreastCircController.text = data.start.breastCirc?.toString() ?? '';
-                            _startWaistCircController.text = data.start.waistCirc?.toString() ?? '';
-                            _startHipsCircController.text = data.start.hipsCirc?.toString() ?? '';
-                            setState(() { _isStartEditing = false; });
+                            _startWeightController.text =
+                                data.start.weight?.toString() ?? '';
+                            _startShouldersCircController.text =
+                                data.start.shouldersCirc?.toString() ?? '';
+                            _startBreastCircController.text =
+                                data.start.breastCirc?.toString() ?? '';
+                            _startWaistCircController.text =
+                                data.start.waistCirc?.toString() ?? '';
+                            _startHipsCircController.text =
+                                data.start.hipsCirc?.toString() ?? '';
+                            setState(() {
+                              _isStartEditing = false;
+                            });
                           },
+                          user,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -369,11 +448,21 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                           () => setState(() => _isFinishEditing = true),
                           () async {
                             if (_formKey.currentState!.validate()) {
-                              final currentWeight = double.tryParse(_finishWeightController.text);
-                              final currentShouldersCirc = int.tryParse(_finishShouldersCircController.text);
-                              final currentBreastCirc = int.tryParse(_finishBreastCircController.text);
-                              final currentWaistCirc = int.tryParse(_finishWaistCircController.text);
-                              final currentHipsCirc = int.tryParse(_finishHipsCircController.text);
+                              final currentWeight = double.tryParse(
+                                _finishWeightController.text,
+                              );
+                              final currentShouldersCirc = int.tryParse(
+                                _finishShouldersCircController.text,
+                              );
+                              final currentBreastCirc = int.tryParse(
+                                _finishBreastCircController.text,
+                              );
+                              final currentWaistCirc = int.tryParse(
+                                _finishWaistCircController.text,
+                              );
+                              final currentHipsCirc = int.tryParse(
+                                _finishHipsCircController.text,
+                              );
 
                               try {
                                 await ApiService.updateAnthropometryMeasurements(
@@ -385,28 +474,46 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                                   waistCirc: currentWaistCirc ?? 0,
                                   hipsCirc: currentHipsCirc ?? 0,
                                 );
-                                ref.invalidate(anthropometryProvider(widget.clientId));
+                                ref.invalidate(
+                                  anthropometryProvider(widget.clientId),
+                                );
                                 setState(() {
                                   _isFinishEditing = false;
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Данные Окончание успешно обновлены!')),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Данные Окончание успешно обновлены!',
+                                    ),
+                                  ),
                                 );
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Ошибка при сохранении данных Окончание: $e')),
+                                  SnackBar(
+                                    content: Text(
+                                      'Ошибка при сохранении данных Окончание: $e',
+                                    ),
+                                  ),
                                 );
                               }
                             }
                           },
                           () {
-                            _finishWeightController.text = data.finish.weight?.toString() ?? '';
-                            _finishShouldersCircController.text = data.finish.shouldersCirc?.toString() ?? '';
-                            _finishBreastCircController.text = data.finish.breastCirc?.toString() ?? '';
-                            _finishWaistCircController.text = data.finish.waistCirc?.toString() ?? '';
-                            _finishHipsCircController.text = data.finish.hipsCirc?.toString() ?? '';
-                            setState(() { _isFinishEditing = false; });
+                            _finishWeightController.text =
+                                data.finish.weight?.toString() ?? '';
+                            _finishShouldersCircController.text =
+                                data.finish.shouldersCirc?.toString() ?? '';
+                            _finishBreastCircController.text =
+                                data.finish.breastCirc?.toString() ?? '';
+                            _finishWaistCircController.text =
+                                data.finish.waistCirc?.toString() ?? '';
+                            _finishHipsCircController.text =
+                                data.finish.hipsCirc?.toString() ?? '';
+                            setState(() {
+                              _isFinishEditing = false;
+                            });
                           },
+                          user,
                         ),
                       ),
                     ],
@@ -418,9 +525,18 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Генетический тип фигуры', style: Theme.of(context).textTheme.titleLarge),
+                          Text(
+                            'Генетический тип фигуры',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
                           const SizedBox(height: 8),
-                          Text(finishBodyShape ?? 'Недостаточно данных', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(
+                            finishBodyShape ?? 'Недостаточно данных',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -436,12 +552,18 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
     );
   }
 
-  Widget _buildEditableField(String label, TextEditingController controller,
-      {bool isInt = false, bool isDouble = false, required bool isEditing, FocusNode? focusNode}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: isEditing
-          ? TextFormField(
+  Widget _buildEditableField(
+    String label,
+    TextEditingController controller, {
+    bool isInt = false,
+    bool isDouble = false,
+    required bool isEditing,
+    FocusNode? focusNode,
+    String? startValue,
+  }) {
+    Widget valueWidget;
+    if (isEditing) {
+      valueWidget = TextFormField(
         controller: controller,
         focusNode: focusNode,
         decoration: InputDecoration(
@@ -450,8 +572,9 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
           isDense: true,
           contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
         ),
-        keyboardType: isInt || isDouble ? TextInputType.number : TextInputType
-            .text,
+        keyboardType: isInt || isDouble
+            ? TextInputType.number
+            : TextInputType.text,
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Поле не может быть пустым';
@@ -468,38 +591,86 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
           }
           return null;
         },
-      )
-          : Text('$label: ${controller.text.isEmpty ? 'не указано' : controller
-          .text}'),
+      );
+    } else {
+      String differenceText = '';
+      if (startValue != null) {
+        if (isDouble) {
+          final double? start = double.tryParse(startValue);
+          final double? end = double.tryParse(controller.text);
+          if (start != null && end != null) {
+            final double diff = end - start;
+            if (diff != 0) {
+              differenceText =
+                  ' (${diff > 0 ? '+' : ''}${diff.toStringAsFixed(1)})';
+            }
+          }
+        } else {
+          final int? start = int.tryParse(startValue);
+          final int? end = int.tryParse(controller.text);
+          if (start != null && end != null) {
+            final int diff = end - start;
+            if (diff != 0) {
+              differenceText = ' (${diff > 0 ? '+' : ''}$diff)';
+            }
+          }
+        }
+      }
+
+      valueWidget = RichText(
+        text: TextSpan(
+          style: DefaultTextStyle.of(context).style,
+          children: [
+            TextSpan(
+              text:
+                  '$label: ${controller.text.isEmpty ? 'не указано' : controller.text}',
+            ),
+            if (differenceText.isNotEmpty)
+              TextSpan(
+                text: differenceText,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: valueWidget,
     );
   }
 
-
-
-  Widget _buildEditControls(bool isEditing, VoidCallback onEdit, VoidCallback onSave, VoidCallback onCancel) {
+  Widget _buildEditControls(
+    bool isEditing,
+    VoidCallback onEdit,
+    VoidCallback onSave,
+    VoidCallback onCancel,
+  ) {
     return isEditing
         ? Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.save),
-                onPressed: onSave,
-              ),
-              IconButton(
-                icon: const Icon(Icons.cancel),
-                onPressed: onCancel,
-              ),
+              IconButton(icon: const Icon(Icons.save), onPressed: onSave),
+              IconButton(icon: const Icon(Icons.cancel), onPressed: onCancel),
             ],
           )
-        : IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: onEdit,
-          );
+        : IconButton(icon: const Icon(Icons.edit), onPressed: onEdit);
   }
 
-  Widget _buildFixedMeasurementsCard(AnthropometryFixed fixed,
-      TextEditingController heightController,
-      TextEditingController wristCircController,
-      TextEditingController ankleCircController, bool canEdit, bool isEditing, VoidCallback onEdit, VoidCallback onSave, VoidCallback onCancel) {
+  Widget _buildFixedMeasurementsCard(
+    AnthropometryFixed fixed,
+    TextEditingController heightController,
+    TextEditingController wristCircController,
+    TextEditingController ankleCircController,
+    bool canEdit,
+    bool isEditing,
+    VoidCallback onEdit,
+    VoidCallback onSave,
+    VoidCallback onCancel,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -511,55 +682,61 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
               children: [
                 Text(
                   'Фиксированные значения',
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
                 if (canEdit)
-                  _buildEditControls(
-                    isEditing,
-                    onEdit,
-                    onSave,
-                    onCancel,
-                  ),
+                  _buildEditControls(isEditing, onEdit, onSave, onCancel),
               ],
             ),
             const SizedBox(height: 8),
-            _buildEditableField('Рост', heightController, isInt: true,
-                isEditing: isEditing, focusNode: _heightFocusNode),
             _buildEditableField(
-                'Обхват запястья', wristCircController, isInt: true,
-                isEditing: isEditing),
+              'Рост',
+              heightController,
+              isInt: true,
+              isEditing: isEditing,
+              focusNode: _heightFocusNode,
+            ),
             _buildEditableField(
-                'Обхват лодыжки', ankleCircController, isInt: true,
-                isEditing: isEditing),
+              'Обхват запястья',
+              wristCircController,
+              isInt: true,
+              isEditing: isEditing,
+            ),
+            _buildEditableField(
+              'Обхват лодыжки',
+              ankleCircController,
+              isInt: true,
+              isEditing: isEditing,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMeasurementsCard(String title,
-      AnthropometryMeasurements measurements,
-      String? photoUrl,
-      String type,
-      TextEditingController weightController,
-      TextEditingController shouldersCircController,
-      TextEditingController breastCircController,
-      TextEditingController waistCircController,
-      TextEditingController hipsCircController,
-      bool isEditing, // New parameter
-      bool canEdit,
-      String? bodyShape,
-      VoidCallback onEdit, VoidCallback onSave, VoidCallback onCancel) {
-
+  Widget _buildMeasurementsCard(
+    String title,
+    AnthropometryMeasurements measurements,
+    String? photoUrl,
+    String type,
+    TextEditingController weightController,
+    TextEditingController shouldersCircController,
+    TextEditingController breastCircController,
+    TextEditingController waistCircController,
+    TextEditingController hipsCircController,
+    bool isEditing, // New parameter
+    bool canEdit,
+    String? bodyShape,
+    VoidCallback onEdit,
+    VoidCallback onSave,
+    VoidCallback onCancel,
+    User? user,
+  ) {
     final height = int.tryParse(_heightController.text);
     final waistCirc = int.tryParse(waistCircController.text);
     final whtrRatio = (height != null && waistCirc != null && height > 0)
         ? (waistCirc / height)
         : null;
-
 
     return Card(
       child: Padding(
@@ -567,44 +744,69 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row( // New: Row for title and edit button
+            Row(
+              // New: Row for title and edit button
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title,
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .titleLarge,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleLarge),
                 if (canEdit)
-                  _buildEditControls(
-                    isEditing,
-                    onEdit,
-                    onSave,
-                    onCancel,
-                  ),
+                  _buildEditControls(isEditing, onEdit, onSave, onCancel),
               ],
             ),
             const SizedBox(height: 8),
             _buildEditableField(
-                'Вес', weightController, isDouble: true, isEditing: isEditing),
+              'Вес',
+              weightController,
+              isDouble: true,
+              isEditing: isEditing,
+              startValue: type == 'finish' ? _startWeightController.text : null,
+            ),
             _buildEditableField(
-                'Обхват плеч', shouldersCircController, isInt: true,
-                isEditing: isEditing, focusNode: type == 'start' ? _startShouldersCircFocusNode : null),
+              'Обхват плеч',
+              shouldersCircController,
+              isInt: true,
+              isEditing: isEditing,
+              focusNode: type == 'start' ? _startShouldersCircFocusNode : null,
+              startValue: type == 'finish'
+                  ? _startShouldersCircController.text
+                  : null,
+            ),
             _buildEditableField(
-                'Обхват груди', breastCircController, isInt: true,
-                isEditing: isEditing),
+              'Обхват груди',
+              breastCircController,
+              isInt: true,
+              isEditing: isEditing,
+              startValue: type == 'finish'
+                  ? _startBreastCircController.text
+                  : null,
+            ),
             _buildEditableField(
-                'Обхват талии', waistCircController, isInt: true,
-                isEditing: isEditing, focusNode: type == 'start' ? _startWaistCircFocusNode : null),
-            _buildEditableField('Обхват бедер', hipsCircController, isInt: true,
-                isEditing: isEditing, focusNode: type == 'start' ? _startHipsCircFocusNode : null),
-            if (whtrRatio != null && (bodyShape == 'Яблоко' || bodyShape == 'Перевернутый треугольник')) ...[
+              'Обхват талии',
+              waistCircController,
+              isInt: true,
+              isEditing: isEditing,
+              focusNode: type == 'start' ? _startWaistCircFocusNode : null,
+              startValue: type == 'finish'
+                  ? _startWaistCircController.text
+                  : null,
+            ),
+            _buildEditableField(
+              'Обхват бедер',
+              hipsCircController,
+              isInt: true,
+              isEditing: isEditing,
+              focusNode: type == 'start' ? _startHipsCircFocusNode : null,
+              startValue: type == 'finish'
+                  ? _startHipsCircController.text
+                  : null,
+            ),
+            if (whtrRatio != null &&
+                (bodyShape == 'Яблоко' ||
+                    bodyShape == 'Перевернутый треугольник')) ...[
               const SizedBox(height: 8),
               Text('WHtR: ${whtrRatio.toStringAsFixed(2)}'),
               const SizedBox(height: 8),
-              _buildWhtrIndex(whtrRatio),
+              _buildWhtrIndex(whtrRatio, user?.age),
             ],
           ],
         ),
@@ -612,34 +814,60 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
     );
   }
 
-  Widget _buildWhtrIndex(double whtr) {
+  Widget _buildWhtrIndex(double whtr, int? age) {
     String message;
     Color color;
     double progress = (whtr - 0.3) / (0.7 - 0.3); // Normalize for progress bar
     progress = progress.clamp(0.0, 1.0);
 
-    if (whtr < 0.4) {
-      message = 'Высокий риск истощения';
-      color = Colors.red;
-    } else if (whtr >= 0.4 && whtr < 0.45) {
-      message = 'Повышенный риск истощения';
-      color = Colors.orange;
-    } else if (whtr >= 0.45 && whtr <= 0.55) {
-      message = 'Норма, риск низкий';
-      color = Colors.green;
-    } else if (whtr > 0.55 && whtr <= 0.6) {
-      message = 'Повышенный риск ожирения';
-      color = Colors.orange;
+    double normalWhtrThreshold;
+
+    if (age == null) {
+      normalWhtrThreshold = 0;
+    } else if (age <= 25) {
+      normalWhtrThreshold = 0.5;
+    } else if (age <= 40) {
+      normalWhtrThreshold = 0.48;
+    } else if (age <= 60) {
+      normalWhtrThreshold = 0.46;
     } else {
-      message = 'Высокий риск ожирения';
-      color = Colors.red;
+      normalWhtrThreshold = 0.45;
     }
 
+    if (age == null) {
+      message = 'Расчет невозможен, не указан возраст';
+      color = Colors.grey;
+    } else {
+      if (whtr < normalWhtrThreshold - 0.05) {
+        // 0.05 is an arbitrary lower bound for 'low risk'
+        message = 'Высокий риск истощения';
+        color = Colors.red;
+      } else if (whtr >= normalWhtrThreshold - 0.05 &&
+          whtr < normalWhtrThreshold) {
+        message = 'Повышенный риск истощения';
+        color = Colors.orange;
+      } else if (whtr >= normalWhtrThreshold &&
+          whtr <= normalWhtrThreshold + 0.05) {
+        // 0.05 is an arbitrary upper bound for 'low risk'
+        message = 'Норма, риск низкий';
+        color = Colors.green;
+      } else if (whtr > normalWhtrThreshold + 0.05 &&
+          whtr <= normalWhtrThreshold + 0.1) {
+        // 0.1 is an arbitrary upper bound for 'increased risk'
+        message = 'Повышенный риск ожирения';
+        color = Colors.orange;
+      } else {
+        message = 'Высокий риск ожирения';
+        color = Colors.red;
+      }
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Индекс здоровья WHtR:', style: TextStyle(fontWeight: FontWeight.bold)),
-        const Text('Для типа фигур "Яблоко" и "Перевернутый треугольник"', style: TextStyle(fontStyle: FontStyle.italic)),
+        const Text(
+          'Индекс здоровья WHtR:',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 4),
         LinearProgressIndicator(
           value: progress,
@@ -647,7 +875,10 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
           valueColor: AlwaysStoppedAnimation<Color>(color),
         ),
         const SizedBox(height: 4),
-        Text(message, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+        Text(
+          message,
+          style: TextStyle(color: color, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
