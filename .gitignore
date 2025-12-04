@@ -51,3 +51,5 @@ app.*.map.json
 *.jpg
 *.jpeg
 *.png
+*.ps1
+*.apk

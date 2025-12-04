@@ -271,10 +271,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                     },
                     child: const Text(
                       'Сравнение по фото',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
                   ),
                   const SizedBox(height: 16),

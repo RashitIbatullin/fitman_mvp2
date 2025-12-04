@@ -25,6 +25,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(fontSize: 16.0),
+          titleMedium: TextStyle(fontSize: 14.0),
+          labelLarge: TextStyle(fontSize: 14.0),
+        ),
       ),
       scrollBehavior: MyCustomScrollBehavior(),
       localizationsDelegates: const [
