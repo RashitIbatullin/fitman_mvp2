@@ -13,7 +13,8 @@ final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: "packages/fitman_app/.env");
+    const env = String.fromEnvironment('ENV', defaultValue: 'dev');
+  await dotenv.load(fileName: "packages/fitman_app/.env.$env");
   await initializeDateFormatting('ru', null);
   await ApiService.init();
   runApp(const ProviderScope(child: MyApp()));

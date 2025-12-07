@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:postgres/postgres.dart';
-import 'package:dotenv/dotenv.dart';
+import 'app_config.dart'; // Добавлено
 import '../models/user_back.dart';
 import '../models/role.dart';
 
@@ -34,18 +34,16 @@ class Database {
           _connectionCompleter = Completer<void>();
 
             try {
-
-              // Загружаем переменные окружения
-              final env = DotEnv()..load();
+              // Получаем конфигурацию из синглтона AppConfig
+              final config = AppConfig.instance;
 
               // Создаем Endpoint для подключения
               final endpoint = Endpoint(
-                host: env['DB_HOST'] ?? 'localhost',
-                port: int.tryParse(env['DB_PORT'] ?? '5432') ?? 5432,
-                database: env['DB_NAME'] ?? 'fitman_mvp2',
-                username: env['DB_USER'] ?? 'postgres',
-                password: env['DB_PASS'] ?? 'postgres',
-
+                host: config.dbHost,
+                port: config.dbPort,
+                database: config.dbName,
+                username: config.dbUser,
+                password: config.dbPass,
               );
 
               print('🔄 Connecting to PostgreSQL database...');

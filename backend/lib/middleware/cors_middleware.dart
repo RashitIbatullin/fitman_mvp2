@@ -35,7 +35,7 @@ Map<String, String> _getcorsHeaders(String? origin) {
       headers['Access-Control-Allow-Origin'] = origin;
     } 
     // Check if the origin is in the allowed list for production/mobile
-    else if (AppConfig.allowedOrigins.contains(origin)) {
+    else if (AppConfig.instance.allowedOrigins.contains(origin)) {
       headers['Access-Control-Allow-Origin'] = origin;
     }
   }

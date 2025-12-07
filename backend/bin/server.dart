@@ -12,8 +12,11 @@ import 'package:path/path.dart' as p;
 import 'package:shelf_router/shelf_router.dart';
 
 void main(List<String> args) async {
+  // Конфигурация теперь загружается лениво при первом вызове AppConfig.instance
+  
   // Формируем абсолютный путь к директории uploads
   final uploadPath = p.normalize(p.join(Directory.current.path, '..', 'uploads'));
+
 
   // Создаем директорию для загрузок, если она не существует
   final uploadDir = Directory(uploadPath);
@@ -39,8 +42,8 @@ void main(List<String> args) async {
   // Запускаем сервер
   final server = await io.serve(
       handler,
-      AppConfig.serverHost,
-      AppConfig.serverPort
+      AppConfig.instance.serverHost,
+      AppConfig.instance.serverPort
   );
 
   // Инициализация базы данных

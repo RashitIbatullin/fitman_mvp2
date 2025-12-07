@@ -37,4 +37,6 @@ flutter:
   generate: true
   assets:
     - assets/images/
-    - .env
+    - .env.dev
+    - .env.prod
+    - .env.test

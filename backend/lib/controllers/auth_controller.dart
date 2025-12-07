@@ -136,15 +136,15 @@ class AuthController {
       'roles': user.roles.map((r) => r.name).toList(), // Changed to list of role names
       'firstName': user.firstName,
       'lastName': user.lastName,
-      'exp': (DateTime.now().add(Duration(hours: AppConfig.jwtExpiryHours)).millisecondsSinceEpoch / 1000).round(),
+      'exp': (DateTime.now().add(Duration(hours: AppConfig.instance.jwtExpiryHours)).millisecondsSinceEpoch / 1000).round(),
     });
 
-    return jwt.sign(SecretKey(AppConfig.jwtSecret));
+    return jwt.sign(SecretKey(AppConfig.instance.jwtSecret));
   }
 
   static Map<String, dynamic>? verifyToken(String token) {
     try {
-      final jwt = JWT.verify(token, SecretKey(AppConfig.jwtSecret));
+      final jwt = JWT.verify(token, SecretKey(AppConfig.instance.jwtSecret));
       return jwt.payload;
     } catch (e) {
       return null;
