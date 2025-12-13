@@ -221,7 +221,12 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+        ),
         const SizedBox(height: 8),
         _PhotoView(
           key: key,
@@ -237,15 +242,17 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (canUploadPhoto)
-              ElevatedButton(
+              IconButton(
+                icon: const Icon(Icons.cloud_upload), // Или Icons.add_a_photo
+                tooltip: 'Загрузить фото',
                 onPressed: () => _pickAndUploadImage(type),
-                child: const Text('Загрузить фото'),
               ),
             const SizedBox(width: 8),
             if (canUploadPhoto)
-              ElevatedButton(
+              IconButton(
+                icon: const Icon(Icons.save),
+                tooltip: 'Сохранить изменения',
                 onPressed: photoUrl != null ? () => key.currentState?.save() : null,
-                child: const Text('Сохранить'),
               ),
           ],
         ),
@@ -435,6 +442,13 @@ class _PhotoViewState extends State<_PhotoView> {
           : DateTime.now();
 
       widget.onPhotoSaved(widget.type, newUrl, newDateTime);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Фотография успешно сохранена'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
       setState(() {
         _scale = 1.0;
