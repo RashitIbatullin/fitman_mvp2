@@ -703,13 +703,13 @@ class _UsersToolbar extends StatelessWidget {
             segments: const [
               ButtonSegment(value: 'all', label: Text('Все')),
 
-              ButtonSegment(value: 'admin', label: Text('Администраторы')),
+              ButtonSegment(value: 'admin', label: Text('Админ-ры')),
 
               ButtonSegment(value: 'manager', label: Text('Менеджеры')),
 
               ButtonSegment(value: 'trainer', label: Text('Тренеры')),
 
-              ButtonSegment(value: 'instructor', label: Text('Инструкторы')),
+              ButtonSegment(value: 'instructor', label: Text('Инстр-ры')),
 
               ButtonSegment(value: 'client', label: Text('Клиенты')),
             ],

@@ -13,8 +13,15 @@ final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    const env = String.fromEnvironment('ENV', defaultValue: 'dev');
+
+  // Load environment from --dart-define, defaulting to 'dev'
+  const env = String.fromEnvironment('env', defaultValue: 'dev');
+  print('--- [Fitman Build] Evironment selected: $env');
+
   await dotenv.load(fileName: "packages/fitman_app/.env.$env");
+  print('--- [Fitman Build] Attempted to load .env.$env');
+  print('--- [Fitman Build] Loaded BASE_URL: ${dotenv.env['BASE_URL']}');
+
   await initializeDateFormatting('ru', null);
   await ApiService.init();
   runApp(const ProviderScope(child: MyApp()));
