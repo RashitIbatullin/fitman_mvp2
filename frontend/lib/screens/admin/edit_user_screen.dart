@@ -1,11 +1,12 @@
 import 'dart:ui' as ui;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../models/user_front.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../client/full_screen_photo_editor.dart';
+import 'users_list_screen.dart';
 
 class EditUserScreen extends ConsumerStatefulWidget {
   final User user;
@@ -31,10 +32,10 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   int _hourNotification = 1;
   double _coeffActivity = 1.2;
   String? _photoUrl;
-  
+
   Matrix4 _currentAvatarTransform = Matrix4.identity();
   String? _avatarUrlWithCacheBust;
-  
+
   bool _isLoading = false;
   String? _error;
 
@@ -47,7 +48,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     _lastNameController.text = user.lastName;
     _middleNameController.text = user.middleName ?? '';
     _phoneController.text = user.phone ?? '';
-    _dateOfBirthController.text = user.dateOfBirth?.toIso8601String().split('T').first ?? '';
+    _dateOfBirthController.text =
+        user.dateOfBirth?.toIso8601String().split('T').first ?? '';
     _selectedGender = user.gender;
     _sendNotification = user.sendNotification;
     _trackCalories = user.trackCalories;
@@ -57,7 +59,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
     _updateAvatarUrlForCacheBusting();
   }
-  
+
   void _updateAvatarUrlForCacheBusting() {
     if (_photoUrl != null) {
       setState(() {
@@ -68,7 +70,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   }
 
   Future<void> _uploadAndReplaceAvatar() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(type: FileType.image);
     if (result == null) return;
 
     final fileBytes = result.files.single.bytes;
@@ -77,14 +80,16 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     if (fileBytes == null) return;
 
     try {
-      final response = await ApiService.uploadAvatar(fileBytes, fileName, widget.user.id);
+      final response =
+          await ApiService.uploadAvatar(fileBytes, fileName, widget.user.id);
       if (!mounted) return;
-      
+
       setState(() {
         _photoUrl = response['photoUrl'];
         _currentAvatarTransform = Matrix4.identity();
         _updateAvatarUrlForCacheBusting();
       });
+      ref.invalidate(usersProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Аватар успешно заменен')),
       );
@@ -98,11 +103,10 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
   Future<void> _editAvatar() async {
     if (_avatarUrlWithCacheBust == null) {
-      // If there's no avatar, this action should just prompt to upload one.
       _uploadAndReplaceAvatar();
       return;
     }
-    
+
     final result = await Navigator.push<dynamic>(
       context,
       MaterialPageRoute(
@@ -117,24 +121,25 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
       final image = result.$1;
       final newTransform = result.$2;
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      
+
       if (!mounted) return;
       final imageBytes = byteData?.buffer.asUint8List();
 
       if (imageBytes != null) {
         try {
-          final response = await ApiService.uploadAvatar(imageBytes, 'avatar.png', widget.user.id);
+          final response =
+              await ApiService.uploadAvatar(imageBytes, 'avatar.png', widget.user.id);
           if (!mounted) return;
-          
+
           setState(() {
             _photoUrl = response['photoUrl'];
             _currentAvatarTransform = newTransform;
             _updateAvatarUrlForCacheBusting();
           });
+          ref.invalidate(usersProvider);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Аватар успешно обновлен')),
           );
-
         } catch (e) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +149,6 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
       }
     }
   }
-
 
   Future<void> _updateUser() async {
     if (!_formKey.currentState!.validate()) return;
@@ -169,6 +173,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
       );
 
       final updatedUser = await ApiService.updateUser(request);
+      
+      ref.invalidate(usersProvider);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -196,7 +202,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final currentUser = authState.value?.user;
-    final canEditPhoto = currentUser != null && !currentUser.roles.any((role) => role.name == 'client');
+    final canEditPhoto =
+        currentUser != null && !currentUser.roles.any((role) => role.name == 'client');
 
     return Scaffold(
       appBar: AppBar(title: Text('Редактирование: ${widget.user.shortName}')),
@@ -242,7 +249,9 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundImage: backgroundImage,
-                  child: backgroundImage == null ? const Icon(Icons.person, size: 50) : null,
+                  child: backgroundImage == null
+                      ? const Icon(Icons.person, size: 50)
+                      : null,
                 ),
                 Container(
                   width: 100,
@@ -259,14 +268,16 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
           const SizedBox(height: 8),
           TextButton.icon(
             icon: const Icon(Icons.upload_file),
-            label: const Text('Загрузить/заменить фото'),
+            label: Text(_photoUrl == null
+                ? 'Загрузить фото'
+                : 'Загрузить/заменить фото'),
             onPressed: _uploadAndReplaceAvatar,
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildBasicInfoSection() {
     return Card(
       child: Padding(
@@ -289,7 +300,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
               keyboardType: TextInputType.phone,
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
-                  final phoneRegExp = RegExp(r'^(\+7|8)?[\s-]?\(?[489][0-9]{2}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{2}[\s-]?[0-9]{2}$');
+                  final phoneRegExp = RegExp(
+                      r'^(\+7|8)?[\s-]?\(?[489][0-9]{2}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{2}[\s-]?[0-9]{2}$');
                   if (!phoneRegExp.hasMatch(value)) {
                     return 'Неверный формат телефона';
                   }
@@ -307,7 +319,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) return 'Введите email';
-                final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                final emailRegExp =
+                    RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                 if (!emailRegExp.hasMatch(value)) {
                   return 'Неверный формат email';
                 }
@@ -324,9 +337,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
                       labelText: 'Фамилия *',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) => (value == null || value.isEmpty)
-                        ? 'Введите фамилию'
-                        : null,
+                    validator: (value) =>
+                        (value == null || value.isEmpty) ? 'Введите фамилию' : null,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -383,7 +395,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
                   lastDate: DateTime.now(),
                 );
                 if (selectedDate != null) {
-                  _dateOfBirthController.text = selectedDate.toIso8601String().split('T').first;
+                  _dateOfBirthController.text =
+                      selectedDate.toIso8601String().split('T').first;
                 }
               },
             ),
