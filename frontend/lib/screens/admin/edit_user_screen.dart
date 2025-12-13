@@ -1,9 +1,11 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../models/user_front.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../client/full_screen_photo_editor.dart';
 
 class EditUserScreen extends ConsumerStatefulWidget {
   final User user;
@@ -29,7 +31,10 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   int _hourNotification = 1;
   double _coeffActivity = 1.2;
   String? _photoUrl;
-
+  
+  Matrix4 _currentAvatarTransform = Matrix4.identity();
+  String? _avatarUrlWithCacheBust;
+  
   bool _isLoading = false;
   String? _error;
 
@@ -49,35 +54,97 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     _hourNotification = user.hourNotification;
     _coeffActivity = user.coeffActivity;
     _photoUrl = user.photoUrl;
+
+    _updateAvatarUrlForCacheBusting();
+  }
+  
+  void _updateAvatarUrlForCacheBusting() {
+    if (_photoUrl != null) {
+      setState(() {
+        _avatarUrlWithCacheBust =
+            '${Uri.parse(ApiService.baseUrl).replace(path: _photoUrl!).toString()}?v=${_photoUrl.hashCode}';
+      });
+    }
   }
 
-  Future<void> _pickAndUploadAvatar() async {
+  Future<void> _uploadAndReplaceAvatar() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result == null) return;
 
-    if (result != null) {
-      final fileBytes = result.files.single.bytes;
-      final fileName = result.files.single.name;
+    final fileBytes = result.files.single.bytes;
+    final fileName = result.files.single.name;
 
-      if (fileBytes != null) {
+    if (fileBytes == null) return;
+
+    try {
+      final response = await ApiService.uploadAvatar(fileBytes, fileName, widget.user.id);
+      if (!mounted) return;
+      
+      setState(() {
+        _photoUrl = response['photoUrl'];
+        _currentAvatarTransform = Matrix4.identity();
+        _updateAvatarUrlForCacheBusting();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Аватар успешно заменен')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки нового аватара: $e')),
+      );
+    }
+  }
+
+  Future<void> _editAvatar() async {
+    if (_avatarUrlWithCacheBust == null) {
+      // If there's no avatar, this action should just prompt to upload one.
+      _uploadAndReplaceAvatar();
+      return;
+    }
+    
+    final result = await Navigator.push<dynamic>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FullScreenPhotoEditor(
+          imageUrl: _avatarUrlWithCacheBust!,
+          initialTransform: _currentAvatarTransform,
+        ),
+      ),
+    );
+
+    if (result != null && result is (ui.Image, Matrix4)) {
+      final image = result.$1;
+      final newTransform = result.$2;
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      
+      if (!mounted) return;
+      final imageBytes = byteData?.buffer.asUint8List();
+
+      if (imageBytes != null) {
         try {
-          final response = await ApiService.uploadAvatar(fileBytes, fileName, widget.user.id);
+          final response = await ApiService.uploadAvatar(imageBytes, 'avatar.png', widget.user.id);
           if (!mounted) return;
-
+          
           setState(() {
             _photoUrl = response['photoUrl'];
+            _currentAvatarTransform = newTransform;
+            _updateAvatarUrlForCacheBusting();
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Аватар успешно обновлен')),
           );
+
         } catch (e) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка загрузки аватара: $e')),
+            SnackBar(content: Text('Ошибка сохранения аватара: $e')),
           );
         }
       }
     }
   }
+
 
   Future<void> _updateUser() async {
     if (!_formKey.currentState!.validate()) return;
@@ -103,16 +170,16 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
       final updatedUser = await ApiService.updateUser(request);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Пользователь успешно обновлен'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context, updatedUser);
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Пользователь успешно обновлен'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context, updatedUser);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
       });
@@ -129,7 +196,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final currentUser = authState.value?.user;
-    final canUploadPhoto = currentUser != null && !currentUser.roles.any((role) => role.name == 'client');
+    final canEditPhoto = currentUser != null && !currentUser.roles.any((role) => role.name == 'client');
 
     return Scaffold(
       appBar: AppBar(title: Text('Редактирование: ${widget.user.shortName}')),
@@ -139,7 +206,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              if (canUploadPhoto) ...[
+              if (canEditPhoto) ...[
                 _buildAvatarSection(),
                 const SizedBox(height: 16),
               ],
@@ -159,27 +226,47 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   }
 
   Widget _buildAvatarSection() {
+    ImageProvider? backgroundImage;
+    if (_photoUrl != null) {
+      backgroundImage = NetworkImage(_avatarUrlWithCacheBust!);
+    }
+
     return Center(
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundImage: _photoUrl != null
-                ? NetworkImage(Uri.parse(ApiService.baseUrl).replace(path: _photoUrl).toString())
-                : null,
-            child: _photoUrl == null ? const Icon(Icons.person, size: 50) : null,
+          GestureDetector(
+            onTap: _editAvatar,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: backgroundImage,
+                  child: backgroundImage == null ? const Icon(Icons.person, size: 50) : null,
+                ),
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha(77),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit, color: Colors.white),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
           TextButton.icon(
             icon: const Icon(Icons.upload_file),
-            label: const Text('Загрузить фото'),
-            onPressed: _pickAndUploadAvatar,
+            label: const Text('Загрузить/заменить фото'),
+            onPressed: _uploadAndReplaceAvatar,
           ),
         ],
       ),
     );
   }
-
+  
   Widget _buildBasicInfoSection() {
     return Card(
       child: Padding(

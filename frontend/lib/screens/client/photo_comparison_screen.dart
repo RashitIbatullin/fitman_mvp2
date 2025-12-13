@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:flutter/gestures.dart';
+import 'package:fitman_app/screens/client/full_screen_photo_editor.dart';
+import 'package:fitman_app/widgets/dashed_crosshair_painter.dart';
 import 'package:fitman_app/widgets/image_comparison_slider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fitman_app/services/api_service.dart';
@@ -9,43 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
-
-class DashedCrosshairPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey
-      ..strokeWidth = 1;
-
-    const dashWidth = 5;
-    const dashSpace = 5;
-
-    // Horizontal line
-    double startX = 0;
-    while (startX < size.width) {
-      canvas.drawLine(
-        Offset(startX, size.height / 2),
-        Offset(startX + dashWidth, size.height / 2),
-        paint,
-      );
-      startX += dashWidth + dashSpace;
-    }
-
-    // Vertical line
-    double startY = 0;
-    while (startY < size.height) {
-      canvas.drawLine(
-        Offset(size.width / 2, startY),
-        Offset(size.width / 2, startY + dashWidth),
-        paint,
-      );
-      startY += dashWidth + dashSpace;
-    }
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
-}
 
 class PhotoComparisonScreen extends ConsumerStatefulWidget {
   final int? clientId;
@@ -125,7 +89,6 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   }
 
   Future<void> _pickAndUploadImage(String photoType) async {
-    print('[_pickAndUploadImage] Starting photo pick for type: $photoType');
     try {
       FilePickerResult? result =
           await FilePicker.platform.pickFiles(type: FileType.image);
@@ -133,87 +96,49 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
       if (result != null) {
         final platformFile = result.files.single;
         final fileName = platformFile.name;
-        Uint8List? fileBytes;
-
-        // Check if we have bytes directly (web) or need to read from path (mobile)
-        if (platformFile.bytes != null) {
-          fileBytes = platformFile.bytes;
-          print('[_pickAndUploadImage] Got file bytes directly (web).');
-        } else if (platformFile.path != null) {
-          print('[_pickAndUploadImage] Reading file from path (mobile): ${platformFile.path}');
-          fileBytes = await File(platformFile.path!).readAsBytes();
-        }
+        Uint8List? fileBytes = platformFile.bytes ??
+            (platformFile.path != null
+                ? await File(platformFile.path!).readAsBytes()
+                : null);
 
         if (fileBytes != null) {
-          print('[_pickAndUploadImage] File bytes acquired, proceeding with upload.');
           try {
-            print('[_pickAndUploadImage] Calling ApiService.uploadAnthropometryPhoto...');
             final responseData = await ApiService.uploadAnthropometryPhoto(
               fileBytes,
               fileName,
               photoType,
               clientId: widget.clientId,
-              photoDateTime: null, // Let backend decide the time
+              photoDateTime: null,
             );
-            print('[_pickAndUploadImage] ApiService response: $responseData');
-
             final newUrl = responseData['url'];
             final newDateTime = responseData['photo_date_time'] != null
                 ? DateTime.parse(responseData['photo_date_time'])
                 : DateTime.now();
-
-            setState(() {
-              if (photoType == 'start_front') {
-                _startPhotoUrl = newUrl;
-                _startPhotoDateTime = newDateTime;
-              } else if (photoType == 'finish_front') {
-                _finishPhotoUrl = newUrl;
-                _finishPhotoDateTime = newDateTime;
-              } else if (photoType == 'start_profile') {
-                _startProfilePhotoUrl = newUrl;
-                _startProfilePhotoDateTime = newDateTime;
-              } else if (photoType == 'finish_profile') {
-                _finishProfilePhotoUrl = newUrl;
-                _finishProfilePhotoDateTime = newDateTime;
-              }
-            });
+            _onPhotoSaved(photoType, newUrl, newDateTime);
           } catch (e) {
-            print('[_pickAndUploadImage] Image upload failed: $e');
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Ошибка загрузки фото: $e')),
-              );
-            }
-          }
-        } else {
-          print('[_pickAndUploadImage] Could not read file bytes.');
-          if (mounted) {
+            if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Не удалось прочитать файл.')),
+              SnackBar(content: Text('Ошибка загрузки фото: $e')),
             );
-          }
+          } // <-- Fixed: Added missing closing brace
         }
-      } else {
-        print('[_pickAndUploadImage] User canceled the file picker.');
       }
     } catch (e) {
-      print('[_pickAndUploadImage] Error during file picking: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка при выборе файла: $e')),
-        );
-      }
+      if (!mounted) return; // <-- Fixed: Added mounted check
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при выборе файла: $e')),
+      );
     }
   }
 
   Widget _buildPhotoSection(
-      String? photoUrl,
-      DateTime? photoDateTime,
-      String title,
-      String type,
-      bool canUploadPhoto,
-      GlobalKey<_PhotoViewState> key) {
-    // Simple date formatting, for better formatting, use the intl package
+    String? photoUrl,
+    DateTime? photoDateTime,
+    String title,
+    String type,
+    bool canUploadPhoto,
+    GlobalKey<_PhotoViewState> key,
+  ) {
     final formattedDate = photoDateTime != null
         ? '${photoDateTime.day.toString().padLeft(2, '0')}.${photoDateTime.month.toString().padLeft(2, '0')}.${photoDateTime.year} ${photoDateTime.hour.toString().padLeft(2, '0')}:${photoDateTime.minute.toString().padLeft(2, '0')}'
         : 'Нет даты';
@@ -228,12 +153,34 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 8),
-        _PhotoView(
-          key: key,
-          photoUrl: photoUrl,
-          type: type,
-          clientId: widget.clientId,
-          onPhotoSaved: _onPhotoSaved,
+        GestureDetector(
+          onTap: () async {
+            if (key.currentState?._imageUrlWithCacheBust == null) return;
+
+            final result = await Navigator.push<dynamic>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FullScreenPhotoEditor(
+                  imageUrl: key.currentState!._imageUrlWithCacheBust!,
+                  initialTransform: key.currentState!._currentTransform,
+                ),
+              ),
+            );
+
+            if (result != null && result is (ui.Image, Matrix4)) {
+              key.currentState?.updateState(
+                newImage: result.$1,
+                newTransform: result.$2,
+              );
+            }
+          },
+          child: _PhotoView(
+            key: key,
+            photoUrl: photoUrl,
+            type: type,
+            clientId: widget.clientId,
+            onPhotoSaved: _onPhotoSaved,
+          ),
         ),
         const SizedBox(height: 8),
         Text(formattedDate),
@@ -243,7 +190,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
           children: [
             if (canUploadPhoto)
               IconButton(
-                icon: const Icon(Icons.cloud_upload), // Или Icons.add_a_photo
+                icon: const Icon(Icons.cloud_upload),
                 tooltip: 'Загрузить фото',
                 onPressed: () => _pickAndUploadImage(type),
               ),
@@ -252,7 +199,8 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
               IconButton(
                 icon: const Icon(Icons.save),
                 tooltip: 'Сохранить изменения',
-                onPressed: photoUrl != null ? () => key.currentState?.save() : null,
+                onPressed:
+                    photoUrl != null ? () => key.currentState?.save() : null,
               ),
           ],
         ),
@@ -260,20 +208,55 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     );
   }
 
-  void _navigateToComparisonScreen(String? startPhotoUrl, String? finishPhotoUrl, String title) {
-    if (startPhotoUrl != null && finishPhotoUrl != null) {
+  Future<void> _navigateToComparisonScreen({
+    required String? startUrl,
+    required String? finishUrl,
+    required GlobalKey<_PhotoViewState> startKey,
+    required GlobalKey<_PhotoViewState> finishKey,
+    required String title,
+  }) async {
+    // This function now retrieves the rendered image data before navigating.
+    final startState = startKey.currentState;
+    final finishState = finishKey.currentState;
+
+    if (startState == null || finishState == null) return;
+
+    Uint8List? startBytes;
+    if (startState._renderedImage != null) {
+      final byteData = await startState._renderedImage!
+          .toByteData(format: ui.ImageByteFormat.png);
+      startBytes = byteData?.buffer.asUint8List();
+    }
+
+    Uint8List? finishBytes;
+    if (finishState._renderedImage != null) {
+      final byteData = await finishState._renderedImage!
+          .toByteData(format: ui.ImageByteFormat.png);
+      finishBytes = byteData?.buffer.asUint8List();
+    }
+
+    if (startUrl != null && finishUrl != null) {
+      if (!mounted) return; // FIX: Add mounted check before using context
       Navigator.push(context, MaterialPageRoute(builder: (context) {
         return Scaffold(
           appBar: AppBar(title: Text(title)),
           body: ImageComparisonSlider(
-            before: Image.network(
-              Uri.parse(ApiService.baseUrl).replace(path: startPhotoUrl).toString(),
-              fit: BoxFit.contain,
-            ),
-            after: Image.network(
-              Uri.parse(ApiService.baseUrl).replace(path: finishPhotoUrl).toString(),
-              fit: BoxFit.contain,
-            ),
+            before: startBytes != null
+                ? Image.memory(startBytes, fit: BoxFit.contain)
+                : Image.network(
+                    Uri.parse(ApiService.baseUrl)
+                        .replace(path: startUrl)
+                        .toString(),
+                    fit: BoxFit.contain,
+                  ),
+            after: finishBytes != null
+                ? Image.memory(finishBytes, fit: BoxFit.contain)
+                : Image.network(
+                    Uri.parse(ApiService.baseUrl)
+                        .replace(path: finishUrl)
+                        .toString(),
+                    fit: BoxFit.contain,
+                  ),
           ),
         );
       }));
@@ -284,13 +267,14 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final user = authState.value?.user;
-
-    final canUploadPhoto = user != null && (!user.roles.any((role) => role.name == 'client') || user.roles.length > 1);
+    final canUploadPhoto = user != null &&
+        (!user.roles.any((role) => role.name == 'client') ||
+            user.roles.length > 1);
 
     return PopScope(
-      canPop: false, // Prevent default back button behavior
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return; // If the system already popped, do nothing
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
         Navigator.pop(context, {
           'startPhotoUrl': _startPhotoUrl,
           'finishPhotoUrl': _finishPhotoUrl,
@@ -310,14 +294,17 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Front photos comparison section
               if (_startPhotoUrl != null && _finishPhotoUrl != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: ElevatedButton(
-                    onPressed: () {
-                      _navigateToComparisonScreen(_startPhotoUrl, _finishPhotoUrl, 'Сравнение анфас');
-                    },
+                    onPressed: () => _navigateToComparisonScreen(
+                      startUrl: _startPhotoUrl,
+                      finishUrl: _finishPhotoUrl,
+                      startKey: _startPhotoViewKey,
+                      finishKey: _finishPhotoViewKey,
+                      title: 'Сравнение анфас',
+                    ),
                     child: const Text('Сравнить анфас'),
                   ),
                 )
@@ -335,24 +322,38 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                 children: [
                   Expanded(
                     child: _buildPhotoSection(
-                        _startPhotoUrl, _startPhotoDateTime, 'Анфас начало', 'start_front', canUploadPhoto, _startPhotoViewKey),
+                        _startPhotoUrl,
+                        _startPhotoDateTime,
+                        'Анфас начало',
+                        'start_front',
+                        canUploadPhoto,
+                        _startPhotoViewKey),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildPhotoSection(_finishPhotoUrl,
-                        _finishPhotoDateTime, 'Анфас окончание', 'finish_front', canUploadPhoto, _finishPhotoViewKey),
+                    child: _buildPhotoSection(
+                        _finishPhotoUrl,
+                        _finishPhotoDateTime,
+                        'Анфас окончание',
+                        'finish_front',
+                        canUploadPhoto,
+                        _finishPhotoViewKey),
                   ),
                 ],
               ),
               const Divider(height: 32),
-              // Profile photos comparison section
-              if (_startProfilePhotoUrl != null && _finishProfilePhotoUrl != null)
+              if (_startProfilePhotoUrl != null &&
+                  _finishProfilePhotoUrl != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: ElevatedButton(
-                    onPressed: () {
-                      _navigateToComparisonScreen(_startProfilePhotoUrl, _finishProfilePhotoUrl, 'Сравнение профиль');
-                    },
+                    onPressed: () => _navigateToComparisonScreen(
+                      startUrl: _startProfilePhotoUrl,
+                      finishUrl: _finishProfilePhotoUrl,
+                      startKey: _startProfilePhotoViewKey,
+                      finishKey: _finishProfilePhotoViewKey,
+                      title: 'Сравнение профиль',
+                    ),
                     child: const Text('Сравнить профиль'),
                   ),
                 )
@@ -370,12 +371,22 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                 children: [
                   Expanded(
                     child: _buildPhotoSection(
-                        _startProfilePhotoUrl, _startProfilePhotoDateTime, 'Профиль начало', 'start_profile', canUploadPhoto, _startProfilePhotoViewKey),
+                        _startProfilePhotoUrl,
+                        _startProfilePhotoDateTime,
+                        'Профиль начало',
+                        'start_profile',
+                        canUploadPhoto,
+                        _startProfilePhotoViewKey),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildPhotoSection(_finishProfilePhotoUrl,
-                        _finishProfilePhotoDateTime, 'Профиль окончание', 'finish_profile', canUploadPhoto, _finishProfilePhotoViewKey),
+                    child: _buildPhotoSection(
+                        _finishProfilePhotoUrl,
+                        _finishProfilePhotoDateTime,
+                        'Профиль окончание',
+                        'finish_profile',
+                        canUploadPhoto,
+                        _finishProfilePhotoViewKey),
                   ),
                 ],
               ),
@@ -391,7 +402,8 @@ class _PhotoView extends StatefulWidget {
   final String? photoUrl;
   final String type;
   final int? clientId;
-  final void Function(String type, String newUrl, DateTime newDateTime) onPhotoSaved;
+  final void Function(String type, String newUrl, DateTime newDateTime)
+      onPhotoSaved;
 
   const _PhotoView({
     super.key,
@@ -406,27 +418,71 @@ class _PhotoView extends StatefulWidget {
 }
 
 class _PhotoViewState extends State<_PhotoView> {
-  double _scale = 1.0;
-  Offset _offset = Offset.zero;
-  double _initialScale = 1.0;
-  Offset _initialFocalPoint = Offset.zero;
-  bool _showCrosshairs = true;
   final GlobalKey _repaintBoundaryKey = GlobalKey();
+  String? _imageUrlWithCacheBust;
+  ui.Image? _renderedImage;
+  Matrix4 _currentTransform = Matrix4.identity();
+
+  @override
+  void initState() {
+    super.initState();
+    _updateImageUrl();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PhotoView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.photoUrl != oldWidget.photoUrl) {
+      _updateImageUrl();
+      setState(() {
+        _renderedImage = null;
+        _currentTransform = Matrix4.identity();
+      });
+    }
+  }
+
+  void _updateImageUrl() {
+    if (widget.photoUrl != null) {
+      setState(() {
+        _imageUrlWithCacheBust =
+            '${Uri.parse(ApiService.baseUrl).replace(path: widget.photoUrl!).toString()}?v=${widget.photoUrl.hashCode}';
+      });
+    } else {
+      setState(() {
+        _imageUrlWithCacheBust = null;
+      });
+    }
+  }
+
+  void updateState({required ui.Image newImage, required Matrix4 newTransform}) {
+    setState(() {
+      _renderedImage = newImage;
+      _currentTransform = newTransform;
+    });
+  }
 
   Future<void> save() async {
-    setState(() {
-      _showCrosshairs = false;
-    });
-
-    await Future.delayed(const Duration(milliseconds: 20));
-
     try {
-      RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
+      Uint8List? pngBytes;
+      if (_renderedImage != null) {
+        final byteData =
+            await _renderedImage!.toByteData(format: ui.ImageByteFormat.png);
+        pngBytes = byteData?.buffer.asUint8List();
+      } else {
+        RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!
+            .findRenderObject() as RenderRepaintBoundary;
+        ui.Image image = await boundary.toImage(pixelRatio: 1.0); // Use 1.0 for original scale
+        final byteData =
+            await image.toByteData(format: ui.ImageByteFormat.png);
+        pngBytes = byteData?.buffer.asUint8List();
+      }
 
-      final String fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}.png';
+      if (pngBytes == null) {
+        throw Exception('Could not generate image bytes.');
+      }
+
+      final String fileName =
+          'photo_${DateTime.now().millisecondsSinceEpoch}.png';
 
       final responseData = await ApiService.uploadAnthropometryPhoto(
         pngBytes,
@@ -443,25 +499,25 @@ class _PhotoViewState extends State<_PhotoView> {
 
       widget.onPhotoSaved(widget.type, newUrl, newDateTime);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Фотография успешно сохранена'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Фотография успешно сохранена'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
       setState(() {
-        _scale = 1.0;
-        _offset = Offset.zero;
+        _renderedImage = null;
+        _currentTransform = Matrix4.identity();
       });
-
     } catch (e) {
-      // Handle error
       print('[_savePhoto] Image save failed: $e');
-    } finally {
-      setState(() {
-        _showCrosshairs = true;
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка сохранения фото: $e')),
+        );
+      }
     }
   }
 
@@ -476,59 +532,30 @@ class _PhotoViewState extends State<_PhotoView> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Listener(
-          onPointerSignal: (pointerSignal) {
-            if (pointerSignal is PointerScrollEvent) {
-              setState(() {
-                _scale -= pointerSignal.scrollDelta.dy / 1000.0;
-              });
-            }
-          },
-          child: GestureDetector(
-            onScaleStart: (details) {
-              setState(() {
-                _showCrosshairs = true;
-              });
-              _initialFocalPoint = details.focalPoint;
-              _initialScale = _scale;
-            },
-            onScaleUpdate: (details) {
-              setState(() {
-                _scale = _initialScale * details.scale;
-                _offset += details.focalPoint - _initialFocalPoint;
-                _initialFocalPoint = details.focalPoint;
-              });
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (widget.photoUrl != null)
-                  RepaintBoundary(
-                    key: _repaintBoundaryKey,
-                    child: Transform.scale(
-                      scale: _scale,
-                      child: Transform.translate(
-                        offset: _offset,
-                        child: Image.network(
-                          '${Uri.parse(ApiService.baseUrl).replace(path: widget.photoUrl!).toString()}?v=${DateTime.now().millisecondsSinceEpoch}',
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Center(child: Icon(Icons.error, size: 50)),
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  const Center(child: Text('Фото не загружено')),
-                if (_showCrosshairs)
-                  IgnorePointer(
-                    child: CustomPaint(
-                      size: Size.infinite,
-                      painter: DashedCrosshairPainter(),
-                    ),
-                  ),
-              ],
-            ),
+        child: RepaintBoundary(
+          key: _repaintBoundaryKey,
+          child: Stack(
+            fit: StackFit.expand,
+            alignment: Alignment.center,
+            children: [
+              if (_renderedImage != null)
+                RawImage(image: _renderedImage!, fit: BoxFit.contain)
+              else if (_imageUrlWithCacheBust != null)
+                Image.network(
+                  _imageUrlWithCacheBust!,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Center(child: Icon(Icons.error, size: 50)),
+                )
+              else
+                const Center(child: Text('Фото не загружено')),
+              IgnorePointer(
+                child: CustomPaint(
+                  size: Size.infinite,
+                  painter: DashedCrosshairPainter(),
+                ),
+              ),
+            ],
           ),
         ),
       ),
