@@ -26,6 +26,7 @@ class AuthState {
 
 // 2. Notifier управляет единым состоянием AuthState
 class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
+  // A simple comment to try and force analyzer refresh.
   final Ref _ref;
   AuthNotifier(this._ref) : super(const AsyncValue.loading()) {
     _loadStoredUser();

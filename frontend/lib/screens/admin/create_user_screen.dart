@@ -92,6 +92,15 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
     });
 
     try {
+      // Conditionally create the client profile map
+      Map<String, dynamic>? clientProfileData;
+      if (_selectedRoleNames.contains('client')) {
+        clientProfileData = {
+          'track_calories': _trackCalories,
+          'coeff_activity': _coeffActivity,
+        };
+      }
+
       final request = CreateUserRequest(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -110,8 +119,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             : null,
         sendNotification: _sendNotification,
         hourNotification: _hourNotification,
-        trackCalories: _trackCalories,
-        coeffActivity: _coeffActivity,
+        clientProfile: clientProfileData,
       );
 
       final newUser = await ApiService.createUser(request);

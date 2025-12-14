@@ -25,34 +25,88 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   int? _selectedLevelId;
   bool _isLoading = false;
 
+  // Client profile specific state
+  late bool _trackCalories;
+  late double _coeffActivity;
+
+
   @override
   void initState() {
     super.initState();
     _photoUrl = widget.user.photoUrl;
-    _selectedGoalId = widget.user.goalTrainingId;
-    _selectedLevelId = widget.user.levelTrainingId;
+    // Initialize from the nested clientProfile object
+    _selectedGoalId = widget.user.clientProfile?.goalTrainingId;
+    _selectedLevelId = widget.user.clientProfile?.levelTrainingId;
+    _trackCalories = widget.user.clientProfile?.trackCalories ?? true;
+    _coeffActivity = widget.user.clientProfile?.coeffActivity ?? 1.2;
+  }
+
+  bool _isDirty() {
+    final profile = widget.user.clientProfile;
+    return _selectedGoalId != profile?.goalTrainingId ||
+        _selectedLevelId != profile?.levelTrainingId ||
+        _trackCalories != profile?.trackCalories ||
+        _coeffActivity != profile?.coeffActivity;
   }
 
   Future<void> _saveProfile() async {
+    if (!_isDirty()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Нет изменений для сохранения.'),
+          backgroundColor: Colors.amber,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
-    try {
-      final updatedUser = await ApiService.updateClientProfile(
-        goalTrainingId: _selectedGoalId,
-        levelTrainingId: _selectedLevelId,
-      );
 
-      // Update the global auth state
-      ref.read(authProvider.notifier).updateUser(updatedUser);
+    try {
+      final authUser = ref.read(authProvider).value?.user;
+      final isSelfEdit = (authUser != null) && (authUser.id == widget.user.id);
+
+      late User updatedUser;
+      
+      // This is the data we want to save for the client profile.
+      final clientProfileData = {
+        'goal_training_id': _selectedGoalId,
+        'level_training_id': _selectedLevelId,
+        'track_calories': _trackCalories,
+        'coeff_activity': _coeffActivity,
+      };
+
+      if (isSelfEdit) {
+        // A client is editing their own profile.
+        // We anticipate refactoring updateClientProfile to accept a map.
+        updatedUser = await ApiService.updateClientProfile(clientProfileData);
+        ref.read(authProvider.notifier).updateUser(updatedUser);
+      } else {
+        // An admin/manager is editing a client's profile.
+        final request = UpdateUserRequest(
+          id: widget.user.id,
+          // We can add other fields here if we want to edit them, e.g., email
+          // email: _emailController.text, 
+          clientProfile: clientProfileData,
+        );
+        updatedUser = await ApiService.updateUser(request);
+      }
+
+      // After a successful save, update the local state from the server's response.
+      setState(() {
+        _selectedGoalId = updatedUser.clientProfile?.goalTrainingId;
+        _selectedLevelId = updatedUser.clientProfile?.levelTrainingId;
+        _trackCalories = updatedUser.clientProfile?.trackCalories ?? true;
+        _coeffActivity = updatedUser.clientProfile?.coeffActivity ?? 1.2;
+        _photoUrl = updatedUser.photoUrl;
+      });
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Профиль успешно обновлен',
-            style: TextStyle(color: Colors.white),
-          ),
+          content: Text('Профиль успешно обновлен', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.green,
         ),
       );
@@ -74,7 +128,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final currentUser = authState.value?.user;
-    // Права на редактирование: может редактировать любой, кто не является клиентом.
+    // Allow editing if the current user is not a client.
     final canEditClientProfile = currentUser != null && !currentUser.roles.any((r) => r.name == 'client');
 
     return ListView(
@@ -96,9 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       maxScale: 4,
                       child: _photoUrl != null
                           ? Image.network(
-                              Uri.parse(ApiService.baseUrl)
-                                  .replace(path: _photoUrl)
-                                  .toString(),
+                              Uri.parse(ApiService.baseUrl).replace(path: _photoUrl!).toString(),
                               fit: BoxFit.cover,
                             )
                           : const Icon(Icons.person, size: 50),
@@ -120,7 +172,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildProfileInfoCard(bool canEditClientProfile) {
-    // Профиль принадлежит клиенту?
     final isClientProfile = widget.user.roles.any((r) => r.name == 'client');
 
     return Card(
@@ -143,13 +194,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildInfoRow(
                 label: 'Возраст',
                 value: widget.user.age?.toString() ?? 'не указан'),
-            const Divider(height: 30),
-            if (widget.user.roles.length > 1 &&
-                widget.user.roles.every((r) => r.name != 'client'))
+            if (widget.user.roles.length > 1 && widget.user.roles.every((r) => r.name != 'client'))
               _buildRolesSection(),
             const Divider(height: 30),
             _buildSettingsSection(canEditClientProfile),
-            // Кнопка "Сохранить" видна, если можно редактировать и это профиль клиента
             if (isClientProfile && canEditClientProfile) ...[
               const SizedBox(height: 24),
               Center(
@@ -176,25 +224,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        ...widget.user.roles
-            .map((role) => SelectableText('  - ${role.title}')),
+        ...widget.user.roles.map((role) => SelectableText('  - ${role.title}')),
         const SizedBox(height: 16),
       ],
     );
   }
 
   Widget _buildSettingsSection(bool canEdit) {
-    final isClientProfile = widget.user.roles.any((r) => r.name == 'client');
+    final clientProfile = widget.user.clientProfile;
+    final isClientRole = widget.user.roles.any((r) => r.name == 'client');
     final goalsAsync = ref.watch(goalsTrainingProvider);
     final levelsAsync = ref.watch(levelsTrainingProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SelectableText(
-          'Настройки',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        const SelectableText('Настройки', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         SwitchListTile(
           title: const SelectableText('Получать уведомления'),
@@ -205,60 +250,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           label: 'Уведомлять за (часы)',
           value: widget.user.hourNotification.toString(),
         ),
-        if (isClientProfile) ...[
+        if (isClientRole && clientProfile != null) ...[
             SwitchListTile(
               title: const SelectableText('Отслеживать калории'),
-              value: widget.user.trackCalories,
-              onChanged: null, // TODO: Implement settings change
+              value: _trackCalories,
+              onChanged: canEdit ? (value) => setState(() => _trackCalories = value) : null,
             ),
             _buildInfoRow(
               label: 'Коэф. активности',
-              value: widget.user.coeffActivity.toString(),
+              value: _coeffActivity.toString(),
             ),
             const SizedBox(height: 16),
-            // Dropdown for Goals
             goalsAsync.when(
               data: (goals) => DropdownButtonFormField<int>(
+                key: ValueKey<String>('goal_$_selectedGoalId'),
                 initialValue: _selectedGoalId,
-                decoration: const InputDecoration(
-                  labelText: 'Цель тренировок',
-                  border: OutlineInputBorder(),
-                ),
-                items: goals.map((goal) {
-                  return DropdownMenuItem<int>(
-                    value: goal.id,
-                    child: Text(goal.name),
-                  );
-                }).toList(),
-                onChanged: canEdit ? (value) {
-                  setState(() {
-                    _selectedGoalId = value;
-                  });
-                } : null,
+                decoration: const InputDecoration(labelText: 'Цель тренировок', border: OutlineInputBorder()),
+                items: goals.map((goal) => DropdownMenuItem<int>(value: goal.id, child: Text(goal.name))).toList(),
+                onChanged: canEdit ? (value) => setState(() => _selectedGoalId = value) : null,
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Text('Ошибка загрузки: $err'),
             ),
             const SizedBox(height: 16),
-            // Dropdown for Levels
             levelsAsync.when(
               data: (levels) => DropdownButtonFormField<int>(
+                key: ValueKey<String>('level_$_selectedLevelId'),
                 initialValue: _selectedLevelId,
-                decoration: const InputDecoration(
-                  labelText: 'Уровень подготовки',
-                  border: OutlineInputBorder(),
-                ),
-                items: levels.map((level) {
-                  return DropdownMenuItem<int>(
-                    value: level.id,
-                    child: Text(level.name),
-                  );
-                }).toList(),
-                onChanged: canEdit ? (value) {
-                  setState(() {
-                    _selectedLevelId = value;
-                  });
-                } : null,
+                decoration: const InputDecoration(labelText: 'Уровень подготовки', border: OutlineInputBorder()),
+                items: levels.map((level) => DropdownMenuItem<int>(value: level.id, child: Text(level.name))).toList(),
+                onChanged: canEdit ? (value) => setState(() => _selectedLevelId = value) : null,
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Text('Ошибка загрузки: $err'),
@@ -274,8 +295,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SelectableText(label,
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+          SelectableText(label, style: const TextStyle(fontWeight: FontWeight.bold)),
           SelectableText(value),
         ],
       ),

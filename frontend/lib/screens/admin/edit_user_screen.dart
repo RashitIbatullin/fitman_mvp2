@@ -57,9 +57,9 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
         user.dateOfBirth?.toIso8601String().split('T').first ?? '';
     _selectedGender = user.gender;
     _sendNotification = user.sendNotification;
-    _trackCalories = user.trackCalories;
+    _trackCalories = user.clientProfile?.trackCalories ?? true;
     _hourNotification = user.hourNotification;
-    _coeffActivity = user.coeffActivity;
+    _coeffActivity = user.clientProfile?.coeffActivity ?? 1.2;
     _photoUrl = user.photoUrl;
 
     _updateAvatarUrlForCacheBusting();
@@ -69,7 +69,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     if (_photoUrl != null) {
       setState(() {
         _avatarUrlWithCacheBust =
-            '${Uri.parse(ApiService.baseUrl).replace(path: _photoUrl!).toString()}?v=${_photoUrl.hashCode}';
+            '${Uri.parse(ApiService.baseUrl).replace(path: _photoUrl!).toString()}?v=${DateTime.now().millisecondsSinceEpoch}';
       });
     }
   }
@@ -81,7 +81,6 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
     final platformFile = result.files.single;
     final fileName = platformFile.name;
-    // Uint8List? fileBytes = platformFile.bytes;
     final fileBytes = platformFile.bytes ??
         (platformFile.path != null
             ? await File(platformFile.path!).readAsBytes()
@@ -146,7 +145,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
       setState(() {
         _photoUrl = response['photoUrl'];
-        _editedAvatarImage = null; 
+        _editedAvatarImage = null;
         _hasUnsavedChanges = false;
         _updateAvatarUrlForCacheBusting();
       });
@@ -200,6 +199,14 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     });
 
     try {
+      Map<String, dynamic>? clientProfileData;
+      if (widget.user.roles.any((r) => r.name == 'client')) {
+        clientProfileData = {
+          'track_calories': _trackCalories,
+          'coeff_activity': _coeffActivity,
+        };
+      }
+
       final request = UpdateUserRequest(
         id: widget.user.id,
         email: _emailController.text.trim(),
@@ -211,6 +218,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
         dateOfBirth: _dateOfBirthController.text.trim().isNotEmpty
             ? DateTime.parse(_dateOfBirthController.text.trim())
             : null,
+        clientProfile: clientProfileData,
       );
 
       final updatedUser = await ApiService.updateUser(request);
@@ -275,15 +283,12 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
   Widget _buildAvatarSection() {
     Widget avatarContent;
-    // If there are unsaved changes, display the edited image.
     if (_hasUnsavedChanges && _editedAvatarImage != null) {
       avatarContent = RawImage(image: _editedAvatarImage!, fit: BoxFit.cover);
     }
-    // Otherwise, if there is a saved photo URL, display it from the network.
     else if (_photoUrl != null) {
       avatarContent = Image.network(_avatarUrlWithCacheBust!, fit: BoxFit.cover);
     }
-    // Otherwise, show the default person icon.
     else {
       avatarContent = const Icon(Icons.person, size: 50);
     }
@@ -292,7 +297,6 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
       child: Column(
         children: [
           GestureDetector(
-            // Disable editing if there are unsaved changes.
             onTap: _hasUnsavedChanges
                 ? null
                 : (_photoUrl != null ? _editAvatar : _uploadAndReplaceAvatar),
@@ -313,7 +317,6 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
                 tooltip: 'Загрузить новое фото',
                 onPressed: _uploadAndReplaceAvatar,
               ),
-              // Show save button if a photo exists, but enable only if there are unsaved changes.
               if (_photoUrl != null)
                 IconButton(
                   icon: const Icon(Icons.save),

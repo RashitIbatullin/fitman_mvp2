@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:postgres/postgres.dart';
+import '../models/client_profile_back.dart';
 import 'app_config.dart'; // Добавлено
 import '../models/user_back.dart';
 import '../models/role.dart';
@@ -138,15 +139,33 @@ class Database {
     try {
       final conn = await connection;
       final results = await conn.execute('''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
-        FROM users
-        ORDER BY last_name, first_name
+        SELECT 
+          u.id, u.email, u.password_hash, u.first_name, u.last_name, u.middle_name, 
+          u.phone, u.gender, u.date_of_birth, u.photo_url, u.created_at, u.updated_at,
+          cp.user_id as cp_user_id, cp.goal_training_id, cp.level_training_id, 
+          cp.track_calories, cp.coeff_activity
+        FROM users u
+        LEFT JOIN client_profiles cp ON u.id = cp.user_id
+        ORDER BY u.last_name, u.first_name
       ''');
 
       final users = <User>[];
       for (final row in results) {
         final userMap = row.toColumnMap();
-        final user = User.fromMap(userMap);
+        
+        ClientProfile? clientProfile;
+        // Check if a client profile exists (cp_user_id will not be null)
+        if (userMap['cp_user_id'] != null) {
+          clientProfile = ClientProfile.fromMap({
+            'user_id': userMap['cp_user_id'],
+            'goal_training_id': userMap['goal_training_id'],
+            'level_training_id': userMap['level_training_id'],
+            'track_calories': userMap['track_calories'],
+            'coeff_activity': userMap['coeff_activity'],
+          });
+        }
+
+        final user = User.fromMap(userMap).copyWith(clientProfile: clientProfile);
         final roles = await getRolesForUser(user.id);
         users.add(user.copyWith(roles: roles));
       }
@@ -157,150 +176,143 @@ class Database {
     }
   }
 
-  // Получить пользователя по email
-  Future<User?> getUserByEmail(String email) async {
-    try {
-      final conn = await connection;
-
-      final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
-        FROM users
-        WHERE email = @email
-        LIMIT 1
-      ''';
-
-      final results = await conn.execute(
-        Sql.named(sql),
-        parameters: {
-          'email': email,
-        },
-      );
-
-      if (results.isEmpty) return null;
-
-      final userMap = results.first.toColumnMap();
-      var user = User.fromMap(userMap);
-      final roles = await getRolesForUser(user.id);
-      user = user.copyWith(roles: roles);
-
-      if (user.roles.any((r) => r.name == 'client')) {
-        final profileResult = await conn.execute(
-          Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
-          parameters: {'id': user.id},
+        // Получить пользователя по email
+    Future<User?> getUserByEmail(String email) async {
+      try {
+        final conn = await connection;
+  
+        final sql = '''
+          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
+          FROM users
+          WHERE email = @email
+          LIMIT 1
+        ''';
+  
+        final results = await conn.execute(
+          Sql.named(sql),
+          parameters: {
+            'email': email,
+          },
         );
-        if (profileResult.isNotEmpty) {
-          final profileMap = profileResult.first.toColumnMap();
-          user = user.copyWith(
-            trackCalories: profileMap['track_calories'] as bool?,
-            coeffActivity: profileMap['coeff_activity'] as double?,
-            goalTrainingId: profileMap['goal_training_id'] as int?,
-            levelTrainingId: profileMap['level_training_id'] as int?,
+  
+        if (results.isEmpty) return null;
+  
+        final userMap = results.first.toColumnMap();
+        var user = User.fromMap(userMap);
+        final roles = await getRolesForUser(user.id);
+        user = user.copyWith(roles: roles);
+  
+        if (user.roles.any((r) => r.name == 'client')) {
+          final profileResult = await conn.execute(
+            Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
+            parameters: {'id': user.id},
           );
+          if (profileResult.isNotEmpty) {
+            final profileMap = profileResult.first.toColumnMap();
+            final clientProfile = ClientProfile.fromMap(profileMap);
+            user = user.copyWith(
+              clientProfile: clientProfile,
+            );
+          }
         }
+        return user;
+      } catch (e) {
+        print('❌ getUserByEmail error: $e');
+        rethrow;
       }
-      return user;
-    } catch (e) {
-      print('❌ getUserByEmail error: $e');
-      rethrow;
     }
-  }
-
-  // Получить пользователя по телефону
-  Future<User?> getUserByPhone(String phone) async {
-    try {
-      final conn = await connection;
-
-      final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
-        FROM users
-        WHERE phone = @phone
-        LIMIT 1
-      ''';
-
-      final results = await conn.execute(
-        Sql.named(sql),
-        parameters: {
-          'phone': phone,
-        },
-      );
-
-      if (results.isEmpty) return null;
-
-      final userMap = results.first.toColumnMap();
-      var user = User.fromMap(userMap);
-      final roles = await getRolesForUser(user.id);
-      user = user.copyWith(roles: roles);
-
-      if (user.roles.any((r) => r.name == 'client')) {
-        final profileResult = await conn.execute(
-          Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
-          parameters: {'id': user.id},
+  
+    // Получить пользователя по телефону
+    Future<User?> getUserByPhone(String phone) async {
+      try {
+        final conn = await connection;
+  
+        final sql = '''
+          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
+          FROM users
+          WHERE phone = @phone
+          LIMIT 1
+        ''';
+  
+        final results = await conn.execute(
+          Sql.named(sql),
+          parameters: {
+            'phone': phone,
+          },
         );
-        if (profileResult.isNotEmpty) {
-          final profileMap = profileResult.first.toColumnMap();
-          user = user.copyWith(
-            trackCalories: profileMap['track_calories'] as bool?,
-            coeffActivity: profileMap['coeff_activity'] as double?,
-            goalTrainingId: profileMap['goal_training_id'] as int?,
-            levelTrainingId: profileMap['level_training_id'] as int?,
+  
+        if (results.isEmpty) return null;
+  
+        final userMap = results.first.toColumnMap();
+        var user = User.fromMap(userMap);
+        final roles = await getRolesForUser(user.id);
+        user = user.copyWith(roles: roles);
+  
+        if (user.roles.any((r) => r.name == 'client')) {
+          final profileResult = await conn.execute(
+            Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
+            parameters: {'id': user.id},
           );
+          if (profileResult.isNotEmpty) {
+            final profileMap = profileResult.first.toColumnMap();
+            final clientProfile = ClientProfile.fromMap(profileMap);
+            user = user.copyWith(
+              clientProfile: clientProfile,
+            );
+          }
         }
+        return user;
+      } catch (e) {
+        print('❌ getUserByPhone error: $e');
+        rethrow;
       }
-      return user;
-    } catch (e) {
-      print('❌ getUserByPhone error: $e');
-      rethrow;
     }
-  }
-
-  // Получить пользователя по ID
-  Future<User?> getUserById(int id) async {
-    try {
-      final conn = await connection;
-
-      final sql = '''
-        SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
-        FROM users
-        WHERE id = @id
-        LIMIT 1
-      ''';
-
-      final results = await conn.execute(
-        Sql.named(sql),
-        parameters: {
-          'id': id,
-        },
-      );
-
-      if (results.isEmpty) return null;
-
-      final userMap = results.first.toColumnMap();
-      var user = User.fromMap(userMap);
-      final roles = await getRolesForUser(user.id);
-      user = user.copyWith(roles: roles);
-
-      if (user.roles.any((r) => r.name == 'client')) {
-        final profileResult = await conn.execute(
-          Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
-          parameters: {'id': user.id},
+  
+    // Получить пользователя по ID
+    Future<User?> getUserById(int id) async {
+      try {
+        final conn = await connection;
+  
+        final sql = '''
+          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
+          FROM users
+          WHERE id = @id
+          LIMIT 1
+        ''';
+  
+        final results = await conn.execute(
+          Sql.named(sql),
+          parameters: {
+            'id': id,
+          },
         );
-        if (profileResult.isNotEmpty) {
-          final profileMap = profileResult.first.toColumnMap();
-          user = user.copyWith(
-            trackCalories: profileMap['track_calories'] as bool?,
-            coeffActivity: profileMap['coeff_activity'] as double?,
-            goalTrainingId: profileMap['goal_training_id'] as int?,
-            levelTrainingId: profileMap['level_training_id'] as int?,
+  
+        if (results.isEmpty) return null;
+  
+        final userMap = results.first.toColumnMap();
+        var user = User.fromMap(userMap);
+        final roles = await getRolesForUser(user.id);
+        user = user.copyWith(roles: roles);
+  
+        if (user.roles.any((r) => r.name == 'client')) {
+          final profileResult = await conn.execute(
+            Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
+            parameters: {'id': user.id},
           );
+          if (profileResult.isNotEmpty) {
+            final profileMap = profileResult.first.toColumnMap();
+            final clientProfile = ClientProfile.fromMap(profileMap);
+            user = user.copyWith(
+              clientProfile: clientProfile,
+            );
+          }
         }
+        return user;
+      } catch (e) {
+        print('❌ getUserById error: $e');
+        rethrow;
       }
-      return user;
-    } catch (e) {
-      print('❌ getUserById error: $e');
-      rethrow;
     }
-  }
-
   // Создать пользователя
   Future<User> createUser(User user, List<String> roleNames, [int? creatorId]) async {
     final conn = await connection;
@@ -479,6 +491,8 @@ class Database {
     required int userId,
     int? goalTrainingId,
     int? levelTrainingId,
+    bool? trackCalories,
+    double? coeffActivity,
     required int updatedBy,
   }) async {
     try {
@@ -494,6 +508,14 @@ class Database {
       if (levelTrainingId != null) {
         setParts.add('level_training_id = @levelTrainingId');
         parameters['levelTrainingId'] = levelTrainingId;
+      }
+      if (trackCalories != null) {
+        setParts.add('track_calories = @trackCalories');
+        parameters['trackCalories'] = trackCalories;
+      }
+      if (coeffActivity != null) {
+        setParts.add('coeff_activity = @coeffActivity');
+        parameters['coeffActivity'] = coeffActivity;
       }
       
       if (setParts.isEmpty) {
@@ -522,14 +544,22 @@ class Database {
       if (result.affectedRows == 0) {
         await conn.execute(
           Sql.named('''
-            INSERT INTO client_profiles (user_id, goal_training_id, level_training_id, created_by, updated_by)
-            VALUES (@userId, @goalTrainingId, @levelTrainingId, @updatedBy, @updatedBy)
-            ON CONFLICT (user_id) DO NOTHING
+            INSERT INTO client_profiles (user_id, goal_training_id, level_training_id, track_calories, coeff_activity, created_by, updated_by)
+            VALUES (@userId, @goalTrainingId, @levelTrainingId, @trackCalories, @coeffActivity, @updatedBy, @updatedBy)
+            ON CONFLICT (user_id) DO UPDATE SET
+              goal_training_id = COALESCE(@goalTrainingId, client_profiles.goal_training_id),
+              level_training_id = COALESCE(@levelTrainingId, client_profiles.level_training_id),
+              track_calories = COALESCE(@trackCalories, client_profiles.track_calories),
+              coeff_activity = COALESCE(@coeffActivity, client_profiles.coeff_activity),
+              updated_at = NOW(),
+              updated_by = @updatedBy
           '''),
           parameters: {
             'userId': userId,
             'goalTrainingId': goalTrainingId,
             'levelTrainingId': levelTrainingId,
+            'trackCalories': trackCalories,
+            'coeffActivity': coeffActivity,
             'updatedBy': updatedBy,
           }
         );

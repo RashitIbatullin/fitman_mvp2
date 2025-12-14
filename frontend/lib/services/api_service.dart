@@ -198,10 +198,11 @@ class ApiService {
   // Обновление пользователя (для админа)
   static Future<User> updateUser(UpdateUserRequest request) async {
     try {
+      final requestBody = request.toJson();
       final response = await http.put(
         Uri.parse('$baseUrl/api/users/${request.id}'),
         headers: _headers,
-        body: jsonEncode(request.toJson()),
+        body: jsonEncode(requestBody),
       );
 
       if (response.statusCode == 200) {
@@ -1177,14 +1178,14 @@ class ApiService {
   }
 
   // Обновить профиль клиента
-  static Future<User> updateClientProfile({int? goalTrainingId, int? levelTrainingId}) async {
+  static Future<User> updateClientProfile(
+      Map<String, dynamic> clientProfileData) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/api/client/profile'),
         headers: _headers,
         body: jsonEncode({
-          'goal_training_id': goalTrainingId,
-          'level_training_id': levelTrainingId,
+          'client_profile': clientProfileData,
         }),
       );
 

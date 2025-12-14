@@ -216,7 +216,7 @@ class UsersController {
       final dateOfBirthString = data['dateOfBirth'] as String?;
       final dateOfBirth = dateOfBirthString != null ? DateTime.parse(dateOfBirthString) : null;
 
-      final updatedUser = await Database().updateUser(
+      await Database().updateUser(
         userId,
         email: email,
         firstName: data['firstName'] as String?,
@@ -228,8 +228,30 @@ class UsersController {
         updatedBy: updaterId,
       );
 
+      // --- START OF NEW LOGIC ---
+      // Check for client profile data and update it if present
+      if (data.containsKey('client_profile') && data['client_profile'] is Map) {
+        final clientProfileData = data['client_profile'] as Map<String, dynamic>;
+        
+        // Check if the user actually is a client
+        final userRoles = await Database().getRolesForUser(userId);
+        if (userRoles.any((role) => role.name == 'client')) {
+            await Database().updateClientProfile(
+              userId: userId,
+              goalTrainingId: clientProfileData['goal_training_id'] as int?,
+              levelTrainingId: clientProfileData['level_training_id'] as int?,
+              trackCalories: clientProfileData['track_calories'] as bool?,
+              coeffActivity: (clientProfileData['coeff_activity'] as num?)?.toDouble(),
+              updatedBy: updaterId ?? userId,
+            );
+        }
+      }
+      // --- END OF NEW LOGIC ---
+
+      final updatedUser = await Database().getUserById(userId);
+
       if (updatedUser == null) {
-        return Response(404, body: jsonEncode({'error': 'User not found'}));
+        return Response(404, body: jsonEncode({'error': 'User not found after update'}));
       }
       return Response.ok(jsonEncode({'user': updatedUser.toSafeJson()}));
     } catch (e) {

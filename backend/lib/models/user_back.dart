@@ -1,4 +1,5 @@
 import 'role.dart';
+import 'client_profile_back.dart';
 
 class User {
   final int id;
@@ -14,13 +15,7 @@ class User {
   final DateTime? dateOfBirth;
   final DateTime createdAt;
   final DateTime updatedAt;
-
-  // Client-specific fields
-  final bool? trackCalories;
-  final double? coeffActivity;
-  final int? goalTrainingId;
-  final int? levelTrainingId;
-
+  final ClientProfile? clientProfile;
 
   int? get age {
     if (dateOfBirth == null) return null;
@@ -47,23 +42,19 @@ class User {
     this.dateOfBirth,
     required this.createdAt,
     required this.updatedAt,
-    // Client-specific
-    this.trackCalories,
-    this.coeffActivity,
-    this.goalTrainingId,
-    this.levelTrainingId,
+    this.clientProfile,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      id: map['id'] is int ? map['id'] : int.parse(map['id'].toString()),
+      id: map['id'] as int,
       email: map['email'].toString(),
       passwordHash: map['password_hash'].toString(),
       firstName: map['first_name'].toString(),
       lastName: map['last_name'].toString(),
       middleName: map['middle_name']?.toString(),
       photoUrl: map['photo_url']?.toString(),
-      roles: [], // Roles will be fetched separately and populated
+      roles: [], // Roles will be fetched and populated separately
       phone: map['phone']?.toString(),
       gender: map['gender'] != null ? (map['gender'] == 0 ? 'мужской' : 'женский') : null,
       dateOfBirth: map['date_of_birth'] is DateTime
@@ -75,11 +66,12 @@ class User {
       updatedAt: map['updated_at'] is DateTime
           ? map['updated_at']
           : DateTime.parse(map['updated_at'].toString()),
+      // clientProfile is populated separately after creation
     );
   }
 
   Map<String, dynamic> toSafeJson() {
-    final json = {
+    return {
       'id': id,
       'email': email,
       'firstName': firstName,
@@ -92,19 +84,8 @@ class User {
       'dateOfBirth': dateOfBirth?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'client_profile': clientProfile?.toJson(),
     };
-
-    // If the user is a client, add the nested profile data
-    if (roles.any((role) => role.name == 'client')) {
-      json['client_profile'] = {
-        'track_calories': trackCalories,
-        'coeff_activity': coeffActivity,
-        'goal_training_id': goalTrainingId,
-        'level_training_id': levelTrainingId,
-      };
-    }
-
-    return json;
   }
 
   Map<String, dynamic> toJson() {
@@ -120,11 +101,7 @@ class User {
     String? gender,
     DateTime? dateOfBirth,
     List<Role>? roles,
-    // Client-specific
-    bool? trackCalories,
-    double? coeffActivity,
-    int? goalTrainingId,
-    int? levelTrainingId,
+    ClientProfile? clientProfile,
   }) {
     return User(
       id: id,
@@ -140,11 +117,7 @@ class User {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
-      // Client-specific
-      trackCalories: trackCalories ?? this.trackCalories,
-      coeffActivity: coeffActivity ?? this.coeffActivity,
-      goalTrainingId: goalTrainingId ?? this.goalTrainingId,
-      levelTrainingId: levelTrainingId ?? this.levelTrainingId,
+      clientProfile: clientProfile ?? this.clientProfile,
     );
   }
 }

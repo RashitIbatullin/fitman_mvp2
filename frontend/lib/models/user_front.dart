@@ -1,5 +1,7 @@
 import 'role.dart';
+import 'client_profile.dart';
 
+// --- Main User Model ---
 class User {
   final int id;
   final String email;
@@ -14,23 +16,9 @@ class User {
   final DateTime? dateOfBirth;
   final bool sendNotification;
   final int hourNotification;
-  final bool trackCalories;
-  final double coeffActivity;
-  final int? goalTrainingId;
-  final int? levelTrainingId;
+  final ClientProfile? clientProfile;
   final DateTime createdAt;
   final DateTime updatedAt;
-
-  int? get age {
-    if (dateOfBirth == null) return null;
-    final now = DateTime.now();
-    int age = now.year - dateOfBirth!.year;
-    if (now.month < dateOfBirth!.month ||
-        (now.month == dateOfBirth!.month && now.day < dateOfBirth!.day)) {
-      age--;
-    }
-    return age;
-  }
 
   User({
     required this.id,
@@ -46,34 +34,21 @@ class User {
     this.dateOfBirth,
     this.sendNotification = true,
     this.hourNotification = 1,
-    this.trackCalories = true,
-    this.coeffActivity = 1.2,
-    this.goalTrainingId,
-    this.levelTrainingId,
+    this.clientProfile,
     required this.createdAt,
     required this.updatedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    // Helper to safely parse int from dynamic
-    int? parseInt(dynamic value) {
-      if (value is int) return value;
-      if (value is String) return int.tryParse(value);
-      return null;
-    }
-
-    final clientProfile = json['client_profile'];
-
     return User(
       id: json['id'],
-      email: json['email'],
+      email: json['email'] ?? json['login'], // Accept login as fallback for email
       passwordHash: json['passwordHash'] ?? '',
-      firstName: json['firstName'],
-      lastName: json['lastName'],
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
       middleName: json['middleName'],
       photoUrl: json['photoUrl'],
-      roles:
-          (json['roles'] as List<dynamic>?)
+      roles: (json['roles'] as List<dynamic>?)
               ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
               .toList() ??
           [],
@@ -81,36 +56,24 @@ class User {
       gender: json['gender'],
       dateOfBirth: json['dateOfBirth'] != null ? DateTime.parse(json['dateOfBirth']) : null,
       sendNotification: json['sendNotification'] ?? true,
-      hourNotification: parseInt(json['hourNotification']) ?? 1,
-      trackCalories: clientProfile != null ? clientProfile['track_calories'] ?? true : true,
-      coeffActivity: clientProfile != null ? (clientProfile['coeff_activity']?.toDouble() ?? 1.2) : 1.2,
-      goalTrainingId: clientProfile != null ? parseInt(clientProfile['goal_training_id']) : null,
-      levelTrainingId: clientProfile != null ? parseInt(clientProfile['level_training_id']) : null,
+      hourNotification: (json['hourNotification'] as num?)?.toInt() ?? 1,
+      clientProfile: json['client_profile'] != null
+          ? ClientProfile.fromJson(json['client_profile'])
+          : null,
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'email': email,
-      'firstName': firstName,
-      'lastName': lastName,
-      'middleName': middleName,
-      'photoUrl': photoUrl,
-      'phone': phone,
-      'gender': gender,
-      'dateOfBirth': dateOfBirth?.toIso8601String(),
-      'sendNotification': sendNotification,
-      'hourNotification': hourNotification,
-      'trackCalories': trackCalories,
-      'coeffActivity': coeffActivity,
-      'goalTrainingId': goalTrainingId,
-      'level_training_id': levelTrainingId,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-    };
+  int? get age {
+    if (dateOfBirth == null) return null;
+    final now = DateTime.now();
+    int age = now.year - dateOfBirth!.year;
+    if (now.month < dateOfBirth!.month ||
+        (now.month == dateOfBirth!.month && now.day < dateOfBirth!.day)) {
+      age--;
+    }
+    return age;
   }
 
   String get fullName {
@@ -141,10 +104,7 @@ class User {
     DateTime? dateOfBirth,
     bool? sendNotification,
     int? hourNotification,
-    bool? trackCalories,
-    double? coeffActivity,
-    int? goalTrainingId,
-    int? levelTrainingId,
+    ClientProfile? clientProfile,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -162,15 +122,34 @@ class User {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       sendNotification: sendNotification ?? this.sendNotification,
       hourNotification: hourNotification ?? this.hourNotification,
-      trackCalories: trackCalories ?? this.trackCalories,
-      coeffActivity: coeffActivity ?? this.coeffActivity,
-      goalTrainingId: goalTrainingId ?? this.goalTrainingId,
-      levelTrainingId: levelTrainingId ?? this.levelTrainingId,
+      clientProfile: clientProfile ?? this.clientProfile,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'firstName': firstName,
+      'lastName': lastName,
+      'middleName': middleName,
+      'photoUrl': photoUrl,
+      'roles': roles.map((r) => r.toJson()).toList(),
+      'phone': phone,
+      'gender': gender,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
+      'sendNotification': sendNotification,
+      'hourNotification': hourNotification,
+      'client_profile': clientProfile?.toJson(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
 }
+
+// --- API Helper classes ---
 
 class AuthResponse {
   final String token;
@@ -191,82 +170,88 @@ class CreateUserRequest {
   final String password;
   final String firstName;
   final String lastName;
-  final String? middleName;
   final List<String> roles;
+  final String? middleName;
   final String? phone;
   final String? gender;
   final DateTime? dateOfBirth;
   final bool sendNotification;
   final int hourNotification;
-  final bool trackCalories;
-  final double coeffActivity;
+  // This can be provided when creating a client
+  final Map<String, dynamic>? clientProfile;
 
   CreateUserRequest({
     required this.email,
     required this.password,
     required this.firstName,
     required this.lastName,
-    this.middleName,
     required this.roles,
+    this.middleName,
     this.phone,
     this.gender,
     this.dateOfBirth,
     this.sendNotification = true,
     this.hourNotification = 1,
-    this.trackCalories = true,
-    this.coeffActivity = 1.2,
+    this.clientProfile,
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> data = {
       'email': email,
       'password': password,
       'firstName': firstName,
       'lastName': lastName,
-      'middleName': middleName,
       'roles': roles,
-      'phone': phone,
-      'gender': gender,
-      'dateOfBirth': dateOfBirth?.toIso8601String(),
       'sendNotification': sendNotification,
       'hourNotification': hourNotification,
-      'trackCalories': trackCalories,
-      'coeffActivity': coeffActivity,
     };
+    if (middleName != null) data['middleName'] = middleName;
+    if (phone != null) data['phone'] = phone;
+    if (gender != null) data['gender'] = gender;
+    if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth!.toIso8601String();
+    if (clientProfile != null) data['client_profile'] = clientProfile;
+    
+    return data;
   }
 }
 
 class UpdateUserRequest {
   final int id;
-  final String email;
-  final String firstName;
-  final String lastName;
+  final String? email;
+  final String? firstName;
+  final String? lastName;
   final String? middleName;
   final String? phone;
   final String? gender;
   final DateTime? dateOfBirth;
+  // Allows for partial updates of a client's profile
+  final Map<String, dynamic>? clientProfile;
 
   UpdateUserRequest({
     required this.id,
-    required this.email,
-    required this.firstName,
-    required this.lastName,
+    this.email,
+    this.firstName,
+    this.lastName,
     this.middleName,
     this.phone,
     this.gender,
     this.dateOfBirth,
+    this.clientProfile,
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> data = {
       'id': id,
-      'email': email,
-      'firstName': firstName,
-      'lastName': lastName,
-      'middleName': middleName,
-      'phone': phone,
-      'gender': gender,
-      'dateOfBirth': dateOfBirth?.toIso8601String(),
     };
+    if (email != null) data['email'] = email;
+    if (firstName != null) data['firstName'] = firstName;
+    if (lastName != null) data['lastName'] = lastName;
+    if (middleName != null) data['middleName'] = middleName;
+    if (phone != null) data['phone'] = phone;
+    if (gender != null) data['gender'] = gender;
+    if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth!.toIso8601String();
+    if (clientProfile != null) data['client_profile'] = clientProfile;
+    
+    return data;
   }
 }
