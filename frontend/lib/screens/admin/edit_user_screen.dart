@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'dart:ui' as ui;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../models/user_front.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
@@ -35,6 +38,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
   Matrix4 _currentAvatarTransform = Matrix4.identity();
   String? _avatarUrlWithCacheBust;
+  ui.Image? _editedAvatarImage;
+  bool _hasUnsavedChanges = false;
 
   bool _isLoading = false;
   String? _error;
@@ -74,10 +79,23 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
         await FilePicker.platform.pickFiles(type: FileType.image);
     if (result == null) return;
 
-    final fileBytes = result.files.single.bytes;
-    final fileName = result.files.single.name;
+    final platformFile = result.files.single;
+    final fileName = platformFile.name;
+    // Uint8List? fileBytes = platformFile.bytes;
+    final fileBytes = platformFile.bytes ??
+        (platformFile.path != null
+            ? await File(platformFile.path!).readAsBytes()
+            : null);
 
-    if (fileBytes == null) return;
+    if (fileBytes == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Не удалось получить данные файла изображения.')),
+        );
+      }
+      return;
+    }
 
     try {
       final response =
@@ -86,17 +104,64 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
       setState(() {
         _photoUrl = response['photoUrl'];
+        _editedAvatarImage = null;
+        _hasUnsavedChanges = false;
         _currentAvatarTransform = Matrix4.identity();
         _updateAvatarUrlForCacheBusting();
       });
       ref.invalidate(usersProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Аватар успешно заменен')),
+        const SnackBar(
+          content: Text('Фото успешно сохранено'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка загрузки нового аватара: $e')),
+        SnackBar(content: Text('Ошибка загрузки нового фото аватара: $e')),
+      );
+    }
+  }
+
+  Future<void> _saveAvatar() async {
+    if (_editedAvatarImage == null) return;
+
+    final byteData =
+        await _editedAvatarImage!.toByteData(format: ui.ImageByteFormat.png);
+    if (!mounted) return;
+    final imageBytes = byteData?.buffer.asUint8List();
+
+    if (imageBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось обработать изображение')),
+      );
+      return;
+    }
+
+    try {
+      final response = await ApiService.uploadAvatar(
+          imageBytes, 'avatar.png', widget.user.id);
+      if (!mounted) return;
+
+      setState(() {
+        _photoUrl = response['photoUrl'];
+        _editedAvatarImage = null; 
+        _hasUnsavedChanges = false;
+        _updateAvatarUrlForCacheBusting();
+      });
+
+      ref.invalidate(usersProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Фото успешно сохранено'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка сохранения фото аватара: $e')),
       );
     }
   }
@@ -118,35 +183,11 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     );
 
     if (result != null && result is (ui.Image, Matrix4)) {
-      final image = result.$1;
-      final newTransform = result.$2;
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-
-      if (!mounted) return;
-      final imageBytes = byteData?.buffer.asUint8List();
-
-      if (imageBytes != null) {
-        try {
-          final response =
-              await ApiService.uploadAvatar(imageBytes, 'avatar.png', widget.user.id);
-          if (!mounted) return;
-
-          setState(() {
-            _photoUrl = response['photoUrl'];
-            _currentAvatarTransform = newTransform;
-            _updateAvatarUrlForCacheBusting();
-          });
-          ref.invalidate(usersProvider);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Аватар успешно обновлен')),
-          );
-        } catch (e) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка сохранения аватара: $e')),
-          );
-        }
-      }
+      setState(() {
+        _editedAvatarImage = result.$1;
+        _currentAvatarTransform = result.$2;
+        _hasUnsavedChanges = true;
+      });
     }
   }
 
@@ -233,46 +274,54 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   }
 
   Widget _buildAvatarSection() {
-    ImageProvider? backgroundImage;
-    if (_photoUrl != null) {
-      backgroundImage = NetworkImage(_avatarUrlWithCacheBust!);
+    Widget avatarContent;
+    // If there are unsaved changes, display the edited image.
+    if (_hasUnsavedChanges && _editedAvatarImage != null) {
+      avatarContent = RawImage(image: _editedAvatarImage!, fit: BoxFit.cover);
+    }
+    // Otherwise, if there is a saved photo URL, display it from the network.
+    else if (_photoUrl != null) {
+      avatarContent = Image.network(_avatarUrlWithCacheBust!, fit: BoxFit.cover);
+    }
+    // Otherwise, show the default person icon.
+    else {
+      avatarContent = const Icon(Icons.person, size: 50);
     }
 
     return Center(
       child: Column(
         children: [
           GestureDetector(
-            onTap: _editAvatar,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: backgroundImage,
-                  child: backgroundImage == null
-                      ? const Icon(Icons.person, size: 50)
-                      : null,
-                ),
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(77),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.edit, color: Colors.white),
-                ),
-              ],
+            // Disable editing if there are unsaved changes.
+            onTap: _hasUnsavedChanges
+                ? null
+                : (_photoUrl != null ? _editAvatar : _uploadAndReplaceAvatar),
+            child: ClipOval(
+              child: SizedBox(
+                width: 100,
+                height: 100,
+                child: avatarContent,
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          TextButton.icon(
-            icon: const Icon(Icons.upload_file),
-            label: Text(_photoUrl == null
-                ? 'Загрузить фото'
-                : 'Загрузить/заменить фото'),
-            onPressed: _uploadAndReplaceAvatar,
-          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.cloud_upload),
+                tooltip: 'Загрузить новое фото',
+                onPressed: _uploadAndReplaceAvatar,
+              ),
+              // Show save button if a photo exists, but enable only if there are unsaved changes.
+              if (_photoUrl != null)
+                IconButton(
+                  icon: const Icon(Icons.save),
+                  tooltip: 'Сохранить изменения',
+                  onPressed: _hasUnsavedChanges ? _saveAvatar : null,
+                ),
+            ],
+          )
         ],
       ),
     );
