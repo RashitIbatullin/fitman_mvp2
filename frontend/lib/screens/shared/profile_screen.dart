@@ -8,7 +8,7 @@ import '../../models/user_front.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-
+import '../../providers/catalogs_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   final User user;
@@ -22,22 +22,71 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late String? _photoUrl;
   final GlobalKey _repaintBoundaryKey = GlobalKey();
-  final TransformationController _transformationController = TransformationController();
+  final TransformationController _transformationController =
+      TransformationController();
+
+  // State for form fields
+  int? _selectedGoalId;
+  int? _selectedLevelId;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _photoUrl = widget.user.photoUrl;
+    _selectedGoalId = widget.user.goalTrainingId;
+    _selectedLevelId = widget.user.levelTrainingId;
+  }
+
+  Future<void> _saveProfile() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final updatedUser = await ApiService.updateClientProfile(
+        goalTrainingId: _selectedGoalId,
+        levelTrainingId: _selectedLevelId,
+      );
+
+      // Update the global auth state
+      ref.read(authProvider.notifier).updateUser(updatedUser);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Профиль успешно обновлен',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка обновления профиля: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _saveAvatar() async {
     try {
-      RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      RenderRepaintBoundary boundary =
+          _repaintBoundaryKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-      final response = await ApiService.uploadAvatar(pngBytes, 'avatar.png', widget.user.id);
+      final response = await ApiService.uploadAvatar(
+          pngBytes, 'avatar.png', widget.user.id);
       if (!mounted) return;
 
       setState(() {
@@ -57,7 +106,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _pickAndUploadAvatar() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+      FilePickerResult? result =
+          await FilePicker.platform.pickFiles(type: FileType.image);
 
       if (result != null) {
         final platformFile = result.files.single;
@@ -71,7 +121,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         }
 
         if (fileBytes != null) {
-          final response = await ApiService.uploadAvatar(fileBytes, fileName, widget.user.id);
+          final response = await ApiService.uploadAvatar(
+              fileBytes, fileName, widget.user.id);
           if (!mounted) return;
 
           setState(() {
@@ -81,10 +132,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SnackBar(content: Text('Аватар успешно обновлен')),
           );
         } else {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Не удалось прочитать файл.')),
-            );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Не удалось прочитать файл.')),
+          );
         }
       }
     } catch (e) {
@@ -99,7 +150,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final currentUser = authState.value?.user;
-    final canUploadPhoto = currentUser != null && !currentUser.roles.any((role) => role.name == 'client');
+    // Права на редактирование: может редактировать любой, кто не является клиентом.
+    final canEditClientProfile = currentUser != null && !currentUser.roles.any((r) => r.name == 'client');
+    final canUploadPhoto = canEditClientProfile;
 
     return ListView(
       padding: const EdgeInsets.all(16.0),
@@ -115,12 +168,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     height: 100,
                     child: InteractiveViewer(
                       transformationController: _transformationController,
-                      boundaryMargin: EdgeInsets.all(double.infinity),
+                      boundaryMargin: const EdgeInsets.all(double.infinity),
                       minScale: 1,
                       maxScale: 4,
                       child: _photoUrl != null
                           ? Image.network(
-                              Uri.parse(ApiService.baseUrl).replace(path: _photoUrl).toString(),
+                              Uri.parse(ApiService.baseUrl)
+                                  .replace(path: _photoUrl)
+                                  .toString(),
                               fit: BoxFit.cover,
                             )
                           : const Icon(Icons.person, size: 50),
@@ -149,12 +204,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        _buildProfileInfoCard(),
+        _buildProfileInfoCard(canEditClientProfile),
       ],
     );
   }
 
-  Widget _buildProfileInfoCard() {
+  Widget _buildProfileInfoCard(bool canEditClientProfile) {
+    // Профиль принадлежит клиенту?
+    final isClientProfile = widget.user.roles.any((r) => r.name == 'client');
+
     return Card(
       elevation: 4,
       child: Padding(
@@ -167,15 +225,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _buildInfoRow(label: 'Email', value: widget.user.email),
             _buildInfoRow(label: 'Телефон', value: widget.user.phone ?? 'не указан'),
             _buildInfoRow(label: 'Пол', value: widget.user.gender ?? 'не указан'),
-            _buildInfoRow(label: 'Дата рождения', value: widget.user.dateOfBirth != null ? '${widget.user.dateOfBirth!.day}.${widget.user.dateOfBirth!.month}.${widget.user.dateOfBirth!.year}' : 'не указана'),
-            _buildInfoRow(label: 'Возраст', value: widget.user.age?.toString() ?? 'не указан'),
+            _buildInfoRow(
+                label: 'Дата рождения',
+                value: widget.user.dateOfBirth != null
+                    ? '${widget.user.dateOfBirth!.day}.${widget.user.dateOfBirth!.month}.${widget.user.dateOfBirth!.year}'
+                    : 'не указана'),
+            _buildInfoRow(
+                label: 'Возраст',
+                value: widget.user.age?.toString() ?? 'не указан'),
             const Divider(height: 30),
-            // Требование 9.1.4, пункты 2 и 3
             if (widget.user.roles.length > 1 &&
                 widget.user.roles.every((r) => r.name != 'client'))
               _buildRolesSection(),
             const Divider(height: 30),
-            _buildSettingsSection(),
+            _buildSettingsSection(canEditClientProfile),
+            // Кнопка "Сохранить" видна, если можно редактировать и это профиль клиента
+            if (isClientProfile && canEditClientProfile) ...[
+              const SizedBox(height: 24),
+              Center(
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                        onPressed: _saveProfile,
+                        child: const Text('Сохранить изменения'),
+                      ),
+              )
+            ]
           ],
         ),
       ),
@@ -191,15 +266,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        ...widget.user.roles.map((role) => SelectableText('  - ${role.title}')),
+        ...widget.user.roles
+            .map((role) => SelectableText('  - ${role.title}')),
         const SizedBox(height: 16),
       ],
     );
   }
 
-  Widget _buildSettingsSection() {
-    // Требование 9.5
-    final isClient = widget.user.roles.any((r) => r.name == 'client');
+  Widget _buildSettingsSection(bool canEdit) {
+    final isClientProfile = widget.user.roles.any((r) => r.name == 'client');
+    final goalsAsync = ref.watch(goalsTrainingProvider);
+    final levelsAsync = ref.watch(levelsTrainingProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,17 +295,65 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           label: 'Уведомлять за (часы)',
           value: widget.user.hourNotification.toString(),
         ),
-        if (isClient)
-          SwitchListTile(
-            title: const SelectableText('Отслеживать калории'),
-            value: widget.user.trackCalories,
-            onChanged: null, // TODO: Implement settings change
-          ),
-        if (isClient)
-          _buildInfoRow(
-            label: 'Коэф. активности',
-            value: widget.user.coeffActivity.toString(),
-          ),
+        if (isClientProfile) ...[
+            SwitchListTile(
+              title: const SelectableText('Отслеживать калории'),
+              value: widget.user.trackCalories,
+              onChanged: null, // TODO: Implement settings change
+            ),
+            _buildInfoRow(
+              label: 'Коэф. активности',
+              value: widget.user.coeffActivity.toString(),
+            ),
+            const SizedBox(height: 16),
+            // Dropdown for Goals
+            goalsAsync.when(
+              data: (goals) => DropdownButtonFormField<int>(
+                initialValue: _selectedGoalId,
+                decoration: const InputDecoration(
+                  labelText: 'Цель тренировок',
+                  border: OutlineInputBorder(),
+                ),
+                items: goals.map((goal) {
+                  return DropdownMenuItem<int>(
+                    value: goal.id,
+                    child: Text(goal.name),
+                  );
+                }).toList(),
+                onChanged: canEdit ? (value) {
+                  setState(() {
+                    _selectedGoalId = value;
+                  });
+                } : null,
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Text('Ошибка загрузки: $err'),
+            ),
+            const SizedBox(height: 16),
+            // Dropdown for Levels
+            levelsAsync.when(
+              data: (levels) => DropdownButtonFormField<int>(
+                initialValue: _selectedLevelId,
+                decoration: const InputDecoration(
+                  labelText: 'Уровень подготовки',
+                  border: OutlineInputBorder(),
+                ),
+                items: levels.map((level) {
+                  return DropdownMenuItem<int>(
+                    value: level.id,
+                    child: Text(level.name),
+                  );
+                }).toList(),
+                onChanged: canEdit ? (value) {
+                  setState(() {
+                    _selectedLevelId = value;
+                  });
+                } : null,
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Text('Ошибка загрузки: $err'),
+            ),
+        ]
       ],
     );
   }
@@ -239,7 +364,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SelectableText(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          SelectableText(label,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           SelectableText(value),
         ],
       ),

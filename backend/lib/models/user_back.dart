@@ -7,13 +7,20 @@ class User {
   final String firstName;
   final String lastName;
   final String? middleName;
-  final String? photoUrl; // <-- ДОБАВЛЕНО
+  final String? photoUrl;
   final List<Role> roles;
   final String? phone;
   final String? gender;
   final DateTime? dateOfBirth;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  // Client-specific fields
+  final bool? trackCalories;
+  final double? coeffActivity;
+  final int? goalTrainingId;
+  final int? levelTrainingId;
+
 
   int? get age {
     if (dateOfBirth == null) return null;
@@ -33,13 +40,18 @@ class User {
     required this.firstName,
     required this.lastName,
     this.middleName,
-    this.photoUrl, // <-- ДОБАВЛЕНО
+    this.photoUrl,
     required this.roles,
     this.phone,
     this.gender,
     this.dateOfBirth,
     required this.createdAt,
     required this.updatedAt,
+    // Client-specific
+    this.trackCalories,
+    this.coeffActivity,
+    this.goalTrainingId,
+    this.levelTrainingId,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
@@ -50,7 +62,7 @@ class User {
       firstName: map['first_name'].toString(),
       lastName: map['last_name'].toString(),
       middleName: map['middle_name']?.toString(),
-      photoUrl: map['photo_url']?.toString(), // <-- ДОБАВЛЕНО
+      photoUrl: map['photo_url']?.toString(),
       roles: [], // Roles will be fetched separately and populated
       phone: map['phone']?.toString(),
       gender: map['gender'] != null ? (map['gender'] == 0 ? 'мужской' : 'женский') : null,
@@ -66,14 +78,14 @@ class User {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
+  Map<String, dynamic> toSafeJson() {
+    final json = {
       'id': id,
       'email': email,
       'firstName': firstName,
       'lastName': lastName,
       'middleName': middleName,
-      'photo_url': photoUrl, // <-- ДОБАВЛЕНО
+      'photoUrl': photoUrl,
       'roles': roles.map((r) => r.toJson()).toList(),
       'phone': phone,
       'gender': gender,
@@ -81,34 +93,38 @@ class User {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
+
+    // If the user is a client, add the nested profile data
+    if (roles.any((role) => role.name == 'client')) {
+      json['client_profile'] = {
+        'track_calories': trackCalories,
+        'coeff_activity': coeffActivity,
+        'goal_training_id': goalTrainingId,
+        'level_training_id': levelTrainingId,
+      };
+    }
+
+    return json;
   }
 
-  Map<String, dynamic> toSafeJson() {
-    return {
-      'id': id,
-      'email': email,
-      'firstName': firstName,
-      'lastName': lastName,
-      'middleName': middleName,
-      'photo_url': photoUrl, // <-- ДОБАВЛЕНО
-      'roles': roles.map((r) => r.toJson()).toList(),
-      'phone': phone,
-      'gender': gender,
-      'dateOfBirth': dateOfBirth?.toIso8601String(),
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-    };
+  Map<String, dynamic> toJson() {
+    return toSafeJson();
   }
 
   User copyWith({
     String? firstName,
     String? lastName,
     String? middleName,
-    String? photoUrl, // <-- ДОБАВЛЕНО
+    String? photoUrl,
     String? phone,
     String? gender,
     DateTime? dateOfBirth,
     List<Role>? roles,
+    // Client-specific
+    bool? trackCalories,
+    double? coeffActivity,
+    int? goalTrainingId,
+    int? levelTrainingId,
   }) {
     return User(
       id: id,
@@ -117,13 +133,18 @@ class User {
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       middleName: middleName ?? this.middleName,
-      photoUrl: photoUrl ?? this.photoUrl, // <-- ДОБАВЛЕЛЕНО
+      photoUrl: photoUrl ?? this.photoUrl,
       roles: roles ?? this.roles,
       phone: phone ?? this.phone,
       gender: gender ?? this.gender,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      // Client-specific
+      trackCalories: trackCalories ?? this.trackCalories,
+      coeffActivity: coeffActivity ?? this.coeffActivity,
+      goalTrainingId: goalTrainingId ?? this.goalTrainingId,
+      levelTrainingId: levelTrainingId ?? this.levelTrainingId,
     );
   }
 }

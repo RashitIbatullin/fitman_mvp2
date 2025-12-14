@@ -13,6 +13,7 @@ import '../controllers/calorie_tracking_controller.dart';
 import '../controllers/progress_controller.dart';
 import '../controllers/catalogs/work_schedule_controller.dart';
 import '../controllers/client_preference_controller.dart';
+import '../controllers/catalogs_controller.dart';
 
 // Создаем обертки для protected routes
 Handler _protectedHandler(Handler handler) {
@@ -92,6 +93,8 @@ final Router router = Router()
 // Protected routes - общие
   ..get('/api/auth/check', (Request request) => _protectedHandler(AuthController.checkAuth)(request))
   ..get('/api/profile', (Request request) => _protectedHandler(UsersController.getProfile)(request))
+  ..get('/api/catalogs/goals-training', (Request request) => _protectedHandler(CatalogsController.getGoalsTraining)(request))
+  ..get('/api/catalogs/levels-training', (Request request) => _protectedHandler(CatalogsController.getLevelsTraining)(request))
 
 // User management routes (только для админа)
   ..get('/api/users', (Request request) => _adminHandler(UsersController.getUsers)(request))
@@ -143,6 +146,7 @@ final Router router = Router()
   ..get('/api/dashboard/client', (Request request) => _protectedHandler(DashboardController.getClientDashboardData)(request))
 
 // Client routes
+  ..put('/api/client/profile', (Request request) => _protectedHandler(UsersController.updateClientProfile)(request))
   ..get('/api/client/trainer', (Request request) => _protectedHandler(UsersController.getTrainerForClient)(request))
   ..get('/api/client/instructor', (Request request) => _protectedHandler(UsersController.getInstructorForClient)(request))
   ..get('/api/client/manager', (Request request) => _protectedHandler(UsersController.getManagerForClient)(request))

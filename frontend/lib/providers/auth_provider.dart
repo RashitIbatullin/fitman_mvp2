@@ -119,6 +119,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     state = state.whenData((value) => value.copyWith(selectedRole: role));
   }
 
+  // Метод для обновления данных пользователя в состоянии
+  Future<void> updateUser(User user) async {
+    state = state.whenData((value) {
+      // Сохраняем обновленного пользователя в SharedPreferences
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('user_data', jsonEncode(user.toJson()));
+      });
+      // Возвращаем новое состояние, сохраняя выбранную роль
+      return value.copyWith(user: user);
+    });
+  }
+
   Future<void> _storeAuthData(AuthResponse authResponse) async {
     await ApiService.saveToken(authResponse.token);
     final prefs = await SharedPreferences.getInstance();

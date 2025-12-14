@@ -7,6 +7,8 @@ import '../models/schedule_item.dart';
 import '../models/user_front.dart';
 import '../models/work_schedule.dart';
 import '../models/client_schedule_preference.dart'; // Import ClientSchedulePreference
+import '../models/goal_training.dart';
+import '../models/level_training.dart';
 
 class ApiService {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
@@ -1130,6 +1132,71 @@ class ApiService {
       }
     } catch (e) {
       print('Reset user password error: $e');
+      rethrow;
+    }
+  }
+
+  // Получить каталог "Цели тренировок"
+  static Future<List<GoalTraining>> getGoalsTraining() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/catalogs/goals-training'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((item) => GoalTraining.fromJson(item)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load training goals');
+      }
+    } catch (e) {
+      print('Get Goals Training error: $e');
+      rethrow;
+    }
+  }
+
+  // Получить каталог "Уровни подготовки"
+  static Future<List<LevelTraining>> getLevelsTraining() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/catalogs/levels-training'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((item) => LevelTraining.fromJson(item)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load training levels');
+      }
+    } catch (e) {
+      print('Get Levels Training error: $e');
+      rethrow;
+    }
+  }
+
+  // Обновить профиль клиента
+  static Future<User> updateClientProfile({int? goalTrainingId, int? levelTrainingId}) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/client/profile'),
+        headers: _headers,
+        body: jsonEncode({
+          'goal_training_id': goalTrainingId,
+          'level_training_id': levelTrainingId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return User.fromJson(data['user']);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to update client profile');
+      }
+    } catch (e) {
+      print('Update Client Profile error: $e');
       rethrow;
     }
   }

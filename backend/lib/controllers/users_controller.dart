@@ -400,6 +400,48 @@ class UsersController {
     }
   }
 
+  // Обновить профиль клиента (цель, уровень)
+  static Future<Response> updateClientProfile(Request request) async {
+    try {
+      final payload = request.context['user'] as Map<String, dynamic>?;
+      if (payload == null) {
+        return Response.unauthorized(jsonEncode({'error': 'Not authenticated'}));
+      }
+      final userId = payload['userId'] as int;
+
+      final body = await request.readAsString();
+      final data = jsonDecode(body) as Map<String, dynamic>;
+
+      final goalTrainingId = data['goal_training_id'] as int?;
+      final levelTrainingId = data['level_training_id'] as int?;
+
+      if (goalTrainingId == null && levelTrainingId == null) {
+        return Response.badRequest(body: jsonEncode({'error': 'At least one field (goal_training_id or level_training_id) must be provided.'}));
+      }
+
+      await Database().updateClientProfile(
+        userId: userId,
+        goalTrainingId: goalTrainingId,
+        levelTrainingId: levelTrainingId,
+        updatedBy: userId,
+      );
+
+      final updatedUser = await Database().getUserById(userId);
+      if (updatedUser == null) {
+        return Response.notFound(jsonEncode({'error': 'User not found after update.'}));
+      }
+
+      return Response.ok(jsonEncode({
+        'message': 'Профиль клиента успешно обновлен',
+        'user': updatedUser.toSafeJson(),
+      }));
+
+    } catch (e) {
+      print('Update client profile error: $e');
+      return Response.internalServerError(body: jsonEncode({'error': 'Internal server error: $e'}));
+    }
+  }
+
   // Загрузить аватар пользователя
   static Future<Response> uploadAvatar(Request request, String id) async {
     try {

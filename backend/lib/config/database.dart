@@ -118,6 +118,21 @@ class Database {
     }
   }
 
+  // Получить данные для каталога по имени таблицы
+  Future<List<Map<String, dynamic>>> getCatalog(String tableName) async {
+    try {
+      final conn = await connection;
+      // ВАЖНО: tableName не должен приходить напрямую от клиента,
+      // чтобы избежать SQL-инъекций. В данном случае это безопасно,
+      // так как он вызывается из контроллера с жестко заданными именами.
+      final results = await conn.execute('SELECT id, name FROM $tableName WHERE archived_at IS NULL ORDER BY id');
+      return results.map((row) => row.toColumnMap()).toList();
+    } catch (e) {
+      print('❌ getCatalog ($tableName) error: $e');
+      rethrow;
+    }
+  }
+
   // Получить всех пользователей
   Future<List<User>> getAllUsers() async {
     try {
@@ -164,9 +179,26 @@ class Database {
       if (results.isEmpty) return null;
 
       final userMap = results.first.toColumnMap();
-      final user = User.fromMap(userMap);
+      var user = User.fromMap(userMap);
       final roles = await getRolesForUser(user.id);
-      return user.copyWith(roles: roles);
+      user = user.copyWith(roles: roles);
+
+      if (user.roles.any((r) => r.name == 'client')) {
+        final profileResult = await conn.execute(
+          Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
+          parameters: {'id': user.id},
+        );
+        if (profileResult.isNotEmpty) {
+          final profileMap = profileResult.first.toColumnMap();
+          user = user.copyWith(
+            trackCalories: profileMap['track_calories'] as bool?,
+            coeffActivity: profileMap['coeff_activity'] as double?,
+            goalTrainingId: profileMap['goal_training_id'] as int?,
+            levelTrainingId: profileMap['level_training_id'] as int?,
+          );
+        }
+      }
+      return user;
     } catch (e) {
       print('❌ getUserByEmail error: $e');
       rethrow;
@@ -195,9 +227,26 @@ class Database {
       if (results.isEmpty) return null;
 
       final userMap = results.first.toColumnMap();
-      final user = User.fromMap(userMap);
+      var user = User.fromMap(userMap);
       final roles = await getRolesForUser(user.id);
-      return user.copyWith(roles: roles);
+      user = user.copyWith(roles: roles);
+
+      if (user.roles.any((r) => r.name == 'client')) {
+        final profileResult = await conn.execute(
+          Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
+          parameters: {'id': user.id},
+        );
+        if (profileResult.isNotEmpty) {
+          final profileMap = profileResult.first.toColumnMap();
+          user = user.copyWith(
+            trackCalories: profileMap['track_calories'] as bool?,
+            coeffActivity: profileMap['coeff_activity'] as double?,
+            goalTrainingId: profileMap['goal_training_id'] as int?,
+            levelTrainingId: profileMap['level_training_id'] as int?,
+          );
+        }
+      }
+      return user;
     } catch (e) {
       print('❌ getUserByPhone error: $e');
       rethrow;
@@ -226,9 +275,26 @@ class Database {
       if (results.isEmpty) return null;
 
       final userMap = results.first.toColumnMap();
-      final user = User.fromMap(userMap);
+      var user = User.fromMap(userMap);
       final roles = await getRolesForUser(user.id);
-      return user.copyWith(roles: roles);
+      user = user.copyWith(roles: roles);
+
+      if (user.roles.any((r) => r.name == 'client')) {
+        final profileResult = await conn.execute(
+          Sql.named('SELECT * FROM client_profiles WHERE user_id = @id'),
+          parameters: {'id': user.id},
+        );
+        if (profileResult.isNotEmpty) {
+          final profileMap = profileResult.first.toColumnMap();
+          user = user.copyWith(
+            trackCalories: profileMap['track_calories'] as bool?,
+            coeffActivity: profileMap['coeff_activity'] as double?,
+            goalTrainingId: profileMap['goal_training_id'] as int?,
+            levelTrainingId: profileMap['level_training_id'] as int?,
+          );
+        }
+      }
+      return user;
     } catch (e) {
       print('❌ getUserById error: $e');
       rethrow;
@@ -404,6 +470,73 @@ class Database {
       return await getUserById(id);
     } catch (e) {
       print('❌ updateUser error: $e');
+      rethrow;
+    }
+  }
+
+  // Обновить профиль клиента (цель, уровень)
+  Future<void> updateClientProfile({
+    required int userId,
+    int? goalTrainingId,
+    int? levelTrainingId,
+    required int updatedBy,
+  }) async {
+    try {
+      final conn = await connection;
+
+      final setParts = <String>[];
+      final parameters = <String, dynamic>{'userId': userId};
+
+      if (goalTrainingId != null) {
+        setParts.add('goal_training_id = @goalTrainingId');
+        parameters['goalTrainingId'] = goalTrainingId;
+      }
+      if (levelTrainingId != null) {
+        setParts.add('level_training_id = @levelTrainingId');
+        parameters['levelTrainingId'] = levelTrainingId;
+      }
+      
+      if (setParts.isEmpty) {
+        // нечего обновлять
+        return;
+      }
+
+      setParts.add('updated_at = @updatedAt');
+      parameters['updatedAt'] = DateTime.now();
+      setParts.add('updated_by = @updatedBy');
+      parameters['updatedBy'] = updatedBy;
+
+      final sql = '''
+        UPDATE client_profiles
+        SET ${setParts.join(', ')}
+        WHERE user_id = @userId
+      ''';
+      
+      final result = await conn.execute(
+        Sql.named(sql),
+        parameters: parameters,
+      );
+
+      // Если ни одна строка не была обновлена, это может означать, что профиль клиента не существует.
+      // Создадим его.
+      if (result.affectedRows == 0) {
+        await conn.execute(
+          Sql.named('''
+            INSERT INTO client_profiles (user_id, goal_training_id, level_training_id, created_by, updated_by)
+            VALUES (@userId, @goalTrainingId, @levelTrainingId, @updatedBy, @updatedBy)
+            ON CONFLICT (user_id) DO NOTHING
+          '''),
+          parameters: {
+            'userId': userId,
+            'goalTrainingId': goalTrainingId,
+            'levelTrainingId': levelTrainingId,
+            'updatedBy': updatedBy,
+          }
+        );
+      }
+
+    } catch (e) {
+      print('❌ updateClientProfile error: $e');
       rethrow;
     }
   }

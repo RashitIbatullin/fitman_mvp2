@@ -16,6 +16,8 @@ class User {
   final int hourNotification;
   final bool trackCalories;
   final double coeffActivity;
+  final int? goalTrainingId;
+  final int? levelTrainingId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -46,11 +48,22 @@ class User {
     this.hourNotification = 1,
     this.trackCalories = true,
     this.coeffActivity = 1.2,
+    this.goalTrainingId,
+    this.levelTrainingId,
     required this.createdAt,
     required this.updatedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Helper to safely parse int from dynamic
+    int? parseInt(dynamic value) {
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+
+    final clientProfile = json['client_profile'];
+
     return User(
       id: json['id'],
       email: json['email'],
@@ -58,7 +71,7 @@ class User {
       firstName: json['firstName'],
       lastName: json['lastName'],
       middleName: json['middleName'],
-      photoUrl: json['photo_url'],
+      photoUrl: json['photoUrl'],
       roles:
           (json['roles'] as List<dynamic>?)
               ?.map((roleMap) => Role.fromJson(roleMap as Map<String, dynamic>))
@@ -68,9 +81,11 @@ class User {
       gender: json['gender'],
       dateOfBirth: json['dateOfBirth'] != null ? DateTime.parse(json['dateOfBirth']) : null,
       sendNotification: json['sendNotification'] ?? true,
-      hourNotification: json['hourNotification'] ?? 1,
-      trackCalories: json['trackCalories'] ?? true,
-      coeffActivity: json['coeffActivity']?.toDouble() ?? 1.2,
+      hourNotification: parseInt(json['hourNotification']) ?? 1,
+      trackCalories: clientProfile != null ? clientProfile['track_calories'] ?? true : true,
+      coeffActivity: clientProfile != null ? (clientProfile['coeff_activity']?.toDouble() ?? 1.2) : 1.2,
+      goalTrainingId: clientProfile != null ? parseInt(clientProfile['goal_training_id']) : null,
+      levelTrainingId: clientProfile != null ? parseInt(clientProfile['level_training_id']) : null,
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
     );
@@ -83,7 +98,7 @@ class User {
       'firstName': firstName,
       'lastName': lastName,
       'middleName': middleName,
-      'photo_url': photoUrl,
+      'photoUrl': photoUrl,
       'phone': phone,
       'gender': gender,
       'dateOfBirth': dateOfBirth?.toIso8601String(),
@@ -91,6 +106,8 @@ class User {
       'hourNotification': hourNotification,
       'trackCalories': trackCalories,
       'coeffActivity': coeffActivity,
+      'goalTrainingId': goalTrainingId,
+      'level_training_id': levelTrainingId,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -126,6 +143,8 @@ class User {
     int? hourNotification,
     bool? trackCalories,
     double? coeffActivity,
+    int? goalTrainingId,
+    int? levelTrainingId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -145,6 +164,8 @@ class User {
       hourNotification: hourNotification ?? this.hourNotification,
       trackCalories: trackCalories ?? this.trackCalories,
       coeffActivity: coeffActivity ?? this.coeffActivity,
+      goalTrainingId: goalTrainingId ?? this.goalTrainingId,
+      levelTrainingId: levelTrainingId ?? this.levelTrainingId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
