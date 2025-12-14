@@ -1,13 +1,8 @@
-import 'dart:io';
 import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_front.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 import '../../providers/catalogs_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -75,84 +70,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  Future<void> _saveAvatar() async {
-    try {
-      RenderRepaintBoundary boundary =
-          _repaintBoundaryKey.currentContext!.findRenderObject()
-              as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      final response = await ApiService.uploadAvatar(
-          pngBytes, 'avatar.png', widget.user.id);
-      if (!mounted) return;
-
-      setState(() {
-        _photoUrl = response['photoUrl'];
-        _transformationController.value = Matrix4.identity();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Аватар успешно сохранен')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка сохранения аватара: $e')),
-      );
-    }
-  }
-
-  Future<void> _pickAndUploadAvatar() async {
-    try {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.image);
-
-      if (result != null) {
-        final platformFile = result.files.single;
-        final fileName = platformFile.name;
-        Uint8List? fileBytes;
-
-        if (platformFile.bytes != null) {
-          fileBytes = platformFile.bytes;
-        } else if (platformFile.path != null) {
-          fileBytes = await File(platformFile.path!).readAsBytes();
-        }
-
-        if (fileBytes != null) {
-          final response = await ApiService.uploadAvatar(
-              fileBytes, fileName, widget.user.id);
-          if (!mounted) return;
-
-          setState(() {
-            _photoUrl = response['photoUrl'];
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Аватар успешно обновлен')),
-          );
-        } else {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Не удалось прочитать файл.')),
-          );
-        }
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка при выборе файла: $e')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final currentUser = authState.value?.user;
     // Права на редактирование: может редактировать любой, кто не является клиентом.
     final canEditClientProfile = currentUser != null && !currentUser.roles.any((r) => r.name == 'client');
-    final canUploadPhoto = canEditClientProfile;
 
     return ListView(
       padding: const EdgeInsets.all(16.0),
@@ -186,19 +109,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (canUploadPhoto)
-                    ElevatedButton(
-                      onPressed: _pickAndUploadAvatar,
-                      child: const Text('Загрузить фото'),
-                    ),
-                  const SizedBox(width: 8),
-                  if (canUploadPhoto)
-                    ElevatedButton(
-                      onPressed: _photoUrl != null ? _saveAvatar : null,
-                      child: const Text('Сохранить'),
-                    ),
-                ],
               ),
             ],
           ),
