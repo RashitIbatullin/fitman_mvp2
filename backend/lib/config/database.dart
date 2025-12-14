@@ -4,6 +4,7 @@ import '../models/client_profile_back.dart';
 import 'app_config.dart'; // Добавлено
 import '../models/user_back.dart';
 import '../models/role.dart';
+import 'recommendations_db.dart';
 
 class Database {
   static final Database _instance = Database._internal();
@@ -1276,6 +1277,7 @@ class Database {
   // Инициализация базы данных (создание таблиц если не существуют)
   Future<void> initializeDatabase() async {
     try {
+      print('🔄 Initializing main database tables...');
       final conn = await connection;
 
       // Создаем таблицу roles, если не существует
@@ -1389,6 +1391,20 @@ class Database {
           PRIMARY KEY (instructor_id, client_id)
         )
       ''');
+      
+      await conn.execute('''
+        CREATE TABLE IF NOT EXISTS client_profiles (
+          user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+          goal_training_id BIGINT,
+          level_training_id BIGINT,
+          track_calories BOOLEAN,
+          coeff_activity REAL,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW(),
+          created_by BIGINT,
+          updated_by BIGINT
+        );
+      ''');
 
       await conn.execute('''
         CREATE TABLE IF NOT EXISTS exercises_templates (
@@ -1475,7 +1491,11 @@ class Database {
             date_time TIMESTAMPTZ DEFAULT NOW(),
             height INT,
             wrist_circ INT,
-            ankle_circ INT
+            ankle_circ INT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            created_by BIGINT,
+            updated_by BIGINT
         );
       ''');
 
@@ -1484,12 +1504,19 @@ class Database {
             user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
             date_time TIMESTAMPTZ DEFAULT NOW(),
             photo VARCHAR(255),
+            profile_photo VARCHAR(255),
+            photo_date_time TIMESTAMPTZ,
+            profile_photo_date_time TIMESTAMPTZ,
             weight REAL,
             shoulders_circ INT,
             breast_circ INT,
             waist_circ INT,
             hips_circ INT,
-            bmr INT
+            bmr INT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            created_by BIGINT,
+            updated_by BIGINT
         );
       ''');
 
@@ -1498,16 +1525,27 @@ class Database {
             user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
             date_time TIMESTAMPTZ DEFAULT NOW(),
             photo VARCHAR(255),
+            profile_photo VARCHAR(255),
+            photo_date_time TIMESTAMPTZ,
+            profile_photo_date_time TIMESTAMPTZ,
             weight REAL,
             shoulders_circ INT,
             breast_circ INT,
             waist_circ INT,
             hips_circ INT,
-            bmr INT
+            bmr INT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            created_by BIGINT,
+            updated_by BIGINT
         );
       ''');
+      
+      print('✅ Main database tables initialized.');
 
-      //print('✅ Database tables initialized');
+      // Инициализируем таблицы рекомендаций
+      await initializeRecommendations(conn);
+
     } catch (e) {
       print('❌ Database initialization error: $e');
       rethrow;
