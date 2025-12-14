@@ -7,11 +7,13 @@ import 'package:flutter/rendering.dart';
 class FullScreenPhotoEditor extends StatefulWidget {
   final String imageUrl;
   final Matrix4 initialTransform;
+  final bool showCrosshair;
 
   const FullScreenPhotoEditor({
     super.key,
     required this.imageUrl,
     required this.initialTransform,
+    this.showCrosshair = false,
   });
 
   @override
@@ -47,13 +49,14 @@ class _FullScreenPhotoEditorState extends State<FullScreenPhotoEditor> {
       if (mounted) {
         Navigator.pop(context, result);
       }
-    } catch (e) {
-      print('Error capturing image: $e');
-      if (mounted) {
-        Navigator.pop(context); // Pop without a value on error
-      }
-    }
-  }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Ошибка захвата изображения: $e')),
+              );
+              Navigator.pop(context); // Pop without a value on error
+            }
+          }  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,12 +74,13 @@ class _FullScreenPhotoEditorState extends State<FullScreenPhotoEditor> {
           ),
         ],
       ),
-      body: RepaintBoundary(
-        key: _repaintBoundaryKey,
-        child: Stack(
-          children: [
-            InteractiveViewer(
+      body: Stack(
+        children: [
+          RepaintBoundary(
+            key: _repaintBoundaryKey,
+            child: InteractiveViewer(
               transformationController: _transformationController,
+              boundaryMargin: const EdgeInsets.all(double.infinity),
               minScale: 0.5,
               maxScale: 5.0,
               constrained: true,
@@ -87,15 +91,16 @@ class _FullScreenPhotoEditorState extends State<FullScreenPhotoEditor> {
                 ),
               ),
             ),
-            // The static crosshair overlay
+          ),
+          // The static crosshair overlay
+          if (widget.showCrosshair)
             IgnorePointer(
               child: CustomPaint(
                 size: Size.infinite,
                 painter: DashedCrosshairPainter(),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

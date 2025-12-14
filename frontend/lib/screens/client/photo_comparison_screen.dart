@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -56,6 +57,11 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   final GlobalKey<_PhotoViewState> _startProfilePhotoViewKey = GlobalKey();
   final GlobalKey<_PhotoViewState> _finishProfilePhotoViewKey = GlobalKey();
 
+  bool _startFrontHasChanges = false;
+  bool _finishFrontHasChanges = false;
+  bool _startProfileHasChanges = false;
+  bool _finishProfileHasChanges = false;
+
   @override
   void initState() {
     super.initState();
@@ -75,15 +81,19 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
       if (type == 'start_front') {
         _startPhotoUrl = newUrl;
         _startPhotoDateTime = newDateTime;
+        _startFrontHasChanges = false;
       } else if (type == 'finish_front') {
         _finishPhotoUrl = newUrl;
         _finishPhotoDateTime = newDateTime;
+        _finishFrontHasChanges = false;
       } else if (type == 'start_profile') {
         _startProfilePhotoUrl = newUrl;
         _startProfilePhotoDateTime = newDateTime;
+        _startProfileHasChanges = false;
       } else if (type == 'finish_profile') {
         _finishProfilePhotoUrl = newUrl;
         _finishProfilePhotoDateTime = newDateTime;
+        _finishProfileHasChanges = false;
       }
     });
   }
@@ -138,9 +148,10 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
     String type,
     bool canUploadPhoto,
     GlobalKey<_PhotoViewState> key,
+    bool hasChanges,
   ) {
     final formattedDate = photoDateTime != null
-        ? '${photoDateTime.day.toString().padLeft(2, '0')}.${photoDateTime.month.toString().padLeft(2, '0')}.${photoDateTime.year} ${photoDateTime.hour.toString().padLeft(2, '0')}:${photoDateTime.minute.toString().padLeft(2, '0')}'
+        ? '${photoDateTime.day.toString().padLeft(2, '0')}.${photoDateTime.month.toString().padLeft(2, '00')}.${photoDateTime.year} ${photoDateTime.hour.toString().padLeft(2, '0')}:${photoDateTime.minute.toString().padLeft(2, '0')}'
         : 'Нет даты';
 
     return Column(
@@ -163,11 +174,30 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                 builder: (context) => FullScreenPhotoEditor(
                   imageUrl: key.currentState!._imageUrlWithCacheBust!,
                   initialTransform: key.currentState!._currentTransform,
+                  showCrosshair: true,
                 ),
               ),
             );
 
             if (result != null && result is (ui.Image, Matrix4)) {
+              // Set the flag in the parent to enable the save button
+              setState(() {
+                switch (type) {
+                  case 'start_front':
+                    _startFrontHasChanges = true;
+                    break;
+                  case 'finish_front':
+                    _finishFrontHasChanges = true;
+                    break;
+                  case 'start_profile':
+                    _startProfileHasChanges = true;
+                    break;
+                  case 'finish_profile':
+                    _finishProfileHasChanges = true;
+                    break;
+                }
+              });
+              // Pass the image down to the child to render
               key.currentState?.updateState(
                 newImage: result.$1,
                 newTransform: result.$2,
@@ -199,8 +229,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
               IconButton(
                 icon: const Icon(Icons.save),
                 tooltip: 'Сохранить изменения',
-                onPressed:
-                    photoUrl != null ? () => key.currentState?.save() : null,
+                onPressed: hasChanges ? () => key.currentState?.save() : null,
               ),
           ],
         ),
@@ -327,7 +356,8 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                         'Анфас начало',
                         'start_front',
                         canUploadPhoto,
-                        _startPhotoViewKey),
+                        _startPhotoViewKey,
+                        _startFrontHasChanges),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -337,7 +367,8 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                         'Анфас окончание',
                         'finish_front',
                         canUploadPhoto,
-                        _finishPhotoViewKey),
+                        _finishPhotoViewKey,
+                        _finishFrontHasChanges),
                   ),
                 ],
               ),
@@ -376,7 +407,8 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                         'Профиль начало',
                         'start_profile',
                         canUploadPhoto,
-                        _startProfilePhotoViewKey),
+                        _startProfilePhotoViewKey,
+                        _startProfileHasChanges),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -386,7 +418,8 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
                         'Профиль окончание',
                         'finish_profile',
                         canUploadPhoto,
-                        _finishProfilePhotoViewKey),
+                        _finishProfilePhotoViewKey,
+                        _finishProfileHasChanges),
                   ),
                 ],
               ),
@@ -422,6 +455,7 @@ class _PhotoViewState extends State<_PhotoView> {
   String? _imageUrlWithCacheBust;
   ui.Image? _renderedImage;
   Matrix4 _currentTransform = Matrix4.identity();
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -462,20 +496,26 @@ class _PhotoViewState extends State<_PhotoView> {
   }
 
   Future<void> save() async {
+    final completer = Completer<void>();
+    setState(() {
+      _isSaving = true;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      completer.complete();
+    });
+
     try {
-      Uint8List? pngBytes;
-      if (_renderedImage != null) {
-        final byteData =
-            await _renderedImage!.toByteData(format: ui.ImageByteFormat.png);
-        pngBytes = byteData?.buffer.asUint8List();
-      } else {
-        RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!
-            .findRenderObject() as RenderRepaintBoundary;
-        ui.Image image = await boundary.toImage(pixelRatio: 1.0); // Use 1.0 for original scale
-        final byteData =
-            await image.toByteData(format: ui.ImageByteFormat.png);
-        pngBytes = byteData?.buffer.asUint8List();
-      }
+      // Wait for the frame to be rendered without the crosshair
+      await completer.future;
+
+      RenderRepaintBoundary boundary = _repaintBoundaryKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(
+          pixelRatio: 1.5); // Use a moderate pixelRatio
+      final byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+      final pngBytes = byteData?.buffer.asUint8List();
 
       if (pngBytes == null) {
         throw Exception('Could not generate image bytes.');
@@ -512,11 +552,16 @@ class _PhotoViewState extends State<_PhotoView> {
         _currentTransform = Matrix4.identity();
       });
     } catch (e) {
-      print('[_savePhoto] Image save failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка сохранения фото: $e')),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
       }
     }
   }
@@ -532,31 +577,31 @@ class _PhotoViewState extends State<_PhotoView> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: RepaintBoundary(
-          key: _repaintBoundaryKey,
-          child: Stack(
-            fit: StackFit.expand,
-            alignment: Alignment.center,
-            children: [
-              if (_renderedImage != null)
-                RawImage(image: _renderedImage!, fit: BoxFit.contain)
-              else if (_imageUrlWithCacheBust != null)
-                Image.network(
-                  _imageUrlWithCacheBust!,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Center(child: Icon(Icons.error, size: 50)),
-                )
-              else
-                const Center(child: Text('Фото не загружено')),
+        child: Stack(
+          fit: StackFit.expand,
+          alignment: Alignment.center,
+          children: [
+            RepaintBoundary(
+              key: _repaintBoundaryKey,
+              child: _renderedImage != null
+                  ? RawImage(image: _renderedImage!, fit: BoxFit.contain)
+                  : (_imageUrlWithCacheBust != null
+                      ? Image.network(
+                          _imageUrlWithCacheBust!,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(child: Icon(Icons.error, size: 50)),
+                        )
+                      : const Center(child: Text('Фото не загружено'))),
+            ),
+            if (!_isSaving)
               IgnorePointer(
                 child: CustomPaint(
                   size: Size.infinite,
                   painter: DashedCrosshairPainter(),
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
