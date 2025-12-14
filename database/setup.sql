@@ -436,5 +436,4 @@ CREATE TABLE anthropometry_finish (
     archived_at TIMESTAMP WITH TIME ZONE,
     archived_by BIGINT
 );
-
 END $$;
