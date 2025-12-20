@@ -14,6 +14,7 @@ import '../controllers/progress_controller.dart';
 import '../controllers/catalogs/work_schedule_controller.dart';
 import '../controllers/client_preference_controller.dart';
 import '../controllers/catalogs_controller.dart';
+import '../controllers/recommendations_controller.dart';
 
 // Создаем обертки для protected routes
 Handler _protectedHandler(Handler handler) {
@@ -153,6 +154,7 @@ final Router router = Router()
   ..get('/api/client/anthropometry', (Request request) => _protectedHandler(AnthropometryController.getAnthropometryDataForClient)(request))
   ..get('/api/client/calorie-tracking', (Request request) => _protectedHandler(CalorieTrackingController.getCalorieTrackingDataForClient)(request))
   ..get('/api/client/progress', (Request request) => _protectedHandler(ProgressController.getProgressDataForClient)(request))
+  ..get('/api/recommendations/<id>', (Request request, String id) => _protectedHandler((Request req) => RecommendationsController.getRecommendation(req, id))(request))
   ..get('/api/client/preferences', (Request request) => _protectedHandler(ClientPreferenceController.getClientPreferences)(request))
   ..post('/api/client/preferences', (Request request) => _protectedHandler(ClientPreferenceController.saveClientPreferences)(request))
   ..post('/api/client/anthropometry/photo', (Request request) => _protectedHandler(AnthropometryController.uploadPhoto)(request))

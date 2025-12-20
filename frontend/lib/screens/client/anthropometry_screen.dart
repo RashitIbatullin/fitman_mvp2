@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:fitman_app/models/anthropometry_data.dart';
+import 'package:fitman_app/providers/recommendation_provider.dart';
 import 'package:fitman_app/screens/client/photo_comparison_screen.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
@@ -537,6 +538,8 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  _buildRecommendationCard(),
                 ],
               ),
             ),
@@ -544,6 +547,76 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(child: Text('Ошибка: $error')),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Персональные рекомендации',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Consumer(
+              builder: (context, ref, child) {
+                return ElevatedButton(
+                  onPressed: () async {
+                    // Show loading dialog
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+
+                    try {
+                      final recommendation = await ref.read(
+                        recommendationProvider(widget.clientId!).future,
+                      );
+                      
+                      Navigator.of(context).pop(); // Dismiss loading dialog
+
+                      // Show result dialog
+                      await showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Ваша рекомендация'),
+                          content: Text(
+                            recommendation['client_recommendation'] ??
+                                'Рекомендация не найдена.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                    } catch (e) {
+                      Navigator.of(context).pop(); // Dismiss loading dialog
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Ошибка получения рекомендации: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Получить рекомендацию'),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

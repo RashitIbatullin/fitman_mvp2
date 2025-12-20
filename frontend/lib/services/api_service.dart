@@ -1201,4 +1201,28 @@ class ApiService {
       rethrow;
     }
   }
+
+  // Получить рекомендацию для клиента
+  static Future<Map<String, String?>> getRecommendation(int clientId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/recommendations/$clientId'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        // Ensure that the values are nullable strings
+        return data.map((key, value) => MapEntry(key, value?.toString()));
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ?? 'Failed to load recommendation with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Get recommendation error: $e');
+      rethrow;
+    }
+  }
 }

@@ -23,6 +23,8 @@ DROP TABLE IF EXISTS
 "users",
 "user_roles",
 "client_schedule_preferences"
+"types_body_build"
+"training_recommendations"
 CASCADE;
 
 -- Общие требования к таблицам:
@@ -122,7 +124,7 @@ CREATE TABLE user_settings (
 -- 5. Вспомогательные каталоги для профилей
 CREATE TABLE goals_training (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) UNIQUE NOT NULL,
     company_id BIGINT DEFAULT -1,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -135,7 +137,8 @@ INSERT INTO goals_training (name) VALUES ('Похудение'), ('Набор м
 
 CREATE TABLE levels_training (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    description text,
     company_id BIGINT DEFAULT -1,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -144,7 +147,10 @@ CREATE TABLE levels_training (
     archived_at TIMESTAMPTZ,
     archived_by BIGINT REFERENCES users(id)
 );
-INSERT INTO levels_training (name) VALUES ('Начальный'), ('Продвинутый'), ('Экспертный');
+INSERT INTO levels_training (name, description) VALUES 
+('Новичок', 'Человек, который никогда не занимался или имел длительный перерыв.'),
+('Опытный', 'Человек, который занимается регулярно от 6 месяцев до 2 лет.'),
+('Продвинутый', 'Человек, который занимается более 2 лет и имеет хорошие силовые показатели.');
 
 
 -- 6. Таблицы профилей для ролей

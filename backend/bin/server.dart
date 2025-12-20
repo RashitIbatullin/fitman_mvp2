@@ -46,9 +46,6 @@ void main(List<String> args) async {
       AppConfig.instance.serverPort
   );
 
-  // Инициализация базы данных
-  await Database().initializeDatabase();
-
   print('🚀 FitMan Dart backend MVP2 running on http://${server.address.host}:${server.port}');
 
   // Обработка graceful shutdown

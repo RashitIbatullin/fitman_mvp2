@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:postgres/postgres.dart';
 import '../models/client_profile_back.dart';
-import 'app_config.dart'; // Добавлено
+import 'app_config.dart';
 import '../models/user_back.dart';
 import '../models/role.dart';
-import 'recommendations_db.dart';
 
 class Database {
   static final Database _instance = Database._internal();
@@ -1274,280 +1273,56 @@ class Database {
     };
   }
 
-  // Инициализация базы данных (создание таблиц если не существуют)
-  Future<void> initializeDatabase() async {
+  // Получить данные биоимпеданса для клиента
+  Future<Map<String, dynamic>> getBioimpedanceData(int clientId) async {
     try {
-      print('🔄 Initializing main database tables...');
       final conn = await connection;
+      final startResult = await conn.execute(
+        Sql.named('SELECT * FROM bioimpedance_start WHERE user_id = @clientId'),
+        parameters: {'clientId': clientId},
+      );
+      final finishResult = await conn.execute(
+        Sql.named('SELECT * FROM bioimpedance_finish WHERE user_id = @clientId'),
+        parameters: {'clientId': clientId},
+      );
 
-      // Создаем таблицу roles, если не существует
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS roles (
-            id BIGSERIAL PRIMARY KEY,
-            name VARCHAR(255) UNIQUE NOT NULL,
-            title VARCHAR(255) NOT NULL,
-            icon VARCHAR(255),
-            company_id BIGINT DEFAULT -1,
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW(),
-            created_by BIGINT,
-            updated_by BIGINT,
-            archived_at TIMESTAMPTZ,
-            archived_by BIGINT
-        );
-      ''');
+      final startData = startResult.isNotEmpty ? _convertDateTimeToString(startResult.first.toColumnMap()) : {};
+      final finishData = finishResult.isNotEmpty ? _convertDateTimeToString(finishResult.first.toColumnMap()) : {};
 
-      // Создаем таблицу users, если не существует
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id BIGSERIAL PRIMARY KEY,
-            login VARCHAR(255) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            email VARCHAR(255) UNIQUE,
-            phone VARCHAR(255) UNIQUE,
-            last_name VARCHAR(255),
-            first_name VARCHAR(255),
-            middle_name VARCHAR(255),
-            gender SMALLINT,
-            date_of_birth DATE,
-            photo_url VARCHAR(255),
-            company_id BIGINT DEFAULT -1,
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW(),
-            created_by BIGINT,
-            updated_by BIGINT,
-            archived_at TIMESTAMPTZ,
-            archived_by BIGINT
-        );
-      ''');
-
-      // Создаем таблицу user_roles, если не существует
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS user_roles (
-            user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            role_id BIGINT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
-            assigned_at TIMESTAMPTZ DEFAULT NOW(),
-            company_id BIGINT DEFAULT -1,
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW(),
-            created_by BIGINT,
-            updated_by BIGINT,
-            archived_at TIMESTAMPTZ,
-            archived_by BIGINT,
-            PRIMARY KEY (user_id, role_id)
-        );
-      ''');
-
-      // Добавляем начальные роли, если их нет
-      await conn.execute('''
-        INSERT INTO roles (name, title)
-        VALUES 
-            ('client', 'Клиент'),
-            ('instructor', 'Инструктор'),
-            ('trainer', 'Тренер'),
-            ('manager', 'Менеджер'),
-            ('admin', 'Администратор')
-        ON CONFLICT (name) DO NOTHING;
-      ''');
-
-      // Остальные таблицы (с исправленными типами FK)
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS manager_profiles (
-          user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-          specialization VARCHAR(255),
-          work_experience INTEGER,
-          is_duty BOOLEAN DEFAULT false
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS manager_clients (
-          manager_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          client_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          PRIMARY KEY (manager_id, client_id)
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS manager_instructors (
-          manager_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          instructor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          PRIMARY KEY (manager_id, instructor_id)
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS manager_trainers (
-          manager_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          trainer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          PRIMARY KEY (manager_id, trainer_id)
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS instructor_clients (
-          instructor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          client_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          PRIMARY KEY (instructor_id, client_id)
-        )
-      ''');
-      
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS client_profiles (
-          user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-          goal_training_id BIGINT,
-          level_training_id BIGINT,
-          track_calories BOOLEAN,
-          coeff_activity REAL,
-          created_at TIMESTAMPTZ DEFAULT NOW(),
-          updated_at TIMESTAMPTZ DEFAULT NOW(),
-          created_by BIGINT,
-          updated_by BIGINT
-        );
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS exercises_templates (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(100) NOT NULL,
-          repeat_qty INTEGER,
-          duration_exec REAL,
-          duration_rest REAL,
-          calories_out REAL,
-          is_group BOOLEAN DEFAULT false,
-          type_exercis_id INTEGER, -- Связь с каталогом типов упражнений
-          note VARCHAR(255),
-          created_at TIMESTAMP DEFAULT NOW(),
-          updated_at TIMESTAMP DEFAULT NOW()
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS lessons (
-          id SERIAL PRIMARY KEY,
-          schedule_id BIGINT,
-          client_training_plan_id BIGINT,
-          set_exercises_id BIGINT,
-          client_id BIGINT REFERENCES users(id),
-          instructor_id BIGINT REFERENCES users(id),
-          trainer_id BIGINT REFERENCES users(id),
-          start_plan_at TIMESTAMP,
-          start_fact_at TIMESTAMP,
-          finish_plan_at TIMESTAMP,
-          finish_fact_at TIMESTAMP,
-          complete INTEGER,
-          note VARCHAR(100)
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS goals_training (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(20) NOT NULL
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS training_plan_templates (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(100) NOT NULL,
-          goal_training_id BIGINT REFERENCES goals_training(id)
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS client_training_plans (
-          id SERIAL PRIMARY KEY,
-          client_id BIGINT REFERENCES users(id),
-          training_plan_template_id BIGINT REFERENCES training_plan_templates(id),
-          assigned_by BIGINT REFERENCES users(id),
-          assigned_at TIMESTAMP,
-          is_active BOOLEAN,
-          goal VARCHAR,
-          notes TEXT
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS work_schedules (
-            id BIGSERIAL PRIMARY KEY,
-            day_of_week INT NOT NULL UNIQUE,
-            start_time TIME NOT NULL,
-            end_time TIME NOT NULL,
-            is_day_off BOOLEAN DEFAULT false,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            created_by BIGINT,
-            updated_by BIGINT,
-            archived_at TIMESTAMP WITH TIME ZONE,
-            archived_by BIGINT,
-            company_id BIGINT DEFAULT -1
-        )
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS anthropometry_fix (
-            user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-            date_time TIMESTAMPTZ DEFAULT NOW(),
-            height INT,
-            wrist_circ INT,
-            ankle_circ INT,
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW(),
-            created_by BIGINT,
-            updated_by BIGINT
-        );
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS anthropometry_start (
-            user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-            date_time TIMESTAMPTZ DEFAULT NOW(),
-            photo VARCHAR(255),
-            profile_photo VARCHAR(255),
-            photo_date_time TIMESTAMPTZ,
-            profile_photo_date_time TIMESTAMPTZ,
-            weight REAL,
-            shoulders_circ INT,
-            breast_circ INT,
-            waist_circ INT,
-            hips_circ INT,
-            bmr INT,
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW(),
-            created_by BIGINT,
-            updated_by BIGINT
-        );
-      ''');
-
-      await conn.execute('''
-        CREATE TABLE IF NOT EXISTS anthropometry_finish (
-            user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-            date_time TIMESTAMPTZ DEFAULT NOW(),
-            photo VARCHAR(255),
-            profile_photo VARCHAR(255),
-            photo_date_time TIMESTAMPTZ,
-            profile_photo_date_time TIMESTAMPTZ,
-            weight REAL,
-            shoulders_circ INT,
-            breast_circ INT,
-            waist_circ INT,
-            hips_circ INT,
-            bmr INT,
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            updated_at TIMESTAMPTZ DEFAULT NOW(),
-            created_by BIGINT,
-            updated_by BIGINT
-        );
-      ''');
-      
-      print('✅ Main database tables initialized.');
-
-      // Инициализируем таблицы рекомендаций
-      await initializeRecommendations(conn);
-
+      return {
+        'start': startData,
+        'finish': finishData,
+      };
     } catch (e) {
-      print('❌ Database initialization error: $e');
+      print('❌ getBioimpedanceData error: $e');
+      rethrow;
+    }
+  }
+
+  // Получить правила для определения соматотипа
+  Future<List<Map<String, dynamic>>> getSomatotypeRules() async {
+    try {
+      final conn = await connection;
+      final results = await conn.execute(
+        Sql.named('SELECT * FROM types_body_build WHERE archived_at IS NULL'),
+      );
+      return results.map((row) => row.toColumnMap()).toList();
+    } catch (e) {
+      print('❌ getSomatotypeRules error: $e');
+      rethrow;
+    }
+  }
+
+  // Получить все рекомендации по тренировкам
+  Future<List<Map<String, dynamic>>> getTrainingRecommendations() async {
+    try {
+      final conn = await connection;
+      final results = await conn.execute(
+        Sql.named('SELECT * FROM training_recommendations WHERE archived_at IS NULL'),
+      );
+      return results.map((row) => row.toColumnMap()).toList();
+    } catch (e) {
+      print('❌ getTrainingRecommendations error: $e');
       rethrow;
     }
   }

@@ -1,9 +1,34 @@
-# init_database.ps1 - Инициализация базы данных FitMan для Windows PowerShell
-# Использование: .\init_database.ps1 (в PowerShell от администратора)
+# init_db_dev.ps1 - Инициализация базы данных FitMan для DEV окружения (Windows PowerShell)
+# Использование: .\init_db_dev.ps1
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Инициализация базы данных FitMan" -ForegroundColor Cyan
+Write-Host "Инициализация DEV базы данных FitMan" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Загрузка переменных окружения из backend\.env.dev
+Write-Host "Загрузка настроек из backend\.env.dev..." -ForegroundColor Yellow
+if (Test-Path "backend\.env.dev") {
+    Get-Content "backend\.env.dev" | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and !$line.StartsWith("#")) {
+            $parts = $line.Split("=", 2)
+            if ($parts.Length -eq 2) {
+                $key = $parts[0].Trim()
+                $value = $parts[1].Trim()
+                if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+                    $value = $value.Substring(1, $value.Length - 2)
+                }
+                [System.Environment]::SetEnvironmentVariable($key, $value, "Process")
+            }
+        }
+    }
+    Write-Host "✓ Настройки для DEV окружения загружены." -ForegroundColor Green
+} else {
+    Write-Host "✗ Ошибка: Файл окружения 'backend\.env.dev' не найден!" -ForegroundColor Red
+    Write-Host "Убедитесь, что вы запускаете скрипт из корневой директории проекта." -ForegroundColor Yellow
+    exit 1
+}
 Write-Host ""
 
 # Настройки подключения
@@ -13,9 +38,9 @@ $DB_NAME = if ($env:DB_NAME) { $env:DB_NAME } else { "fitman" }
 $DB_USER = if ($env:DB_USER) { $env:DB_USER } else { "postgres" }
 $DB_PASSWORD = if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { "postgres" }
 
-# Пути к файлам SQL
-$SETUP_FILE = "database/setup.sql"
-$RECOMMENDATIONS_FILE = "database/recommendations.sql"
+# Пути к файлам SQL (учитывая структуру проекта)
+$SETUP_FILE = "database\setup.sql"
+$RECOMMENDATIONS_FILE = "database\recommendations.sql"
 
 Write-Host "Настройки подключения:" -ForegroundColor Yellow
 Write-Host "Хост: $DB_HOST"
@@ -49,6 +74,7 @@ function Test-SqlFile($file) {
     if (-not (Test-Path $file)) {
         Write-Host "Ошибка: Файл $file не найден!" -ForegroundColor Red
         Write-Host "Текущая директория: $((Get-Location).Path)" -ForegroundColor Yellow
+        Write-Host "Ожидаемый путь: $file" -ForegroundColor Yellow
         return $false
     }
     return $true
@@ -188,19 +214,10 @@ SELECT 'types_body_build', COUNT(*) FROM types_body_build
 ORDER BY table_name;
 "@
 
-$summary | psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME 2>&1 | ForEach-Object {
-    if ($_ -match "\|\s+\d+") {
-        Write-Host $_ -ForegroundColor Green
+& psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c $summary 2>&1 | ForEach-Object {
+    if ($_ -match "|\s+\d+") {
+        Write-Host $_ -ForegroundColor Gray
     }
 }
 $env:PGPASSWORD = $null
 
-Write-Host ""
-Write-Host "Готово! Можно запускать приложение." -ForegroundColor Green
-
-# Пауза для чтения результатов (только если запущено двойным кликом)
-if ([Environment]::UserInteractive) {
-    Write-Host ""
-    Write-Host "Нажмите любую клавишу для выхода..." -ForegroundColor Gray
-    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-}
