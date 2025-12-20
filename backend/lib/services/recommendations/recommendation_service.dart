@@ -15,31 +15,29 @@ class _ClientData {
   });
 }
 
-class _SomatotypeProfile {
-  final double ectomorph;
-  final double mesomorph;
-  final double endomorph;
+class _WhtrProfile {
+  final double ratio;
+  final String gradation;
 
-  _SomatotypeProfile({
-    this.ectomorph = 0,
-    this.mesomorph = 0,
-    this.endomorph = 0,
-  });
-
-  String get dominantType {
-    if (ectomorph >= mesomorph && ectomorph >= endomorph) return 'Эктоморф';
-    if (mesomorph >= ectomorph && mesomorph >= endomorph) return 'Мезоморф';
-    return 'Эндоморф';
-  }
-
-  @override
-  String toString() {
-    return 'Эктоморф: ${ectomorph.toStringAsFixed(0)}%, Мезоморф: ${mesomorph.toStringAsFixed(0)}%, Эндоморф: ${endomorph.toStringAsFixed(0)}%';
-  }
+  _WhtrProfile({required this.ratio, required this.gradation});
 }
+
 
 class RecommendationService {
   final db = Database();
+
+  /// Returns a calculated SomatotypeProfile for a given user.
+  /// This is the single source of truth for somatotype calculation.
+  Future<SomatotypeProfile?> getSomatotypeProfileForUser(int userId) async {
+    final clientData = await _getClientData(userId);
+    if (clientData == null) {
+      print('[RecommendationService] Could not get client data for somatotype profile.');
+      return null;
+    }
+    final rules = await db.getSomatotypeRules();
+    final profile = _determineSomatotype(clientData, rules);
+    return profile;
+  }
 
   Future<Map<String, String?>> generateRecommendation(int userId) async {
     print('[RecommendationService] Starting recommendation generation for userId: $userId');
@@ -55,44 +53,48 @@ class RecommendationService {
     }
 
     final rules = await db.getSomatotypeRules();
-    final allRecommendations = await db.getTrainingRecommendations();
-    print('[RecommendationService] Fetched ${allRecommendations.length} total recommendations and ${rules.length} somatotype rules.');
+    final baseRecommendations = await db.getBodyShapeRecommendations(); 
+    final whtrRefinements = await db.getWhtrRefinements();
+    
+    print('[RecommendationService] Fetched ${baseRecommendations.length} base recommendations and ${whtrRefinements.length} WHtR refinements.');
 
     // 2. Анализ
     final somatotype = _determineSomatotype(clientData, rules);
     final bodyShape = _determineBodyShape(clientData.anthropometry['start']);
+    final whtrProfile = _determineWhtrProfile(clientData);
     
     print('[RecommendationService] Calculated values:');
     print('  - Goal ID: ${clientData.user.clientProfile?.goalTrainingId}');
     print('  - Level ID: ${clientData.user.clientProfile?.levelTrainingId}');
     print('  - Somatotype: $somatotype');
     print('  - Body Shape: $bodyShape');
+    print('  - WHtR: ${whtrProfile.ratio.toStringAsFixed(2)} (${whtrProfile.gradation})');
 
     // 3. Генерация рекомендации
-    final recommendation = _findBestRecommendation(
+    final recommendation = _buildFinalRecommendation(
       bodyShape: bodyShape,
+      whtrGradation: whtrProfile.gradation,
       goalId: clientData.user.clientProfile?.goalTrainingId,
       levelId: clientData.user.clientProfile?.levelTrainingId,
-      dominantSomatotype: somatotype.dominantType,
-      recommendations: allRecommendations,
+      baseRecommendations: baseRecommendations,
+      whtrRefinements: whtrRefinements,
     );
 
     if (recommendation == null) {
       print('[RecommendationService] ERROR: No matching recommendation found in the database.');
       return {
         'client_recommendation': 'Не удалось подобрать индивидуальную рекомендацию. Обратитесь к тренеру.',
-        'trainer_recommendation': 'Не найдено подходящей рекомендации в базе. Проверьте каталог training_recommendations.',
+        'trainer_recommendation': 'Не найдено подходящей рекомендации в базе. Проверьте каталоги body_shape_recommendations и whtr_refinements.',
       };
     }
     
-    print('[RecommendationService] Found recommendation: ${recommendation['id']} for body_type: ${recommendation['body_type']}');
+    print('[RecommendationService] Successfully built a combined recommendation.');
 
-    final somatotypeHelp = getSomatotypeHelpTextForRecommendation(somatotype.dominantType);
+    // The helper now always returns a meaningful string.
+    final somatotypeHelp = getSomatotypeHelpTextForRecommendation(somatotype);
 
-    final enrichedClientRecommendation = (recommendation['recommendation_text_client'] as String? ?? '') + somatotypeHelp;
-    final enrichedTrainerRecommendation = (recommendation['recommendation_text_trainer'] as String? ?? '') + somatotypeHelp;
-
-    // TODO: AI Enhancer logic will be added later
+    final enrichedClientRecommendation = (recommendation['client_recommendation'] ?? '') + somatotypeHelp;
+    final enrichedTrainerRecommendation = (recommendation['trainer_recommendation'] ?? '') + somatotypeHelp;
 
     return {
       'client_recommendation': enrichedClientRecommendation,
@@ -110,6 +112,9 @@ class RecommendationService {
     if (anthropometry['start'] == null || (anthropometry['start'] as Map).isEmpty) {
       return null;
     }
+    if (anthropometry['fixed'] == null || (anthropometry['fixed'] as Map).isEmpty) {
+      return null;
+    }
 
     return _ClientData(
       user: user,
@@ -118,13 +123,13 @@ class RecommendationService {
     );
   }
 
-  _SomatotypeProfile _determineSomatotype(_ClientData data, List<Map<String, dynamic>> rules) {
+  SomatotypeProfile _determineSomatotype(_ClientData data, List<Map<String, dynamic>> rules) {
     final gender = data.user.gender == 'мужской' ? 'M' : 'Ж';
     final wristCirc = (data.anthropometry['fixed']?['wrist_circ'] as num?)?.toDouble();
     final ankleCirc = (data.anthropometry['fixed']?['ankle_circ'] as num?)?.toDouble();
 
     if (wristCirc == null) { // wristCirc is mandatory for this calculation
-      return _SomatotypeProfile();
+      return SomatotypeProfile();
     }
 
     final scores = <String, double>{};
@@ -149,13 +154,13 @@ class RecommendationService {
     }
 
     final totalScore = scores.values.fold(0.0, (sum, val) => sum + val);
-    if (totalScore == 0) return _SomatotypeProfile();
+    if (totalScore == 0) return SomatotypeProfile();
 
     final ecto = (scores['Эктоморф'] ?? 0) / totalScore * 100;
     final meso = (scores['Мезоморф'] ?? 0) / totalScore * 100;
     final endo = (scores['Эндоморф'] ?? 0) / totalScore * 100;
 
-    return _SomatotypeProfile(ectomorph: ecto, mesomorph: meso, endomorph: endo);
+    return SomatotypeProfile(ectomorph: ecto, mesomorph: meso, endomorph: endo);
   }
 
   double _calculateScore(double value, double? min, double? max) {
@@ -196,13 +201,16 @@ class RecommendationService {
     }
 
     // Логика из ТЗ
-    if ((waist / hips >= 0.85) && (waist > shoulders) && (waist > hips)) {
+    final waistToHips = waist / hips;
+    final shouldersToHips = (shoulders / hips).abs();
+
+    if (waistToHips >= 0.85 && waist > shoulders && waist > hips) {
       return 'Яблоко';
     }
     if (hips > shoulders * 1.05) {
       return 'Груша';
     }
-    if ((shoulders / hips).abs() < 1.05 && (hips / shoulders).abs() < 1.05) {
+    if (shouldersToHips >= 0.95 && shouldersToHips <= 1.05) { // Shoulders and hips are about the same
        if ((waist / shoulders) < 0.75) return 'Песочные часы';
        return 'Прямоугольник';
     }
@@ -213,49 +221,91 @@ class RecommendationService {
     return 'Не определен';
   }
 
-  Map<String, dynamic>? _findBestRecommendation({
+  _WhtrProfile _determineWhtrProfile(_ClientData data) {
+    final height = (data.anthropometry['fixed']?['height'] as num?)?.toDouble();
+    final waist = (data.anthropometry['start']?['waist_circ'] as num?)?.toDouble();
+    final age = data.user.age;
+
+    if (height == null || waist == null || height == 0) {
+      return _WhtrProfile(ratio: 0, gradation: 'Не определен');
+    }
+
+    final ratio = waist / height;
+    var whtrWithAge = ratio;
+
+    // Поправка на возраст из ТЗ
+    if (age != null) {
+      if (age <= 25) {
+        // no correction
+      } else if (age <= 40) {
+        whtrWithAge += 0.02;
+      } else if (age <= 60) {
+        whtrWithAge += 0.04;
+      } else {
+        whtrWithAge += 0.05;
+      }
+    }
+    
+    String gradation;
+    if (whtrWithAge > 0.6) {
+      gradation = 'Высокий риск ожирения';
+    } else if (whtrWithAge > 0.55) {
+      gradation = 'Повышенный риск ожирения';
+    } else if (whtrWithAge >= 0.45) {
+      gradation = 'Норма';
+    } else if (whtrWithAge >= 0.4) {
+      gradation = 'Повышенный риск истощения';
+    } else {
+      gradation = 'Высокий риск истощения';
+    }
+
+    return _WhtrProfile(ratio: ratio, gradation: gradation);
+  }
+
+  Map<String, String>? _buildFinalRecommendation({
     required String bodyShape,
+    required String whtrGradation,
     required int? goalId,
     required int? levelId,
-    required String dominantSomatotype,
-    required List<Map<String, dynamic>> recommendations,
+    required List<Map<String, dynamic>> baseRecommendations,
+    required List<Map<String, dynamic>> whtrRefinements,
   }) {
     if (goalId == null || levelId == null) {
-      print('[_findBestRecommendation] Error: goalId or levelId is null.');
+      print('[_buildFinalRecommendation] Error: goalId or levelId is null.');
       return null;
     }
 
-    final filtered = recommendations.where((rec) {
-      return rec['body_type'] == bodyShape &&
-             rec['goal_training_id'] == goalId &&
-             rec['level_training_id'] == levelId;
-    }).toList();
+    // 1. Find base recommendation (strict search)
+    final baseRec = baseRecommendations.firstWhere(
+      (rec) =>
+          rec['body_type'] == bodyShape &&
+          rec['goal_training_id'] == goalId &&
+          rec['level_training_id'] == levelId,
+      orElse: () => {}, // Return an empty map if not found
+    );
 
-    print('[_findBestRecommendation] Found ${filtered.length} direct matches for bodyShape: $bodyShape, goal: $goalId, level: $levelId.');
-
-    if (filtered.isEmpty) {
-       // Fallback to 'Не определен' if no specific recommendation is found
-       final fallback = recommendations.where((rec) {
-         return rec['body_type'] == 'Не определен' &&
-                rec['goal_training_id'] == goalId &&
-                rec['level_training_id'] == levelId;
-       }).toList();
-
-       print('[_findBestRecommendation] Found ${fallback.length} fallback matches.');
-       
-       if (fallback.isNotEmpty) return fallback.first;
-       return null;
+    if (baseRec.isEmpty) {
+      print('[_buildFinalRecommendation] Could not find a specific base recommendation for body_type: $bodyShape, goal_id: $goalId, level_id: $levelId.');
+      return null;
     }
 
-    if (filtered.length == 1) {
-      return filtered.first;
-    }
+    // 2. Find refinement
+    final refinement = whtrRefinements.firstWhere(
+      (ref) =>
+          ref['whtr_gradation'] == whtrGradation &&
+          ref['goal_training_id'] == goalId,
+      orElse: () => {}, // Return an empty map if not found
+    );
+
+    final clientText = (baseRec['recommendation_text_client'] ?? '') +
+        (refinement['refinement_text_client'] ?? '');
     
-    // Если найдено несколько записей, приоритет отдается той, 
-    // которая лучше всего подходит для преобладающего соматотипа.
-    // (This logic is not fully defined in the TS, so we'll just take the first match for now)
-    // A future implementation could add a 'dominant_somatotype' column to the recommendations table.
-    print('[_findBestRecommendation] Multiple direct matches found, returning the first one.');
-    return filtered.first;
+    final trainerText = (baseRec['recommendation_text_trainer'] ?? '') +
+        (refinement['refinement_text_trainer'] ?? '');
+    
+    return {
+      'client_recommendation': clientText,
+      'trainer_recommendation': trainerText,
+    };
   }
 }

@@ -784,6 +784,33 @@ class ApiService {
     }
   }
 
+  // Получение строки профиля соматотипа
+  static Future<String> getSomatotypeProfile({int? clientId}) async {
+    try {
+      final url = clientId != null
+          ? '$baseUrl/api/admin/clients/$clientId/anthropometry/somatotype'
+          : '$baseUrl/api/client/anthropometry/somatotype';
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data['profile_string'] ?? 'Не удалось рассчитать соматотип.';
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ?? 'Failed to load somatotype profile with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Get somatotype profile error: $e');
+      rethrow;
+    }
+  }
+
   static Future<Map<String, dynamic>> getAnthropometryDataForClient(int clientId) async {
     try {
       final response = await http.get(

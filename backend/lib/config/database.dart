@@ -1313,17 +1313,32 @@ class Database {
     }
   }
 
-  // Получить все рекомендации по тренировкам
-  Future<List<Map<String, dynamic>>> getTrainingRecommendations() async {
+  // Получить все рекомендации по тренировкам на основе формы тела
+  Future<List<Map<String, dynamic>>> getBodyShapeRecommendations() async {
     try {
       final conn = await connection;
       final results = await conn.execute(
-        Sql.named('SELECT * FROM training_recommendations WHERE archived_at IS NULL'),
+        Sql.named('SELECT * FROM body_shape_recommendations WHERE archived_at IS NULL'),
       );
       return results.map((row) => row.toColumnMap()).toList();
     } catch (e) {
-      print('❌ getTrainingRecommendations error: $e');
+      print('❌ getBodyShapeRecommendations error: $e');
       rethrow;
     }
   }
+
+  // Получить все уточнения по WHtR
+  Future<List<Map<String, dynamic>>> getWhtrRefinements() async {
+    try {
+      final conn = await connection;
+      final results = await conn.execute(
+        Sql.named('SELECT * FROM whtr_refinements WHERE archived_at IS NULL'),
+      );
+      return results.map((row) => row.toColumnMap()).toList();
+    } catch (e) {
+      print('❌ getWhtrRefinements error: $e');
+      rethrow;
+    }
+  }
+
 }

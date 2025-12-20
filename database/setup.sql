@@ -27,6 +27,10 @@ DROP TABLE IF EXISTS
 "training_recommendations"
 "bioimpedance_start"
 "bioimpedance_finish"
+"types_body_build"
+"body_shape_recommendations"
+"whtr_refinements"
+"ai_recommendation_cache"
 CASCADE;
 
 -- Общие требования к таблицам:
@@ -135,7 +139,17 @@ CREATE TABLE goals_training (
     archived_at TIMESTAMPTZ,
     archived_by BIGINT REFERENCES users(id)
 );
-INSERT INTO goals_training (name) VALUES ('Похудение'), ('Набор массы');
+
+--Обновление каталога "Цели тренировок" (goals_training)
+INSERT INTO goals_training (id, name, created_by, updated_by) VALUES
+(1, 'Снижение веса и оздоровление', 1, 1),
+(2, 'Набор мышечной массы и силы', 1, 1),
+(3, 'Поддержание формы и улучшение рельефа', 1, 1),
+(4, 'Развитие общей выносливости', 1, 1),
+(5, 'Увеличение гибкости и мобильности', 1, 1)
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, updated_at = NOW();
+-- Сбрасываем последовательность, чтобы новые записи из UI не конфликтовали с нашими ID
+SELECT setval('goals_training_id_seq', (SELECT MAX(id) FROM goals_training), true);
 
 CREATE TABLE levels_training (
     id BIGSERIAL PRIMARY KEY,

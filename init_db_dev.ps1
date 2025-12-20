@@ -208,8 +208,6 @@ SELECT
 UNION ALL
 SELECT 'users', COUNT(*) FROM users
 UNION ALL
-SELECT 'training_recommendations', COUNT(*) FROM training_recommendations
-UNION ALL
 SELECT 'types_body_build', COUNT(*) FROM types_body_build
 ORDER BY table_name;
 "@

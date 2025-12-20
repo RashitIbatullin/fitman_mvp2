@@ -3,8 +3,38 @@ import 'dart:io';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_multipart/shelf_multipart.dart';
 import '../config/database.dart';
+import '../services/recommendations/recommendation_service.dart';
 
 class AnthropometryController {
+  static Future<Response> getSomatotype(Request request, [String? id]) async {
+    try {
+      final user = request.context['user'] as Map<String, dynamic>?;
+      if (user == null) {
+        return Response.unauthorized(jsonEncode({'error': 'Not authenticated'}));
+      }
+      
+      int clientId;
+      if (id != null) {
+        clientId = int.parse(id);
+      } else {
+        clientId = user['userId'] as int;
+      }
+
+      final recommendationService = RecommendationService();
+      final profile = await recommendationService.getSomatotypeProfileForUser(clientId);
+
+      if (profile == null) {
+        return Response.notFound(jsonEncode({'profile_string': 'Недостаточно данных для расчета соматотипа.'}));
+      }
+
+      return Response.ok(jsonEncode({'profile_string': profile.toString()}));
+
+    } catch (e) {
+      print('Get somatotype error: $e');
+      return Response.internalServerError(body: jsonEncode({'error': 'Internal server error'}));
+    }
+  }
+
   static Future<Response> getAnthropometryDataForClient(Request request, [String? id]) async {
     try {
       final user = request.context['user'] as Map<String, dynamic>?;
