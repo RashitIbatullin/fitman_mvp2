@@ -7,34 +7,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/utils/body_shape_calculator.dart';
+import 'package:fitman_app/utils/body_shape_helper.dart';
 
 import 'package:fitman_app/utils/somatotype_calculator.dart';
 import 'package:fitman_app/utils/somatotype_helper.dart';
 
 import '../../models/user_front.dart';
 
-final anthropometryProvider = FutureProvider.family<AnthropometryData, int?>((
-  ref,
-  clientId,
-) async {
-  final authUser = ref.watch(authProvider).value?.user;
-  if (authUser == null) {
-    throw Exception('User not authenticated');
-  }
-
-  final isAdmin = authUser.roles.any((role) => role.name == 'admin');
-  // TODO: Expand this role check to include manager, trainer, instructor roles when they can edit client data.
-
-  // If an admin is viewing a specific client's page, clientId will be passed.
-  // If a client is viewing their own page, clientId will also be passed (it will be their own id).
-  if (isAdmin && clientId != null && clientId != authUser.id) {
-    final data = await ApiService.getAnthropometryDataForClient(clientId);
-    return AnthropometryData.fromJson(data);
+final anthropometryProvider = FutureProvider.family<AnthropometryData, int?>((ref, clientId) async {
+  Map<String, dynamic> data;
+  // If clientId is null, it implies the logged-in user is a client viewing their own data.
+  // The API endpoint for this is different from when a manager views a client's data.
+  if (clientId == null) {
+    // This is a client viewing their own data.
+    data = await ApiService.getOwnAnthropometryData();
   } else {
-    // This covers the client viewing their own data, and an admin viewing their own data.
-    final data = await ApiService.getOwnAnthropometryData();
-    return AnthropometryData.fromJson(data);
+    // This is a manager/admin/instructor viewing a specific client's data.
+    data = await ApiService.getAnthropometryDataForClient(clientId);
   }
+  return AnthropometryData.fromJson(data);
 });
 
 class AnthropometryScreen extends ConsumerStatefulWidget {
@@ -834,22 +825,29 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
             const SizedBox(height: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Тип фигуры',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  bodyShape ?? 'Недостаточно данных',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            if (whtrRatio != null) ...[
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Тип фигуры',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.help_outline, size: 20),
+                            onPressed: () => _showBodyShapeHelp(bodyShape),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        bodyShape ?? 'Недостаточно данных',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),            if (whtrRatio != null) ...[
               const SizedBox(height: 8),
               Text('WHtR: ${whtrRatio.toStringAsFixed(2)}'),
               const SizedBox(height: 8),
@@ -929,6 +927,24 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
       ],
     );
   }
+  void _showBodyShapeHelp(String? bodyShape) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Справка по типу фигуры'),
+        content: SingleChildScrollView(
+          child: Text(getBodyShapeHelpText(bodyShape)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showSomatotypeHelp() {
     showDialog(
       context: context,
