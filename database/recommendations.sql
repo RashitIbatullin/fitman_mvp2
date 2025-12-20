@@ -204,3 +204,47 @@ CREATE TABLE IF NOT EXISTS ai_recommendation_cache (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(user_id, created_at) -- Можно хранить историю, убрав UNIQUE
 );
+
+-- 4. Таблицы биоимпеданса
+CREATE TABLE IF NOT EXISTS bioimpedance_start (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    date_time TIMESTAMPTZ NOT NULL,
+    fat_percentage REAL,
+    muscle_mass REAL,
+    water_percentage REAL,
+    visceral_fat INTEGER,
+    bmc REAL,
+    bmi REAL,
+    metabolism INTEGER,
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMPTZ,
+    archived_by BIGINT REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS bioimpedance_finish (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    date_time TIMESTAMPTZ NOT NULL,
+    fat_percentage REAL,
+    muscle_mass REAL,
+    water_percentage REAL,
+    visceral_fat INTEGER,
+    bmc REAL,
+    bmi REAL,
+    metabolism INTEGER,
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMPTZ,
+    archived_by BIGINT REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bioimpedance_start_user_id ON bioimpedance_start(user_id);
+CREATE INDEX IF NOT EXISTS idx_bioimpedance_finish_user_id ON bioimpedance_finish(user_id);

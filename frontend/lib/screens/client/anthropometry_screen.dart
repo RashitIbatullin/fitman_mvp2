@@ -8,6 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/utils/body_shape_calculator.dart';
 
+import 'package:fitman_app/utils/somatotype_calculator.dart';
+import 'package:fitman_app/utils/somatotype_helper.dart';
+
 import '../../models/user_front.dart';
 
 final anthropometryProvider = FutureProvider.family<AnthropometryData, int?>((
@@ -58,6 +61,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
   final _formKey = GlobalKey<FormState>(); // New: Form key for validation
   String? _startBodyShape;
   String? _finishBodyShape;
+  String? _somatotypeProfile;
 
   // Controllers for anthropometry_fix
   late TextEditingController _heightController;
@@ -85,6 +89,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
     AnthropometryFixed fixed,
     AnthropometryMeasurements start,
     AnthropometryMeasurements finish,
+    User? user,
   ) {
     _heightController = TextEditingController(
       text: fixed.height?.toString() ?? '',
@@ -138,6 +143,11 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
       waistCirc: finish.waistCirc,
       hipsCirc: finish.hipsCirc,
     );
+    _somatotypeProfile = calculateSomatotype(
+      wristCirc: fixed.wristCirc?.toDouble(),
+      ankleCirc: fixed.ankleCirc?.toDouble(),
+      gender: user?.gender,
+    );
   }
 
   @override
@@ -156,7 +166,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
       body: anthropometryData.when(
         data: (data) {
           if (!_controllersInitialized) {
-            _initializeControllers(data.fixed, data.start, data.finish);
+            _initializeControllers(data.fixed, data.start, data.finish, user);
             _startPhotoUrl = data.start.photo;
             _finishPhotoUrl = data.finish.photo;
             _startPhotoDateTime = data.start.photoDateTime;
@@ -251,6 +261,11 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
                           );
                           setState(() {
                             _isFixedEditing = false;
+                            _somatotypeProfile = calculateSomatotype(
+                              wristCirc: currentWristCirc?.toDouble(),
+                              ankleCirc: currentAnkleCirc?.toDouble(),
+                              gender: user?.gender,
+                            );
                           });
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -704,6 +719,29 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
               isInt: true,
               isEditing: isEditing,
             ),
+            if (!isEditing) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    'Соматотип:',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.help_outline, size: 20),
+                    onPressed: _showSomatotypeHelp,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _somatotypeProfile ?? 'Недостаточно данных',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -889,6 +927,23 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen> {
           style: TextStyle(color: color, fontWeight: FontWeight.bold),
         ),
       ],
+    );
+  }
+  void _showSomatotypeHelp() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Справка по соматотипу'),
+        content: SingleChildScrollView(
+          child: Text(getSomatotypeHelpText(_somatotypeProfile)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
     );
   }
 }

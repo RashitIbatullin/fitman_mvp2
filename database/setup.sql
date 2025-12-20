@@ -25,6 +25,8 @@ DROP TABLE IF EXISTS
 "client_schedule_preferences"
 "types_body_build"
 "training_recommendations"
+"bioimpedance_start"
+"bioimpedance_finish"
 CASCADE;
 
 -- Общие требования к таблицам:
