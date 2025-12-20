@@ -23,11 +23,11 @@ CREATE TABLE IF NOT EXISTS types_body_build (
 -- Начальные данные для types_body_build (из ТЗ)
 INSERT INTO types_body_build (name, gender, wrist_min, wrist_max, ankle_min, ankle_max) VALUES
 ('Эктоморф', 'M', NULL, 17.5, NULL, 21.5),
-('Мезоморф', 'M', 17.5, 19.5, 21.5, 23.5),
-('Эндоморф', 'M', 19.5, NULL, 23.5, NULL),
+('Мезоморф', 'M', 17.5, 19.5, 21.5, 25.5),
+('Эндоморф', 'M', 19.5, NULL, 25.5, NULL),
 ('Эктоморф', 'Ж', NULL, 15.5, NULL, 21.5),
-('Мезоморф', 'Ж', 15.5, 17.5, 21.5, 23.5),
-('Эндоморф', 'Ж', 17.5, NULL, 23.5, NULL);
+('Мезоморф', 'Ж', 15.5, 17.5, 21.5, 25.5),
+('Эндоморф', 'Ж', 17.5, NULL, 25.5, NULL);
 
 -- 2. Таблица готовых рекомендаций (ядро системы)
 CREATE TABLE IF NOT EXISTS training_recommendations (

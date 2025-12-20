@@ -1,5 +1,6 @@
 import '../../config/database.dart';
 import '../../models/user_back.dart';
+import 'somatotype_helper.dart';
 
 // Helper data classes for clarity
 class _ClientData {
@@ -86,12 +87,16 @@ class RecommendationService {
     
     print('[RecommendationService] Found recommendation: ${recommendation['id']} for body_type: ${recommendation['body_type']}');
 
+    final somatotypeHelp = getSomatotypeHelpTextForRecommendation(somatotype.dominantType);
+
+    final enrichedClientRecommendation = (recommendation['recommendation_text_client'] as String? ?? '') + somatotypeHelp;
+    final enrichedTrainerRecommendation = (recommendation['recommendation_text_trainer'] as String? ?? '') + somatotypeHelp;
 
     // TODO: AI Enhancer logic will be added later
 
     return {
-      'client_recommendation': recommendation['recommendation_text_client'] as String?,
-      'trainer_recommendation': recommendation['recommendation_text_trainer'] as String?,
+      'client_recommendation': enrichedClientRecommendation,
+      'trainer_recommendation': enrichedTrainerRecommendation,
     };
   }
 
@@ -118,7 +123,7 @@ class RecommendationService {
     final wristCirc = (data.anthropometry['fixed']?['wrist_circ'] as num?)?.toDouble();
     final ankleCirc = (data.anthropometry['fixed']?['ankle_circ'] as num?)?.toDouble();
 
-    if (wristCirc == null && ankleCirc == null) {
+    if (wristCirc == null) { // wristCirc is mandatory for this calculation
       return _SomatotypeProfile();
     }
 
@@ -127,26 +132,19 @@ class RecommendationService {
 
     for (final rule in relevantRules) {
       final typeName = rule['name'] as String;
-      double wristScore = 0;
-      double ankleScore = 0;
-      int scoresCount = 0;
+      
+      final wristMin = (rule['wrist_min'] as num?)?.toDouble();
+      final wristMax = (rule['wrist_max'] as num?)?.toDouble();
+      final ankleMin = (rule['ankle_min'] as num?)?.toDouble();
+      final ankleMax = (rule['ankle_max'] as num?)?.toDouble();
 
-      if (wristCirc != null) {
-        final min = (rule['wrist_min'] as num?)?.toDouble();
-        final max = (rule['wrist_max'] as num?)?.toDouble();
-        wristScore = _calculateScore(wristCirc, min, max);
-        scoresCount++;
-      }
+      final wristScore = _calculateScore(wristCirc, wristMin, wristMax);
       
       if (ankleCirc != null) {
-        final min = (rule['ankle_min'] as num?)?.toDouble();
-        final max = (rule['ankle_max'] as num?)?.toDouble();
-        ankleScore = _calculateScore(ankleCirc, min, max);
-        scoresCount++;
-      }
-
-      if (scoresCount > 0) {
-        scores[typeName] = (scores[typeName] ?? 0) + (wristScore + ankleScore) / scoresCount;
+        final ankleScore = _calculateScore(ankleCirc, ankleMin, ankleMax);
+        scores[typeName] = (wristScore + ankleScore) / 2;
+      } else {
+        scores[typeName] = wristScore;
       }
     }
 
@@ -161,16 +159,29 @@ class RecommendationService {
   }
 
   double _calculateScore(double value, double? min, double? max) {
-    // This logic determines how "close" a value is to a given range.
-    // If a rule has only a min (e.g., endomorph), anything above is a match.
-    // If a rule has only a max (e.g., ectomorph), anything below is a match.
-    // If a rule has both, it must be within the range.
-    if (min != null && max != null) { // Mesomorph case
-      return (value >= min && value <= max) ? 100 : 0;
-    } else if (min != null) { // Endomorph case
-      return (value >= min) ? 100 : 0;
-    } else if (max != null) { // Ectomorph case
-      return (value <= max) ? 100 : 0;
+    const falloffRange = 2.0;
+    const falloffFactor = 100 / falloffRange;
+
+    if (min != null && max != null) { // Мезоморф
+      if (value >= min && value <= max) {
+        return 100;
+      } else if (value > max && value <= max + falloffRange) {
+        return 100 - (value - max) * falloffFactor;
+      } else if (value < min && value >= min - falloffRange) {
+        return 100 - (min - value) * falloffFactor;
+      }
+    } else if (min == null && max != null) { // Эктоморф
+      if (value <= max) {
+        return 100;
+      } else if (value > max && value <= max + falloffRange) {
+        return 100 - (value - max) * falloffFactor;
+      }
+    } else if (min != null && max == null) { // Эндоморф
+      if (value >= min) {
+        return 100;
+      } else if (value < min && value >= min - falloffRange) {
+        return 100 - (min - value) * falloffFactor;
+      }
     }
     return 0;
   }
