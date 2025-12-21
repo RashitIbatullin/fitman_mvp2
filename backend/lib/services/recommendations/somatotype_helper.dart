@@ -24,7 +24,7 @@ class SomatotypeProfile {
 
   @override
   String toString() {
-    return 'Эктоморф: ${ectomorph.toStringAsFixed(0)}%, Мезоморф: ${mesomorph.toStringAsFixed(0)}%, Эндоморф: ${endomorph.toStringAsFixed(0)}%';
+    return 'Эктоморф (астеник): ${ectomorph.toStringAsFixed(0)}%, Мезоморф (нормостеник): ${mesomorph.toStringAsFixed(0)}%, Эндоморф (гиперстеник): ${endomorph.toStringAsFixed(0)}%';
   }
 }
 
@@ -32,14 +32,16 @@ class SomatotypeProfile {
 String getSomatotypeHelpTextForRecommendation(SomatotypeProfile profile) {
   final dominantType = profile.getDominantTypeWithThreshold();
 
+  // If all scores are 0, it means input data was insufficient or resulted in zero scores.
+  if (profile.ectomorph == 0 && profile.mesomorph == 0 && profile.endomorph == 0) {
+    return ''; // No somatotype text if data was missing or insufficient
+  }
+
   if (dominantType == null) {
     return '''
 
 ---
-**Соматотип: Смешанный/невыраженный**
-**Характеристики:**
-- У вас нет одного ярко выраженного соматотипа. Это означает, что вы сочетаете в себе черты разных типов телосложения, что является нормой.
-- Ваш профиль: ${profile.toString()}
+У вас нет одного ярко выраженного соматотипа (больше 70%). Это означает, что вы сочетаете в себе черты разных типов телосложения.
 ''';
   }
 

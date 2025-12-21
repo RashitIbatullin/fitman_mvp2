@@ -15,11 +15,33 @@ class _ClientData {
   });
 }
 
-class _WhtrProfile {
+class WhtrProfile {
   final double ratio;
   final String gradation;
 
-  _WhtrProfile({required this.ratio, required this.gradation});
+  WhtrProfile({required this.ratio, required this.gradation});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'ratio': ratio,
+      'gradation': gradation,
+    };
+  }
+}
+
+// New class to hold both start and finish profiles
+class WhtrProfiles {
+  final WhtrProfile start;
+  final WhtrProfile finish;
+
+  WhtrProfiles({required this.start, required this.finish});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'start': start.toJson(),
+      'finish': finish.toJson(),
+    };
+  }
 }
 
 
@@ -37,6 +59,18 @@ class RecommendationService {
     final rules = await db.getSomatotypeRules();
     final profile = _determineSomatotype(clientData, rules);
     return profile;
+  }
+
+  /// Returns a calculated WhtrProfile for a given user and measurement type.
+  Future<WhtrProfiles?> getWhtrProfilesForUser(int userId) async {
+    final clientData = await _getClientData(userId);
+    if (clientData == null) {
+      print('[RecommendationService] Could not get client data for WHtR profile.');
+      return null;
+    }
+    final startProfile = _determineWhtrProfile(clientData, 'start');
+    final finishProfile = _determineWhtrProfile(clientData, 'finish');
+    return WhtrProfiles(start: startProfile, finish: finishProfile);
   }
 
   Future<Map<String, String?>> generateRecommendation(int userId) async {
@@ -61,7 +95,7 @@ class RecommendationService {
     // 2. Анализ
     final somatotype = _determineSomatotype(clientData, rules);
     final bodyShape = _determineBodyShape(clientData.anthropometry['start']);
-    final whtrProfile = _determineWhtrProfile(clientData);
+    final whtrProfile = _determineWhtrProfile(clientData, 'start'); // Explicitly use 'start' for recommendations
     
     print('[RecommendationService] Calculated values:');
     print('  - Goal ID: ${clientData.user.clientProfile?.goalTrainingId}');
@@ -90,11 +124,22 @@ class RecommendationService {
     
     print('[RecommendationService] Successfully built a combined recommendation.');
 
-    // The helper now always returns a meaningful string.
-    final somatotypeHelp = getSomatotypeHelpTextForRecommendation(somatotype);
+    final String methodologyExplanation = '''
+---
+**Методология рекомендаций:**
+Ваши рекомендации сформированы на основе комплексного анализа. Ваши текущие показатели (на основе замеров "Начало"):
+*   **Тип фигуры:** $bodyShape
+*   **Индекс WHtR:** ${whtrProfile.gradation} (коэф. ${whtrProfile.ratio.toStringAsFixed(2)})
 
-    final enrichedClientRecommendation = (recommendation['client_recommendation'] ?? '') + somatotypeHelp;
-    final enrichedTrainerRecommendation = (recommendation['trainer_recommendation'] ?? '') + somatotypeHelp;
+Эти данные, а также ваш соматотип, цели и уровень подготовки, используются для подбора индивидуального плана.
+''';
+
+    final String clientBaseRec = recommendation['client_recommendation'] ?? '';
+    final String trainerBaseRec = recommendation['trainer_recommendation'] ?? '';
+    final String somatotypeHelp = getSomatotypeHelpTextForRecommendation(somatotype);
+
+    final enrichedClientRecommendation = methodologyExplanation + clientBaseRec + somatotypeHelp;
+    final enrichedTrainerRecommendation = methodologyExplanation + trainerBaseRec + somatotypeHelp;
 
     return {
       'client_recommendation': enrichedClientRecommendation,
@@ -221,45 +266,50 @@ class RecommendationService {
     return 'Не определен';
   }
 
-  _WhtrProfile _determineWhtrProfile(_ClientData data) {
+  WhtrProfile _determineWhtrProfile(_ClientData data, String type) {
+    print('--- DETERMINING WHTR PROFILE ---');
     final height = (data.anthropometry['fixed']?['height'] as num?)?.toDouble();
-    final waist = (data.anthropometry['start']?['waist_circ'] as num?)?.toDouble();
+    final waist = (data.anthropometry[type]?['waist_circ'] as num?)?.toDouble();
     final age = data.user.age;
+    
+    print('Input data: age=$age, height=$height, waist ($type)=$waist');
 
     if (height == null || waist == null || height == 0) {
-      return _WhtrProfile(ratio: 0, gradation: 'Не определен');
+      print('Result: Incomplete data.');
+      return WhtrProfile(ratio: 0, gradation: 'Не определен');
     }
 
     final ratio = waist / height;
-    var whtrWithAge = ratio;
+    print('Calculated ratio: $ratio');
+    String gradation;
 
-    // Поправка на возраст из ТЗ
-    if (age != null) {
-      if (age <= 25) {
-        // no correction
-      } else if (age <= 40) {
-        whtrWithAge += 0.02;
+    if (age == null) {
+      gradation = 'Не определен';
+    } else {
+      double upperBound;
+      if (age <= 40) {
+        upperBound = 0.50;
       } else if (age <= 60) {
-        whtrWithAge += 0.04;
+        upperBound = 0.53;
       } else {
-        whtrWithAge += 0.05;
+        upperBound = 0.55;
+      }
+      print('Determined upperBound for age $age: $upperBound');
+
+      if (ratio < 0.4) {
+        gradation = 'Риск истощения';
+      } else if (ratio >= 0.4 && ratio <= upperBound) {
+        gradation = 'Норма';
+      } else if (ratio > upperBound && ratio <= upperBound + 0.1) {
+        gradation = 'Избыточный вес';
+      } else {
+        gradation = 'Ожирение';
       }
     }
     
-    String gradation;
-    if (whtrWithAge > 0.6) {
-      gradation = 'Высокий риск ожирения';
-    } else if (whtrWithAge > 0.55) {
-      gradation = 'Повышенный риск ожирения';
-    } else if (whtrWithAge >= 0.45) {
-      gradation = 'Норма';
-    } else if (whtrWithAge >= 0.4) {
-      gradation = 'Повышенный риск истощения';
-    } else {
-      gradation = 'Высокий риск истощения';
-    }
-
-    return _WhtrProfile(ratio: ratio, gradation: gradation);
+    print('Final gradation: $gradation');
+    print('--- END WHTR PROFILE ---');
+    return WhtrProfile(ratio: ratio, gradation: gradation);
   }
 
   Map<String, String>? _buildFinalRecommendation({

@@ -205,4 +205,33 @@ class AnthropometryController {
       return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
     }
   }
+
+  static Future<Response> getWhtrProfiles(Request request, [String? id]) async {
+    try {
+      final user = request.context['user'] as Map<String, dynamic>?;
+      if (user == null) {
+        return Response.unauthorized(jsonEncode({'error': 'Not authenticated'}));
+      }
+      
+      int clientId;
+      if (id != null) {
+        clientId = int.parse(id);
+      } else {
+        clientId = user['userId'] as int;
+      }
+
+      final recommendationService = RecommendationService();
+      final profiles = await recommendationService.getWhtrProfilesForUser(clientId);
+
+      if (profiles == null) {
+        return Response.notFound(jsonEncode({'error': 'Could not calculate WHtR profiles. User not found or missing anthropometry data.'}));
+      }
+
+      return Response.ok(jsonEncode(profiles.toJson()));
+
+    } catch (e) {
+      print('Get WHtR profiles error: $e');
+      return Response.internalServerError(body: jsonEncode({'error': 'Internal server error'}));
+    }
+  }
 }

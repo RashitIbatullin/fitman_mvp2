@@ -161,6 +161,7 @@ final Router router = Router()
   ..post('/api/client/anthropometry/fixed', (Request request) => _protectedHandler(AnthropometryController.updateFixedAnthropometry)(request))
   ..post('/api/client/anthropometry/measurements', (Request request) => _protectedHandler(AnthropometryController.updateMeasurementsAnthropometry)(request))
   ..get('/api/client/anthropometry/somatotype', (Request request) => _protectedHandler(AnthropometryController.getSomatotype)(request))
+  ..get('/api/client/anthropometry/whtr-profiles', (Request request) => _protectedHandler(AnthropometryController.getWhtrProfiles)(request))
 
 // Admin routes for client anthropometry
   ..get('/api/admin/clients/<id>/anthropometry', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.getAnthropometryDataForClient(req, id))(request))
@@ -168,6 +169,7 @@ final Router router = Router()
   ..post('/api/admin/clients/<id>/anthropometry/fixed', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.updateFixedAnthropometry(req, id))(request))
   ..post('/api/admin/clients/<id>/anthropometry/measurements', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.updateMeasurementsAnthropometry(req, id))(request))
   ..get('/api/admin/clients/<id>/anthropometry/somatotype', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.getSomatotype(req, id))(request))
+  ..get('/api/admin/clients/<id>/anthropometry/whtr-profiles', (Request request, String id) => _adminHandler((Request req) => AnthropometryController.getWhtrProfiles(req, id))(request))
 
 // Work Schedule routes
   ..get('/api/work-schedules', (Request request) => _protectedHandler(WorkScheduleController.getWorkSchedules)(request))

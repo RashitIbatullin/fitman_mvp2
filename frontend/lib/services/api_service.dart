@@ -7,6 +7,7 @@ import '../models/schedule_item.dart';
 import '../models/user_front.dart';
 import '../models/work_schedule.dart';
 import '../models/client_schedule_preference.dart'; // Import ClientSchedulePreference
+import '../models/whtr_profiles.dart';
 import '../models/goal_training.dart';
 import '../models/level_training.dart';
 
@@ -241,6 +242,26 @@ class ApiService {
       }
     } catch (e) {
       print('Get users error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<User> getUserById(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/users/$userId'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return User.fromJson(data['user']);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load user');
+      }
+    } catch (e) {
+      print('Get User by ID error: $e');
       rethrow;
     }
   }
@@ -785,9 +806,11 @@ class ApiService {
   }
 
   // Получение строки профиля соматотипа
-  static Future<String> getSomatotypeProfile({int? clientId}) async {
+  static Future<String> getSomatotypeProfile({int? clientId, bool isAdmin = false}) async {
     try {
-      final url = clientId != null
+      // If an admin is making the request for a specific client, use the admin route.
+      // Otherwise, use the client route (which authenticates via token).
+      final url = isAdmin && clientId != null
           ? '$baseUrl/api/admin/clients/$clientId/anthropometry/somatotype'
           : '$baseUrl/api/client/anthropometry/somatotype';
 
@@ -807,6 +830,32 @@ class ApiService {
       }
     } catch (e) {
       print('Get somatotype profile error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<WhtrProfiles> getWhtrProfiles({int? clientId, bool isAdmin = false}) async {
+    try {
+      final url = isAdmin && clientId != null
+          ? '$baseUrl/api/admin/clients/$clientId/anthropometry/whtr-profiles'
+          : '$baseUrl/api/client/anthropometry/whtr-profiles';
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return WhtrProfiles.fromJson(data);
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ?? 'Failed to load WHtR profiles with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Get WHtR profiles error: $e');
       rethrow;
     }
   }
