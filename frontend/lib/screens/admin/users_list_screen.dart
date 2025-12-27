@@ -25,7 +25,15 @@ final usersProvider = FutureProvider<List<User>>((ref) async {
 
 class UsersListScreen extends ConsumerStatefulWidget {
   final String? initialFilter;
-  const UsersListScreen({super.key, this.initialFilter});
+  final ScrollController scrollController;
+  final bool showToolbar;
+
+  const UsersListScreen({
+    super.key,
+    this.initialFilter,
+    required this.scrollController,
+    required this.showToolbar,
+  });
 
   @override
   ConsumerState<UsersListScreen> createState() => _UsersListScreenState();
@@ -181,31 +189,41 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
     return Column(
       children: [
-        _UsersToolbar(
-          searchController: _searchController,
-          selectedFilter: _selectedFilter,
-          onFilterChanged: (value) {
-            if (value != null) {
-              setState(() {
-                _selectedFilter = value;
-                _selectedUser = null; // Deselect user on filter change
-              });
-            }
-          },
-          onCreate: () => _showCreateUserDialog(context),
-          onEdit: _selectedUser == null
-              ? null
-              : () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditUserScreen(user: _selectedUser!),
-                    ),
-                  );
-                  // No need to handle result, invalidation will be done in EditUserScreen
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: widget.showToolbar ? 1.0 : 0.0,
+            child: SizedBox( // Use SizedBox to control height when hidden
+              height: widget.showToolbar ? null : 0.0,
+              child: _UsersToolbar(
+                searchController: _searchController,
+                selectedFilter: _selectedFilter,
+                onFilterChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedFilter = value;
+                      _selectedUser = null;
+                    });
+                  }
                 },
-          onArchive: _selectedUser == null ? null : () => print('Archive user: ${_selectedUser!.fullName}'),
-          onResetPassword: _selectedUser == null ? null : () => _showResetPasswordDialog(context),
+                onCreate: () => _showCreateUserDialog(context),
+                onEdit: _selectedUser == null
+                    ? null
+                    : () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditUserScreen(user: _selectedUser!),
+                          ),
+                        );
+                        // No need to handle result, invalidation will be done in EditUserScreen
+                      },
+                onArchive: _selectedUser == null ? null : () => print('Archive user: ${_selectedUser!.fullName}'),
+                onResetPassword: _selectedUser == null ? null : () => _showResetPasswordDialog(context),
+              ),
+            ),
+          ),
         ),
         Expanded(
           child: usersAsyncValue.when(
@@ -215,6 +233,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                 return const Center(child: Text('Пользователи не найдены'));
               }
               return ListView.builder(
+                controller: widget.scrollController, // Attach controller here
                 itemCount: filteredUsers.length,
                 itemBuilder: (context, index) {
                   final user = filteredUsers[index];
