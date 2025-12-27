@@ -139,7 +139,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       MaterialPageRoute(builder: (context) => CreateUserScreen(userRole: role)),
     );
 
-    if (success == true) {
+    if (success != null) {
       ref.invalidate(usersProvider); // Invalidate and refetch
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Пользователь успешно создан')),
@@ -395,7 +395,9 @@ class _UsersToolbar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          SegmentedButton<String>(
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SegmentedButton<String>(
             segments: const [
               ButtonSegment(value: 'all', label: Text('Все')),
               ButtonSegment(value: 'admin', label: Text('Админ-ры')),
@@ -408,6 +410,7 @@ class _UsersToolbar extends StatelessWidget {
             onSelectionChanged: (newSelection) =>
                 onFilterChanged(newSelection.first),
           ),
+        ),
         ],
       ),
     );
