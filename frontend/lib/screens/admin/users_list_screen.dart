@@ -221,9 +221,10 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                   final isSelected = _selectedUser?.id == user.id;
 
                   return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
                     color: isSelected ? Theme.of(context).primaryColor.withAlpha(25) : null,
                     child: ListTile(
+                      dense: true,
                       leading: CircleAvatar(
                         radius: 20,
                         backgroundImage: user.photoUrl != null
@@ -231,75 +232,84 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                             : null,
                         child: user.photoUrl == null ? Text(user.firstName.isNotEmpty ? user.firstName[0] : '?') : null,
                       ),
-                      title: Text(user.fullName),
-                      subtitle: // ... (subtitle remains the same)
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            IntrinsicHeight(
-                              child: Row(
-                                children: [
-                                  Text(user.email),
-                                  const VerticalDivider(width: 10, thickness: 1, color: Colors.grey,),
-                                  Text(user.phone ?? 'Нет телефона'),
-                                  if (user.roles.any((role) => role.name == 'client',)) ...[
-                                    const VerticalDivider(width: 10, thickness: 1, color: Colors.grey,),
-                                    Text('Пол: ${user.gender ?? 'Н/Д'}'),
-                                    const VerticalDivider(width: 10, thickness: 1, color: Colors.grey,),
-                                    Text('ДР: ${user.dateOfBirth != null ? '${user.dateOfBirth!.day}.${user.dateOfBirth!.month}.${user.dateOfBirth!.year}' : 'Н/Д'}',),
-                                    const VerticalDivider(width: 10, thickness: 1, color: Colors.grey,),
-                                    Text('Возраст: ${user.age?.toString() ?? 'Н/Д'}',),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            if (user.roles.length > 1)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
-                                child: Wrap(
-                                  spacing: 4.0,
-                                  runSpacing: 2.0,
-                                  children: user.roles.map((role) => Chip(
-                                          label: Text(_getRoleDisplayName(role), style: const TextStyle(fontSize: 10,),),
-                                          backgroundColor: _getRoleColor(role.name,),
-                                          labelStyle: const TextStyle(color: Colors.white,),
-                                        ),
-                                      )
-                                      .toList(),
-                                ),
-                              ),
-                          ],
-                        ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           if (user.roles.length == 1)
-                              Chip(
-                                label: Text(
-                                  _getRoleDisplayName(user.roles.first),
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                backgroundColor: user.roles.isNotEmpty
-                                    ? _getRoleColor(user.roles.first.name)
-                                    : Colors.grey,
-                              ),
-                          if (user.roles.any((role) => role.name == 'manager',)) ...[
-                            const SizedBox(width: 8),
-                            IconButton(icon: const Icon(Icons.group_add), tooltip: 'Назначить клиентов', onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => AssignClientsScreen(manager: user),),);},),
-                            IconButton(icon: const Icon(Icons.sports_kabaddi), tooltip: 'Назначить инструкторов', onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => AssignInstructorsScreen(manager: user,),),);},),
-                            IconButton(icon: const Icon(Icons.fitness_center), tooltip: 'Назначить тренеров', onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (context) => AssignTrainersScreen(manager: user),),);},),
-                          ],
-                          if (currentUserIsAdmin && !user.roles.any((role) => role.name == 'client',))
-                            IconButton(
-                              icon: const Icon(Icons.manage_accounts),
-                              tooltip: 'Управление ролями',
-                              onPressed: () async {
-                                await Navigator.push(context, MaterialPageRoute(builder: (context) => ManageUserRolesScreen(user: user),),);
-                                ref.invalidate(usersProvider);
-                              },
+                          Text(user.fullName),
+                          if (user.roles.isNotEmpty)
+                            Wrap(
+                              spacing: 4.0,
+                              runSpacing: 2.0,
+                              children: user.roles.map((role) => Chip(
+                                      label: Text(_getRoleDisplayName(role), style: const TextStyle(fontSize: 10,),),
+                                      backgroundColor: _getRoleColor(role.name,),
+                                      labelStyle: const TextStyle(color: Colors.white,),
+                                    ),
+                                  )
+                                  .toList(),
                             ),
                         ],
                       ),
+                      subtitle: Wrap(
+                          spacing: 8.0, // horizontal space between chips
+                          runSpacing: 4.0, // vertical space between lines
+                          children: [
+                            Text(user.email),
+                            const Text('•'),
+                            Text(user.phone ?? 'Нет телефона'),
+                            if (user.roles.any((role) => role.name == 'client',)) ...[
+                              const Text('•'),
+                              Text('Пол: ${user.gender ?? 'Н/Д'}'),
+                              const Text('•'),
+                              Text('ДР: ${user.dateOfBirth != null ? '${user.dateOfBirth!.day}.${user.dateOfBirth!.month}.${user.dateOfBirth!.year}' : 'Н/Д'}',),
+                              const Text('•'),
+                              Text('Возраст: ${user.age?.toString() ?? 'Н/Д'}',),
+                            ],
+                          ],
+                        ),
+                      trailing: user.roles.any((r) => r.name == 'manager') || (currentUserIsAdmin && !user.roles.any((r) => r.name == 'client'))
+                          ? PopupMenuButton<String>(
+                              onSelected: (value) async {
+                                switch (value) {
+                                  case 'assign_clients':
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) => AssignClientsScreen(manager: user),),);
+                                    break;
+                                  case 'assign_instructors':
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) => AssignInstructorsScreen(manager: user,),),);
+                                    break;
+                                  case 'assign_trainers':
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) => AssignTrainersScreen(manager: user,),),);
+                                    break;
+                                  case 'manage_roles':
+                                    await Navigator.push(context, MaterialPageRoute(builder: (context) => ManageUserRolesScreen(user: user),),);
+                                    ref.invalidate(usersProvider);
+                                    break;
+                                }
+                              },
+                              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                                if (user.roles.any((role) => role.name == 'manager',))
+                                  const PopupMenuItem<String>(
+                                    value: 'assign_clients',
+                                    child: ListTile(leading: Icon(Icons.group_add), title: Text('Назначить клиентов')),
+                                  ),
+                                if (user.roles.any((role) => role.name == 'manager',))
+                                  const PopupMenuItem<String>(
+                                    value: 'assign_instructors',
+                                    child: ListTile(leading: Icon(Icons.sports_kabaddi), title: Text('Назна-чить инструкторов')),
+                                  ),
+                                if (user.roles.any((role) => role.name == 'manager',))
+                                  const PopupMenuItem<String>(
+                                    value: 'assign_trainers',
+                                    child: ListTile(leading: Icon(Icons.fitness_center), title: Text('Назначить тренеров')),
+                                  ),
+                                if (currentUserIsAdmin && !user.roles.any((role) => role.name == 'client',))
+                                  const PopupMenuItem<String>(
+                                    value: 'manage_roles',
+                                    child: ListTile(leading: Icon(Icons.manage_accounts), title: Text('Управление ролями')),
+                                  ),
+                              ],
+                            )
+                          : null,
                       onTap: () async {
                         final context_ = context;
                         if (user.roles.length > 1) {
