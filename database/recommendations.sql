@@ -23,12 +23,12 @@ CREATE TABLE types_body_build (
 
 -- Начальные данные для types_body_build (из ТЗ)
 INSERT INTO types_body_build (name, gender, wrist_min, wrist_max, ankle_min, ankle_max) VALUES
-('Эктоморф', 'M', NULL, 17.5, NULL, 21.5),
-('Мезоморф', 'M', 17.5, 19.5, 21.5, 25.5),
-('Эндоморф', 'M', 19.5, NULL, 25.5, NULL),
-('Эктоморф', 'Ж', NULL, 15.5, NULL, 21.5),
-('Мезоморф', 'Ж', 15.5, 17.5, 21.5, 25.5),
-('Эндоморф', 'Ж', 17.5, NULL, 25.5, NULL);
+('Эктоморф', 'M', NULL, 17, NULL, 21),
+('Мезоморф', 'M', 17, 20, 21, 25),
+('Эндоморф', 'M', 20, NULL, 25, NULL),
+('Эктоморф', 'Ж', NULL, 15, NULL, 21),
+('Мезоморф', 'Ж', 15, 17, 21, 25),
+('Эндоморф', 'Ж', 17, NULL, 25, NULL);
 
 -- 3. Таблица БАЗОВЫХ рекомендаций по ТИПУ ФИГУРЫ
 CREATE TABLE body_shape_recommendations (

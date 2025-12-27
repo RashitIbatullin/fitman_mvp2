@@ -125,9 +125,7 @@ class RecommendationService {
     print('[RecommendationService] Successfully built a combined recommendation.');
 
     final String methodologyExplanation = '''
----
-**Методология рекомендаций:**
-Ваши рекомендации сформированы на основе комплексного анализа. Ваши текущие показатели (на основе замеров "Начало"):
+Рекомендации сформированы на основе комплексного анализа. Ваши текущие показатели (на основе замеров "Начало"):
 *   **Тип фигуры:** $bodyShape
 *   **Индекс WHtR:** ${whtrProfile.gradation} (коэф. ${whtrProfile.ratio.toStringAsFixed(2)})
 
