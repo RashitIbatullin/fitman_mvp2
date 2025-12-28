@@ -22,14 +22,14 @@ DROP TABLE IF EXISTS
 "roles",
 "users",
 "user_roles",
-"client_schedule_preferences"
-"types_body_build"
-"training_recommendations"
-"bioimpedance_start"
-"bioimpedance_finish"
-"types_body_build"
-"body_shape_recommendations"
-"whtr_refinements"
+"client_schedule_preferences",
+"types_body_build",
+"training_recommendations",
+"bioimpedance_start",
+"bioimpedance_finish",
+"types_body_build",
+"body_shape_recommendations",
+"whtr_refinements",
 "ai_recommendation_cache"
 CASCADE;
 
@@ -140,16 +140,7 @@ CREATE TABLE goals_training (
     archived_by BIGINT REFERENCES users(id)
 );
 
---Обновление каталога "Цели тренировок" (goals_training)
-INSERT INTO goals_training (id, name, created_by, updated_by) VALUES
-(1, 'Снижение веса и оздоровление', 1, 1),
-(2, 'Набор мышечной массы и силы', 1, 1),
-(3, 'Поддержание формы и улучшение рельефа', 1, 1),
-(4, 'Развитие общей выносливости', 1, 1),
-(5, 'Увеличение гибкости и мобильности', 1, 1)
-ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, updated_at = NOW();
--- Сбрасываем последовательность, чтобы новые записи из UI не конфликтовали с нашими ID
-SELECT setval('goals_training_id_seq', (SELECT MAX(id) FROM goals_training), true);
+
 
 CREATE TABLE levels_training (
     id BIGSERIAL PRIMARY KEY,
@@ -315,6 +306,16 @@ BEGIN
     UPDATE goals_training SET created_by = admin_id, updated_by = admin_id;
     UPDATE levels_training SET created_by = admin_id, updated_by = admin_id;
 
+    --Обновление каталога "Цели тренировок" (goals_training)
+    INSERT INTO goals_training (id, name, created_by, updated_by) VALUES
+    (1, 'Снижение веса и оздоровление', admin_id, admin_id),
+    (2, 'Набор мышечной массы и силы', admin_id, admin_id),
+    (3, 'Поддержание формы и улучшение рельефа', admin_id, admin_id),
+    (4, 'Развитие общей выносливости', admin_id, admin_id),
+    (5, 'Увеличение гибкости и мобильности', admin_id, admin_id)
+    ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, updated_at = NOW(), updated_by = admin_id;
+            -- Сбрасываем последовательность, чтобы новые записи из UI не конфликтовали с нашими ID
+            PERFORM setval('goals_training_id_seq', (SELECT MAX(id) FROM goals_training), true);
     -- Создание Менеджера (пароль: manager123)
     INSERT INTO users (login, password_hash, phone, email, last_name, first_name, gender, date_of_birth, created_by, updated_by)
     VALUES ('manager@fitman.ru', '$2a$10$gH1uvOKi0oiI4nwhiapDgeKZjHx2Oo0OiojVABKYL5DWBaxOAKDWa', '+79603949646', 'manager@fitman.ru', 'Менеджеров', 'Менеджер', 0, '1997-01-15', admin_id, admin_id)
