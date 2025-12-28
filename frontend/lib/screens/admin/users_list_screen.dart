@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../models/user_front.dart';
 import '../../models/role.dart';
 import '../../services/api_service.dart';
@@ -22,6 +23,8 @@ import '../../widgets/reset_password_dialog.dart';
 final usersProvider = FutureProvider<List<User>>((ref) async {
   return ApiService.getUsers();
 });
+
+final newlyCreatedUserProvider = StateProvider<User?>((ref) => null);
 
 class UsersListScreen extends ConsumerStatefulWidget {
   final String? initialFilter;
@@ -142,16 +145,14 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   }
 
   void _navigateToCreateUser(BuildContext context, String role) async {
-    final success = await Navigator.push(
+    final newUser = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => CreateUserScreen(userRole: role)),
     );
 
-    if (success != null) {
+    if (newUser != null && newUser is User) {
       ref.invalidate(usersProvider); // Invalidate and refetch
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пользователь успешно создан')),
-      );
+      ref.read(newlyCreatedUserProvider.notifier).state = newUser;
     }
   }
 
@@ -184,6 +185,45 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<User?>(newlyCreatedUserProvider, (previous, next) {
+      if (next != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final roleName = next.roles.first.name;
+          Widget? page;
+          switch (roleName) {
+            case 'client':
+              page = ClientDashboard(client: next, showBackButton: true);
+              break;
+            case 'manager':
+              page = ManagerDashboard(manager: next, showBackButton: true);
+              break;
+            case 'trainer':
+              page = TrainerDashboard(trainer: next, showBackButton: true);
+              break;
+            case 'instructor':
+              page = InstructorDashboard(instructor: next, showBackButton: true);
+              break;
+            case 'admin':
+              // Admins likely stay on the users list, so no navigation.
+              break;
+          }
+
+          if (page != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => page!),
+            ).then((_) {
+              // Reset the provider after navigation
+              ref.read(newlyCreatedUserProvider.notifier).state = null;
+            });
+          } else {
+            // Reset the provider even if there's no navigation
+            ref.read(newlyCreatedUserProvider.notifier).state = null;
+          }
+        });
+      }
+    });
+
     final usersAsyncValue = ref.watch(usersProvider);
     final currentUserIsAdmin = true; // TODO: Replace with actual auth check
 
