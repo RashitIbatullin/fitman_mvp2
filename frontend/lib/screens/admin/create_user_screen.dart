@@ -282,7 +282,7 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             DropdownButtonFormField<String>(
               initialValue: _selectedGender,
               decoration: const InputDecoration(
-                labelText: 'Пол',
+                labelText: 'Пол *',
                 border: OutlineInputBorder(),
               ),
               items: const [
@@ -290,12 +290,18 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 DropdownMenuItem(value: 'женский', child: Text('Женский')),
               ],
               onChanged: (value) => setState(() => _selectedGender = value),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Пожалуйста, выберите пол';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _dateOfBirthController,
               decoration: const InputDecoration(
-                labelText: 'Дата рождения',
+                labelText: 'Дата рождения *',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.calendar_today),
               ),
@@ -310,6 +316,12 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
                 if (selectedDate != null) {
                   _dateOfBirthController.text = selectedDate.toIso8601String().split('T').first;
                 }
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Пожалуйста, выберите дату рождения';
+                }
+                return null;
               },
             ),
 
