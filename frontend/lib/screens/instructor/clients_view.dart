@@ -3,6 +3,8 @@ import 'package:fitman_app/screens/client_dashboard.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/chat_provider.dart';
+import '../shared/chat_screen.dart';
 
 // Провайдер для получения всех клиентов, назначенных инструктору
 final assignedClientsProvider = FutureProvider.family<List<User>, int>((
@@ -33,6 +35,24 @@ class ClientsView extends ConsumerWidget {
               leading: const Icon(Icons.person),
               title: Text(client.fullName),
               subtitle: Text(client.email),
+              trailing: IconButton(
+                icon: const Icon(Icons.chat),
+                onPressed: () async {
+                  final chatNotifier = ref.read(chatProvider.notifier);
+                  await chatNotifier.connect();
+                  final chatId = await chatNotifier.openPrivateChat(client.id);
+                  
+                  if (!context.mounted) return;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        chatId: chatId,
+                        chatTitle: client.fullName,
+                      ),
+                    ),
+                  );
+                },
+              ),
               onTap: () {
                 Navigator.push(
                   context,

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/chat_provider.dart';
+import '../shared/chat_screen.dart';
 
 // Провайдер для получения клиентов для конкретного менеджера
 final assignedClientsProvider = FutureProvider.family<List<User>, int>((
@@ -39,6 +41,24 @@ class ClientsView extends ConsumerWidget {
               leading: const Icon(Icons.person),
               title: Text(client.fullName),
               subtitle: Text(client.email),
+              trailing: IconButton(
+                icon: const Icon(Icons.chat),
+                onPressed: () async {
+                  final chatNotifier = ref.read(chatProvider.notifier);
+                  await chatNotifier.connect();
+                  final chatId = await chatNotifier.openPrivateChat(client.id);
+                  
+                  if (!context.mounted) return;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        chatId: chatId,
+                        chatTitle: client.fullName,
+                      ),
+                    ),
+                  );
+                },
+              ),
               onTap: () {
                 // TODO: Implement navigation to client details
               },

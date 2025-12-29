@@ -15,6 +15,7 @@ import '../controllers/catalogs/work_schedule_controller.dart';
 import '../controllers/client_preference_controller.dart';
 import '../controllers/catalogs_controller.dart';
 import '../controllers/recommendations_controller.dart';
+import '../controllers/chat_controller.dart';
 
 // Создаем обертки для protected routes
 Handler _protectedHandler(Handler handler) {
@@ -175,4 +176,9 @@ final Router router = Router()
   ..get('/api/work-schedules', (Request request) => _protectedHandler(WorkScheduleController.getWorkSchedules)(request))
   ..post('/api/work-schedules', (Request request) => _adminHandler(WorkScheduleController.createWorkSchedule)(request))
   ..put('/api/work-schedules', (Request request) => _adminHandler(WorkScheduleController.updateWorkSchedule)(request))
-  ..delete('/api/work-schedules', (Request request) => _adminHandler(WorkScheduleController.deleteWorkSchedule)(request));
+  ..delete('/api/work-schedules', (Request request) => _adminHandler(WorkScheduleController.deleteWorkSchedule)(request))
+
+// Chat routes
+  ..get('/api/chats', (Request request) => _protectedHandler(ChatController.getChats)(request))
+  ..get('/api/chats/<id>/messages', (Request request, String id) => _protectedHandler((Request req) => ChatController.getMessages(req, id))(request))
+  ..post('/api/chats/private', (Request request) => _protectedHandler(ChatController.createOrGetPrivateChat)(request));

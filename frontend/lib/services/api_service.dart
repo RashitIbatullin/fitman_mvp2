@@ -7,6 +7,7 @@ import '../models/schedule_item.dart';
 import '../models/user_front.dart';
 import '../models/work_schedule.dart';
 import '../models/client_schedule_preference.dart'; // Import ClientSchedulePreference
+import '../models/chat/chat_models.dart'; // Import chat models
 import '../models/whtr_profiles.dart';
 import '../models/goal_training.dart';
 import '../models/level_training.dart';
@@ -15,7 +16,7 @@ class ApiService {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
   static String? _token;
 
-  static String? get currentToken => _token; // Public getter for debugging
+  static String? get currentToken => _token;
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -24,7 +25,7 @@ class ApiService {
 
   static Future<void> saveToken(String token) async {
     _token = token;
-    print('Inside saveToken: _token set to $_token'); // Debug print
+    print('Inside saveToken: _token set to $_token');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
   }
@@ -485,58 +486,6 @@ class ApiService {
     }
   }
 
-  // Получение планов тренировок
-  static Future<List<dynamic>> getTrainingPlans() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/api/training/plans'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['plans'] as List;
-    } else {
-      throw Exception(
-        'Failed to load training plans with status ${response.statusCode}',
-      );
-    }
-  }
-
-  // Получение расписания
-  static Future<List<ScheduleItem>> getSchedule() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/api/schedule'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final scheduleList = data['schedule'] as List;
-      return scheduleList.map((item) => ScheduleItem.fromJson(item)).toList();
-    } else {
-      throw Exception(
-        'Failed to load schedule with status ${response.statusCode}',
-      );
-    }
-  }
-
-  // Получение сообщений чата
-  static Future<List<dynamic>> getChatMessages(int userId) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/api/chat/messages/$userId'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['messages'] as List;
-    } else {
-      throw Exception(
-        'Failed to load chat messages with status ${response.statusCode}',
-      );
-    }
-  }
-
   // Получение ID клиентов, назначенных менеджеру
   static Future<List<int>> getAssignedClientIds(int managerId) async {
     try {
@@ -672,20 +621,103 @@ class ApiService {
     }
   }
 
-  // Отправка сообщения
-  static Future<void> sendMessage(int receiverId, String message) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/chat/send'),
+
+  // Получение планов тренировок
+  static Future<List<dynamic>> getTrainingPlans() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/training/plans'),
       headers: _headers,
-      body: jsonEncode({'receiverId': receiverId, 'message': message}),
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['plans'] as List;
+    } else {
       throw Exception(
-        'Failed to send message with status ${response.statusCode}',
+        'Failed to load training plans with status ${response.statusCode}',
       );
     }
   }
+
+  // Получение расписания
+  static Future<List<ScheduleItem>> getSchedule() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/schedule'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final scheduleList = data['schedule'] as List;
+      return scheduleList.map((item) => ScheduleItem.fromJson(item)).toList();
+    } else {
+      throw Exception(
+        'Failed to load schedule with status ${response.statusCode}',
+      );
+    }
+  }
+
+  // --- Chat API Methods ---
+
+  static Future<List<Chat>> getChats() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/chats'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((chatJson) => Chat.fromJson(chatJson)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load chats');
+      }
+    } catch (e) {
+      print('Get Chats error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<Message>> getMessages(int chatId, {int limit = 50, int offset = 0}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/chats/$chatId/messages?limit=$limit&offset=$offset'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((msgJson) => Message.fromJson(msgJson)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load messages for chat $chatId');
+      }
+    } catch (e) {
+      print('Get Messages error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<int> createOrGetPrivateChat(int peerId) async {
+     try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/chats/private'),
+        headers: _headers,
+        body: jsonEncode({'peerId': peerId}),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['chat_id'] as int;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create or get private chat');
+      }
+    } catch (e) {
+      print('Create or Get Private Chat error: $e');
+      rethrow;
+    }
+  }
+
+  // --- End Chat API Methods ---
 
   // Получение данных для дашборда клиента
   static Future<Map<String, dynamic>> getClientDashboardData() async {
