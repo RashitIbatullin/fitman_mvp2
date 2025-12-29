@@ -6,16 +6,15 @@ class ClientGroupMembersController {
 
   final Database _db;
 
-  Future<List<ClientGroupMember>> getMembers(String groupId) async {
-    // TODO: Implement database logic to fetch group members
-    return [];
+  Future<List<ClientGroupMember>> getMembers(int groupId) async {
+    return await _db.getGroupMembers(groupId);
   }
 
-  Future<void> addMember(String groupId, String clientId, String addedBy) async {
-    // TODO: Implement database logic to add a member
+  Future<void> addMember(int groupId, int clientId, int addedById) async {
+    await _db.addGroupMember(groupId, clientId, addedById);
   }
 
-  Future<void> removeMember(String groupId, String clientId) async {
-    // TODO: Implement database logic to remove a member
+  Future<void> removeMember(int groupId, int clientId) async {
+    await _db.removeGroupMember(groupId, clientId);
   }
 }

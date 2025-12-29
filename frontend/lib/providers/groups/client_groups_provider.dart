@@ -36,8 +36,8 @@ class ClientGroupsNotifier extends Notifier<ClientGroupsState> {
   Future<void> fetchGroups() async {
     try {
       state = state.copyWith(isLoading: true);
-      // final groups = await ref.read(apiServiceProvider).getGroups();
-      state = state.copyWith(groups: [], isLoading: false, error: null); // Placeholder
+      final groups = await ApiService.getAllClientGroups();
+      state = state.copyWith(groups: groups, isLoading: false, error: null);
     } catch (e) {
       state = state.copyWith(error: e.toString(), isLoading: false);
     }
@@ -45,7 +45,7 @@ class ClientGroupsNotifier extends Notifier<ClientGroupsState> {
 
   Future<void> createGroup(ClientGroup group) async {
     try {
-      // await ref.read(apiServiceProvider).createGroup(group);
+      await ApiService.createClientGroup(group);
       fetchGroups(); // Refresh the list
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -54,16 +54,16 @@ class ClientGroupsNotifier extends Notifier<ClientGroupsState> {
 
   Future<void> updateGroup(ClientGroup group) async {
     try {
-      // await ref.read(apiServiceProvider).updateGroup(group);
+      await ApiService.updateClientGroup(group);
       fetchGroups(); // Refresh the list
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
   }
 
-  Future<void> deleteGroup(String groupId) async {
+  Future<void> deleteGroup(int groupId) async {
     try {
-      // await ref.read(apiServiceProvider).deleteGroup(groupId);
+      await ApiService.deleteClientGroup(groupId);
       fetchGroups(); // Refresh the list
     } catch (e) {
       state = state.copyWith(error: e.toString());

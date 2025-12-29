@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:postgres/postgres.dart';
 import '../models/client_profile_back.dart';
+import '../models/groups/client_group.dart';
+import '../models/groups/client_group_member.dart';
 import 'app_config.dart';
 import '../models/user_back.dart';
 import '../models/role.dart';
@@ -65,6 +67,108 @@ class Database {
     await _connection?.close();
     _connection = null;
     _connectionCompleter = null;
+  }
+
+  // === GROUP METHODS ===
+
+  Future<List<ClientGroup>> getAllClientGroups() async {
+    final conn = await connection;
+    final results = await conn.execute('SELECT * FROM client_groups WHERE archived_at IS NULL');
+    return results.map((row) => ClientGroup.fromMap(row.toColumnMap())).toList();
+  }
+
+  Future<ClientGroup?> getClientGroupById(int id) async {
+    final conn = await connection;
+    final results = await conn.execute(
+      Sql.named('SELECT * FROM client_groups WHERE id = @id AND archived_at IS NULL'),
+      parameters: {'id': id},
+    );
+    if (results.isEmpty) return null;
+    return ClientGroup.fromMap(results.first.toColumnMap());
+  }
+
+  Future<ClientGroup> createClientGroup(ClientGroup group, int creatorId) async {
+    final conn = await connection;
+    final result = await conn.execute(
+      Sql.named('''
+        INSERT INTO client_groups (name, description, type, is_auto_update, created_by, updated_by)
+        VALUES (@name, @description, @type, @is_auto_update, @creatorId, @creatorId)
+        RETURNING *
+      '''),
+      parameters: {
+        'name': group.name,
+        'description': group.description,
+        'type': group.type.index,
+        'is_auto_update': group.isAutoUpdate,
+        'creatorId': creatorId,
+      },
+    );
+    return ClientGroup.fromMap(result.first.toColumnMap());
+  }
+
+  Future<ClientGroup> updateClientGroup(ClientGroup group, int updaterId) async {
+    final conn = await connection;
+    final result = await conn.execute(
+      Sql.named('''
+        UPDATE client_groups
+        SET name = @name, description = @description, type = @type, is_auto_update = @is_auto_update, updated_by = @updaterId, updated_at = NOW()
+        WHERE id = @id
+        RETURNING *
+      '''),
+      parameters: {
+        'id': group.id,
+        'name': group.name,
+        'description': group.description,
+        'type': group.type.index,
+        'is_auto_update': group.isAutoUpdate,
+        'updaterId': updaterId,
+      },
+    );
+    return ClientGroup.fromMap(result.first.toColumnMap());
+  }
+
+  Future<void> deleteClientGroup(int id, int archiverId) async {
+    final conn = await connection;
+    await conn.execute(
+      Sql.named('''
+        UPDATE client_groups
+        SET archived_at = NOW(), archived_by = @archiverId
+        WHERE id = @id
+      '''),
+      parameters: {'id': id, 'archiverId': archiverId},
+    );
+  }
+
+  Future<List<ClientGroupMember>> getGroupMembers(int groupId) async {
+    final conn = await connection;
+    final results = await conn.execute(
+      Sql.named('SELECT * FROM client_group_members WHERE client_group_id = @groupId'),
+      parameters: {'groupId': groupId},
+    );
+    return results.map((row) => ClientGroupMember.fromMap(row.toColumnMap())).toList();
+  }
+
+  Future<void> addGroupMember(int groupId, int clientId, int addedById) async {
+    final conn = await connection;
+    await conn.execute(
+      Sql.named('''
+        INSERT INTO client_group_members (client_group_id, client_id, added_by)
+        VALUES (@groupId, @clientId, @addedById)
+        ON CONFLICT (client_group_id, client_id) DO NOTHING
+      '''),
+      parameters: {'groupId': groupId, 'clientId': clientId, 'addedById': addedById},
+    );
+  }
+
+  Future<void> removeGroupMember(int groupId, int clientId) async {
+    final conn = await connection;
+    await conn.execute(
+      Sql.named('''
+        DELETE FROM client_group_members
+        WHERE client_group_id = @groupId AND client_id = @clientId
+      '''),
+      parameters: {'groupId': groupId, 'clientId': clientId},
+    );
   }
 
   // === USER METHODS ===

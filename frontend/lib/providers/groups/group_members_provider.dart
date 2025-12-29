@@ -1,12 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/groups/client_group_member.dart';
 import '../../services/api_service.dart';
-import 'client_groups_provider.dart'; // To access apiServiceProvider
-
-// Since this provider depends on a dynamic groupId, we use the Family modifier.
-// However, the manual implementation for a Notifier with a family is more complex.
-// For now, let's create a simple Notifier that can be managed by another provider
-// or have its groupId set explicitly.
+// import 'client_groups_provider.dart'; // To access apiServiceProvider - no longer needed as ApiService methods are static
 
 class GroupMembersState {
   const GroupMembersState({
@@ -38,28 +33,28 @@ class GroupMembersNotifier extends Notifier<GroupMembersState> {
     return const GroupMembersState();
   }
 
-  Future<void> fetchMembers(String groupId) async {
+  Future<void> fetchMembers(int groupId) async {
     try {
       state = state.copyWith(isLoading: true);
-      // final members = await ref.read(apiServiceProvider).getGroupMembers(groupId);
-      state = state.copyWith(members: [], isLoading: false, error: null); // Placeholder
+      final members = await ApiService.getGroupMembers(groupId);
+      state = state.copyWith(members: members, isLoading: false, error: null);
     } catch (e) {
       state = state.copyWith(error: e.toString(), isLoading: false);
     }
   }
 
-  Future<void> addMember(String groupId, String clientId) async {
+  Future<void> addMember(int groupId, int clientId) async {
     try {
-      // await ref.read(apiServiceProvider).addGroupMember(groupId, clientId);
+      await ApiService.addGroupMember(groupId, clientId);
       fetchMembers(groupId); // Refresh
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
   }
 
-    Future<void> removeMember(String groupId, String clientId) async {
+    Future<void> removeMember(int groupId, int clientId) async {
     try {
-      // await ref.read(apiServiceProvider).removeGroupMember(groupId, clientId);
+      await ApiService.removeGroupMember(groupId, clientId);
       fetchMembers(groupId); // Refresh
     } catch (e) {
       state = state.copyWith(error: e.toString());

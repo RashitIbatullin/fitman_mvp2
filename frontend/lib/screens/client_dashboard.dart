@@ -15,6 +15,7 @@ import 'client/anthropometry_screen.dart';
 import 'client/sessions_screen.dart';
 import 'client/calorie_tracking_screen.dart';
 import 'client/progress_screen.dart';
+import 'chat_list_screen.dart'; // Import the new ChatListScreen
 
 final clientDashboardIndexProvider = StateProvider<int>((ref) => 0);
 
@@ -44,6 +45,7 @@ class ClientDashboard extends ConsumerWidget {
       'Занятия',
       'Калории',
       'Прогресс',
+      'Чаты', // New menu item
     ];
 
     final List<Widget> views = [
@@ -74,6 +76,7 @@ class ClientDashboard extends ConsumerWidget {
       const SessionsScreen(),
       const CalorieTrackingScreen(),
       const ProgressScreen(),
+      const ChatListScreen(), // New chat list screen
     ];
 
     return Scaffold(
@@ -219,6 +222,15 @@ class ClientDashboard extends ConsumerWidget {
                 Navigator.pop(context);
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.chat_bubble),
+              title: const Text('Чаты'),
+              selected: selectedIndex == 9, // New index for chats
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 9; // New index for chats
+                Navigator.pop(context);
+              },
+            ),
           ],
         ),
       ),
@@ -321,8 +333,6 @@ class ClientDashboard extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text('Средний дефицит: ${data.avgDeficit} ккал/день'),
           ],
         ),
       ),

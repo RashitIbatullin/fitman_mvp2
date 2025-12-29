@@ -6,25 +6,32 @@ class ClientGroup {
     required this.name,
     required this.type,
     required this.description,
-    required this.clientIds,
     required this.isAutoUpdate,
   });
 
-  final String id;
+  final int id;
   final String name;
   final ClientGroupType type;
   final String description;
-  final List<String> clientIds;
   final bool isAutoUpdate;
 
   factory ClientGroup.fromJson(Map<String, dynamic> json) {
     return ClientGroup(
-      id: json['id'] as String,
+      id: json['id'] as int,
       name: json['name'] as String,
-      type: ClientGroupType.values.firstWhere((e) => e.name == json['type']),
+      type: ClientGroupType.values[json['type'] as int], // Convert int back to enum
       description: json['description'] as String,
-      clientIds: List<String>.from(json['clientIds'] as List),
-      isAutoUpdate: json['isAutoUpdate'] as bool,
+      isAutoUpdate: json['is_auto_update'] as bool,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'type': type.index, // Convert enum to int for JSON
+      'description': description,
+      'is_auto_update': isAutoUpdate,
+    };
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/chat/message_bubble.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final int chatId;
@@ -19,25 +21,115 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(chatProvider.notifier).setActiveChat(widget.chatId);
+      _sendReadStatusUpdates(); // Send read status after setting active chat and messages are loaded
+      _scrollController.addListener(_onScroll);
+      ref.listen<ChatState>(chatProvider, (prev, next) {
+        if (next.activeChatId == widget.chatId && !next.isLoading && (prev?.isLoading ?? true)) {
+          _sendReadStatusUpdates();
+        }
+      });
     });
   }
 
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
   
-  void _sendMessage() {
-    if (_messageController.text.trim().isNotEmpty) {
-      ref.read(chatProvider.notifier).sendMessage(_messageController.text.trim());
+  void _sendReadStatusUpdates() {
+    final chatState = ref.read(chatProvider);
+    final currentUser = ref.read(authProvider).value?.user;
+    final messages = chatState.messages[widget.chatId] ?? [];
+
+    for (final message in messages) {
+      if (message.senderId != currentUser?.id) {
+        // Assume messages fetched are 'delivered' or 'read'.
+        // We only send 'read' if it's not our own message and it hasn't been read yet.
+        // For simplicity, we just send read status for all messages not from current user.
+        ref.read(chatProvider.notifier).sendReadStatus(message.chatId, message.id);
+      }
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      ref.read(chatProvider.notifier).fetchMoreMessages().then((_) => _sendReadStatusUpdates());
+    }
+  }
+
+  void _sendMessage({
+    List<int>? fileBytes,
+    String? fileName,
+    String? mimeType,
+  }) {
+    final messageText = _messageController.text.trim();
+    if (messageText.isNotEmpty || fileBytes != null) {
+      ref.read(chatProvider.notifier).sendMessage(
+        messageText,
+        fileBytes: fileBytes,
+        fileName: fileName,
+        mimeType: mimeType,
+      );
       _messageController.clear();
+      // Scroll to bottom when new message is sent
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  Future<void> _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      allowMultiple: false,
+    );
+
+    if (result != null && result.files.single.bytes != null) {
+      final platformFile = result.files.single;
+      String? inferredMimeType;
+      if (platformFile.extension != null) {
+        switch (platformFile.extension!.toLowerCase()) {
+          case 'jpg':
+          case 'jpeg':
+            inferredMimeType = 'image/jpeg';
+            break;
+          case 'png':
+            inferredMimeType = 'image/png';
+            break;
+          case 'gif':
+            inferredMimeType = 'image/gif';
+            break;
+          case 'pdf':
+            inferredMimeType = 'application/pdf';
+            break;
+          case 'mp4':
+            inferredMimeType = 'video/mp4';
+            break;
+          case 'mp3':
+            inferredMimeType = 'audio/mpeg';
+            break;
+          default:
+            inferredMimeType = 'application/octet-stream';
+        }
+      } else {
+        inferredMimeType = 'application/octet-stream';
+      }
+      _sendMessage(
+        fileBytes: platformFile.bytes,
+        fileName: platformFile.name,
+        mimeType: inferredMimeType,
+      );
     }
   }
 
@@ -46,6 +138,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chatState = ref.watch(chatProvider);
     final currentUser = ref.watch(authProvider).value?.user;
     final messages = chatState.messages[widget.chatId] ?? [];
+    final messagesMetadata = chatState.messagesMetadata[widget.chatId];
 
     return Scaffold(
       appBar: AppBar(
@@ -58,23 +151,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     reverse: true,
-                    itemCount: messages.length,
+                    controller: _scrollController,
+                    itemCount: messages.length + (chatState.isFetchingMore ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (index == messages.length && chatState.isFetchingMore) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
                       final message = messages[index];
                       final isMe = message.senderId == currentUser?.id;
-                      return Align(
-                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                          margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                          decoration: BoxDecoration(
-                            color: isMe
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : Theme.of(context).colorScheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(16.0),
-                          ),
-                          child: Text(message.content ?? ''),
-                        ),
+                      final userName = isMe 
+                          ? 'You' 
+                          : '${message.firstName ?? ''} ${message.lastName ?? ''}'.trim();
+                      return MessageBubble(
+                        message: message,
+                        isMe: isMe,
+                        userName: userName,
                       );
                     },
                   ),
@@ -83,6 +174,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
+                IconButton(
+                  icon: const Icon(Icons.attach_file),
+                  onPressed: _pickFile,
+                ),
                 Expanded(
                   child: TextField(
                     controller: _messageController,

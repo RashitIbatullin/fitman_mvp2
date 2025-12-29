@@ -1,3 +1,4 @@
+import 'package:dart_frog/dart_frog.dart'; // Import RequestContext for dependency injection
 import '../../config/database.dart';
 import '../../models/groups/client_group.dart';
 
@@ -7,26 +8,22 @@ class ClientGroupsController {
   final Database _db;
 
   Future<List<ClientGroup>> getAllGroups() async {
-    // TODO: Implement database logic to fetch all groups
-    return [];
+    return await _db.getAllClientGroups();
   }
 
-  Future<ClientGroup?> getGroupById(String id) async {
-    // TODO: Implement database logic to fetch a group by id
-    return null;
+  Future<ClientGroup?> getGroupById(int id) async {
+    return await _db.getClientGroupById(id);
   }
 
-  Future<ClientGroup> createGroup(ClientGroup group) async {
-    // TODO: Implement database logic to create a group
-    return group;
+  Future<ClientGroup> createGroup(ClientGroup group, int creatorId) async {
+    return await _db.createClientGroup(group, creatorId);
   }
 
-  Future<ClientGroup> updateGroup(ClientGroup group) async {
-    // TODO: Implement database logic to update a group
-    return group;
+  Future<ClientGroup> updateGroup(ClientGroup group, int updaterId) async {
+    return await _db.updateClientGroup(group, updaterId);
   }
 
-  Future<void> deleteGroup(String id) async {
-    // TODO: Implement database logic to delete a group
+  Future<void> deleteGroup(int id, int archiverId) async {
+    await _db.deleteClientGroup(id, archiverId);
   }
 }

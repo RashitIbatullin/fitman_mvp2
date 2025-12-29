@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/role.dart';
 import '../models/schedule_item.dart';
@@ -11,6 +12,8 @@ import '../models/chat/chat_models.dart'; // Import chat models
 import '../models/whtr_profiles.dart';
 import '../models/goal_training.dart';
 import '../models/level_training.dart';
+import '../models/groups/client_group.dart';
+import '../models/groups/client_group_member.dart';
 
 class ApiService {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
@@ -717,7 +720,166 @@ class ApiService {
     }
   }
 
-  // --- End Chat API Methods ---
+  // --- Client Group API Methods ---
+
+  static Future<List<ClientGroup>> getAllClientGroups() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/client-groups'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => ClientGroup.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load client groups');
+      }
+    } catch (e) {
+      print('Get all client groups error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<ClientGroup> getClientGroupById(int id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/client-groups/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return ClientGroup.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load client group $id');
+      }
+    } catch (e) {
+      print('Get client group by ID error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<ClientGroup> createClientGroup(ClientGroup group) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/client-groups'),
+        headers: _headers,
+        body: jsonEncode({
+          'name': group.name,
+          'description': group.description,
+          'type': group.type.index,
+          'is_auto_update': group.isAutoUpdate,
+          // conditions and clientIds will be handled by specific endpoints or AutoGroupsService
+        }),
+      );
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return ClientGroup.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create client group');
+      }
+    } catch (e) {
+      print('Create client group error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<ClientGroup> updateClientGroup(ClientGroup group) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/client-groups/${group.id}'),
+        headers: _headers,
+        body: jsonEncode({
+          'name': group.name,
+          'description': group.description,
+          'type': group.type.index,
+          'is_auto_update': group.isAutoUpdate,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return ClientGroup.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to update client group');
+      }
+    } catch (e) {
+      print('Update client group error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> deleteClientGroup(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/client-groups/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode != 204) { // 204 No Content for successful deletion
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to delete client group $id');
+      }
+    } catch (e) {
+      print('Delete client group error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<ClientGroupMember>> getGroupMembers(int groupId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/client-groups/$groupId/members'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => ClientGroupMember.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load group members for group $groupId');
+      }
+    } catch (e) {
+      print('Get group members error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> addGroupMember(int groupId, int clientId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/client-groups/$groupId/members'),
+        headers: _headers,
+        body: jsonEncode({'clientId': clientId}),
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to add member to group $groupId');
+      }
+    } catch (e) {
+      print('Add group member error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> removeGroupMember(int groupId, int clientId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/client-groups/$groupId/members/$clientId'),
+        headers: _headers,
+      );
+      if (response.statusCode != 204) { // 204 No Content for successful deletion
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to remove member from group $groupId');
+      }
+    } catch (e) {
+      print('Remove group member error: $e');
+      rethrow;
+    }
+  }
+
+  // --- End Client Group API Methods ---
 
   // Получение данных для дашборда клиента
   static Future<Map<String, dynamic>> getClientDashboardData() async {
@@ -1330,6 +1492,69 @@ class ApiService {
       }
     } catch (e) {
       print('Get recommendation error: $e');
+      rethrow;
+    }
+  }
+
+  // Загрузка вложений для чата
+  static Future<Map<String, dynamic>> uploadChatAttachment(
+    List<int> fileBytes,
+    String fileName,
+    String? mimeType,
+  ) async {
+    try {
+      final url = '$baseUrl/api/uploads/chat';
+      
+      var request = http.MultipartRequest('POST', Uri.parse(url));
+      request.headers.addAll({
+        'Authorization': 'Bearer $currentToken',
+      });
+      request.files.add(http.MultipartFile.fromBytes(
+        'file',
+        fileBytes,
+        filename: fileName,
+        contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+      ));
+
+      final response = await request.send();
+
+      if (response.statusCode == 201) {
+        final responseBody = await response.stream.bytesToString();
+        return jsonDecode(responseBody) as Map<String, dynamic>;
+      } else {
+        final responseBody = await response.stream.bytesToString();
+        final errorData = jsonDecode(responseBody);
+        throw Exception(
+          errorData['error'] ?? 'Failed to upload chat attachment with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Upload chat attachment error: $e');
+      rethrow;
+    }
+  }
+
+  // Создание группового чата
+  static Future<int> createGroupChat(List<int> userIds, {String? name}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/chat'),
+        headers: _headers,
+        body: jsonEncode({
+          'userIds': userIds,
+          if (name != null) 'name': name,
+        }),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['chat_id'] as int;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create group chat');
+      }
+    } catch (e) {
+      print('Create group chat error: $e');
       rethrow;
     }
   }
