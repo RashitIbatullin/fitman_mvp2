@@ -31,7 +31,6 @@ class RedisService {
   }
 
   void dispose() {
-    _pubConnection?.close();
-    // Subscriber connection is handled by the PubSub instance itself
+    _redis.close();
   }
 }

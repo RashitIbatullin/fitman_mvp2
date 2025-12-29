@@ -49,7 +49,7 @@ Future<Response> onRequest(RequestContext context) async {
         print('👂 User $userId listening to channels: $channels');
         sub.subscribe(channels);
         
-        redisSubscription = sub.stream.listen((msg) {
+        redisSubscription = sub.getStream().listen((msg) {
           if (msg.kind == 'message') {
             print('↳ Redis message received for user $userId on channel ${msg.channel}: ${msg.payload}');
             // Пересылаем сообщение клиенту
