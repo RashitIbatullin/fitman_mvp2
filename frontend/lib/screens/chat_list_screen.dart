@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/chat_provider.dart';
-import '../../models/chat/chat_models.dart';
 import '../screens/shared/create_chat_dialog.dart';
 import '../screens/shared/chat_screen.dart';
 

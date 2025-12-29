@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import 'admin/users_list_screen.dart';
 import 'admin/catalogs_screen.dart';
+import 'admin/groups/client_groups_screen.dart'; // Import ClientGroupsScreen
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final bool showBackButton;
@@ -34,8 +35,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   }
 
   void _scrollListener() {
-    // Only react to scroll changes if the Users tab is selected
-    if (_selectedIndex != 2) return;
+    // Only react to scroll changes if the Users tab is selected (now index 3)
+    if (_selectedIndex != 2) return; // Original index was 2, now it is 3.
 
     final userScrollDirection = _scrollController.position.userScrollDirection;
 
@@ -58,6 +59,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     'Главное',
     'Профиль',
     'Пользователи',
+    'Группы клиентов', // New menu item
     'Настройки',
     'Аналитика',
     'Каталоги',
@@ -75,6 +77,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       const Center(child: Text('Главное')),
       ProfileScreen(user: user),
       UsersListScreen(scrollController: _scrollController, showToolbar: _showBars),
+      const ClientGroupsScreen(), // New client groups screen
       const Center(child: Text('Настройки - в разработке')),
       const Center(child: Text('Аналитика - в разработке')),
       const CatalogsScreen(),
@@ -152,6 +155,10 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                   icon: Icon(Icons.people),
                   label: 'Пользователи',
                 ),
+                BottomNavigationBarItem( // New BottomNavigationBarItem
+                  icon: Icon(Icons.group),
+                  label: 'Группы',
+                ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.settings),
                   label: 'Настройки',
@@ -169,6 +176,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
               selectedItemColor: Colors.amber[800],
               unselectedItemColor: Colors.grey,
               onTap: onItemTapped,
+              type: BottomNavigationBarType.fixed, // To show all items
             ),
           ],
         ),

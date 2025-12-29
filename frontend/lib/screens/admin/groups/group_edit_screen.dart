@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/groups/client_group.dart';
 import '../../../models/groups/group_types.dart';
 import '../../../providers/groups/client_groups_provider.dart';
+import 'auto_group_edit_form.dart'; // Import the auto group form
+import 'manual_group_edit_form.dart'; // Import the manual group form
 
 class GroupEditScreen extends ConsumerStatefulWidget {
   final ClientGroup? group;
@@ -121,6 +123,11 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
                   });
                 },
               ),
+              // Conditionally display auto or manual group forms
+              if (_isAutoUpdate)
+                const AutoGroupEditForm()
+              else
+                const ManualGroupEditForm(),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveGroup,

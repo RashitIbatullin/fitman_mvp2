@@ -138,7 +138,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chatState = ref.watch(chatProvider);
     final currentUser = ref.watch(authProvider).value?.user;
     final messages = chatState.messages[widget.chatId] ?? [];
-    final messagesMetadata = chatState.messagesMetadata[widget.chatId];
 
     return Scaffold(
       appBar: AppBar(
