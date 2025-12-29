@@ -2,6 +2,78 @@
 -- Таблицы для подсистемы рекомендаций
 -- Скрипт является идемпотентным.
 
+-- Удаление старых таблиц, если они существуют
+DROP TABLE IF EXISTS 
+    "anthropometry_fix",
+    "anthropometry_start",
+    "anthropometry_finish",
+    "types_body_build", 
+    "body_shape_recommendations", 
+    "whtr_refinements", 
+    "ai_recommendation_cache",
+    "bioimpedance_start",
+    "bioimpedance_finish"
+CASCADE;
+
+
+-- Таблицы антропометрии
+CREATE TABLE anthropometry_fix (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    date_time TIMESTAMPTZ DEFAULT NOW(),
+    height INT,
+    wrist_circ INT,
+    ankle_circ INT,
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMP WITH TIME ZONE,
+    archived_by BIGINT
+);
+
+CREATE TABLE anthropometry_start (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    date_time TIMESTAMPTZ DEFAULT NOW(),
+    photo VARCHAR(255),
+    photo_date_time TIMESTAMPTZ,
+    profile_photo VARCHAR(255),
+    profile_photo_date_time TIMESTAMPTZ,
+    weight REAL,
+    shoulders_circ INT,
+    breast_circ INT,
+    waist_circ INT,
+    hips_circ INT,
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMP WITH TIME ZONE,
+    archived_by BIGINT
+);
+
+CREATE TABLE anthropometry_finish (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    date_time TIMESTAMPTZ DEFAULT NOW(),
+    photo VARCHAR(255),
+    photo_date_time TIMESTAMPTZ,
+    profile_photo VARCHAR(255),
+    profile_photo_date_time TIMESTAMPTZ,
+    weight REAL,
+    shoulders_circ INT,
+    breast_circ INT,
+    waist_circ INT,
+    hips_circ INT,
+    company_id BIGINT DEFAULT -1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id),
+    updated_by BIGINT REFERENCES users(id),
+    archived_at TIMESTAMP WITH TIME ZONE,
+    archived_by BIGINT
+);
+
 -- Каталог "Типы телосложения" для алгоритма определения соматотипа
 CREATE TABLE types_body_build (
     id BIGSERIAL PRIMARY KEY,
@@ -252,3 +324,40 @@ CREATE TABLE bioimpedance_finish (
 
 CREATE INDEX IF NOT EXISTS idx_bioimpedance_start_user_id ON bioimpedance_start(user_id);
 CREATE INDEX IF NOT EXISTS idx_bioimpedance_finish_user_id ON bioimpedance_finish(user_id);
+
+-- Добавление начальных антропометрических данных для тестового клиента
+DO $$
+DECLARE
+    client_user_id BIGINT;
+    admin_user_id BIGINT;
+BEGIN
+    -- Находим ID тестового клиента и админа
+    SELECT id INTO client_user_id FROM users WHERE email = 'client@fitman.ru';
+    SELECT id INTO admin_user_id FROM users WHERE email = 'admin@fitman.ru';
+
+    -- Если клиент найден, вставляем данные
+    IF client_user_id IS NOT NULL THEN
+        -- Вставляем или обновляем фиксированные данные
+        INSERT INTO anthropometry_fix (user_id, height, wrist_circ, ankle_circ, created_by, updated_by)
+        VALUES (client_user_id, 170, 16, 22, admin_user_id, admin_user_id)
+        ON CONFLICT (user_id) DO UPDATE SET
+            height = EXCLUDED.height,
+            wrist_circ = EXCLUDED.wrist_circ,
+            ankle_circ = EXCLUDED.ankle_circ,
+            updated_by = EXCLUDED.updated_by,
+            updated_at = NOW();
+
+        -- Вставляем или обновляем начальные замеры
+        INSERT INTO anthropometry_start (user_id, weight, shoulders_circ, breast_circ, waist_circ, hips_circ, created_by, updated_by)
+        VALUES (client_user_id, 65, 100, 90, 70, 95, admin_user_id, admin_user_id)
+        ON CONFLICT (user_id) DO UPDATE SET
+            weight = EXCLUDED.weight,
+            shoulders_circ = EXCLUDED.shoulders_circ,
+            breast_circ = EXCLUDED.breast_circ,
+            waist_circ = EXCLUDED.waist_circ,
+            hips_circ = EXCLUDED.hips_circ,
+            updated_by = EXCLUDED.updated_by,
+            updated_at = NOW();
+    END IF;
+END;
+$$;
