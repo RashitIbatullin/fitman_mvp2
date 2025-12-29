@@ -52,5 +52,3 @@ app.*.map.json
 *.jpeg
 *.png
 *.apk
-*.lock
-*.yaml

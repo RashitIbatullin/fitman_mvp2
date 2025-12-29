@@ -895,7 +895,7 @@ class Database {
             l.start_plan_at as start_time,
             l.finish_plan_at as end_time,
             l.complete as status,
-            (SELECT u.first_name || \' \' || u.last_name FROM users u WHERE u.id = l.trainer_id) as trainer_name
+            (SELECT u.first_name || ' ' || u.last_name FROM users u WHERE u.id = l.trainer_id) as trainer_name
           FROM lessons l
           LEFT JOIN client_training_plans ctp ON l.client_training_plan_id = ctp.id
           LEFT JOIN training_plan_templates tpt ON ctp.training_plan_template_id = tpt.id

@@ -6,20 +6,23 @@ class RedisService {
 
   RedisService._internal();
 
-  final _redis = RedisConnection();
   Command? _pubConnection;
   PubSub? _subConnection;
+  RedisConnection? _redisConnectionForPub;
+  RedisConnection? _redisConnectionForSub;
 
   Future<Command> get publisher async {
     if (_pubConnection == null) {
-      _pubConnection = await _redis.connect('localhost', 6379);
+      _redisConnectionForPub = RedisConnection();
+      _pubConnection = await _redisConnectionForPub!.connect('localhost', 6379);
     }
     return _pubConnection!;
   }
   
   Future<PubSub> get subscriber async {
     if (_subConnection == null) {
-       final conn = await _redis.connect('localhost', 6379);
+      _redisConnectionForSub = RedisConnection();
+      final conn = await _redisConnectionForSub!.connect('localhost', 6379);
       _subConnection = PubSub(conn);
     }
     return _subConnection!;
@@ -31,6 +34,7 @@ class RedisService {
   }
 
   void dispose() {
-    _redis.close();
+    _redisConnectionForPub?.close();
+    _redisConnectionForSub?.close();
   }
 }
