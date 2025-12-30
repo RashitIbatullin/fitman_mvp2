@@ -725,7 +725,7 @@ class ApiService {
   static Future<List<ClientGroup>> getAllClientGroups() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/client-groups'),
+        Uri.parse('$baseUrl/api/client_groups'),
         headers: _headers,
       );
       if (response.statusCode == 200) {
@@ -744,7 +744,7 @@ class ApiService {
   static Future<ClientGroup> getClientGroupById(int id) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/client-groups/$id'),
+        Uri.parse('$baseUrl/api/client_groups/$id'),
         headers: _headers,
       );
       if (response.statusCode == 200) {
@@ -763,7 +763,7 @@ class ApiService {
   static Future<ClientGroup> createClientGroup(ClientGroup group) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/client-groups'),
+        Uri.parse('$baseUrl/api/client_groups'),
         headers: _headers,
         body: jsonEncode({
           'name': group.name,
@@ -789,7 +789,7 @@ class ApiService {
   static Future<ClientGroup> updateClientGroup(ClientGroup group) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/api/client-groups/${group.id}'),
+        Uri.parse('$baseUrl/api/client_groups/${group.id}'),
         headers: _headers,
         body: jsonEncode({
           'name': group.name,
@@ -814,7 +814,7 @@ class ApiService {
   static Future<void> deleteClientGroup(int id) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/api/client-groups/$id'),
+        Uri.parse('$baseUrl/api/client_groups/$id'),
         headers: _headers,
       );
       if (response.statusCode != 204) { // 204 No Content for successful deletion
@@ -830,7 +830,7 @@ class ApiService {
   static Future<List<ClientGroupMember>> getGroupMembers(int groupId) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/client-groups/$groupId/members'),
+        Uri.parse('$baseUrl/api/client_groups/$groupId/members'),
         headers: _headers,
       );
       if (response.statusCode == 200) {
@@ -849,7 +849,7 @@ class ApiService {
   static Future<void> addGroupMember(int groupId, int clientId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/client-groups/$groupId/members'),
+        Uri.parse('$baseUrl/api/client_groups/$groupId/members'),
         headers: _headers,
         body: jsonEncode({'clientId': clientId}),
       );
@@ -866,7 +866,7 @@ class ApiService {
   static Future<void> removeGroupMember(int groupId, int clientId) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/api/client-groups/$groupId/members/$clientId'),
+        Uri.parse('$baseUrl/api/client_groups/$groupId/members/$clientId'),
         headers: _headers,
       );
       if (response.statusCode != 204) { // 204 No Content for successful deletion

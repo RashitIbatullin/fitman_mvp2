@@ -16,6 +16,8 @@ import '../controllers/client_preference_controller.dart';
 import '../controllers/catalogs_controller.dart';
 import '../controllers/recommendations_controller.dart';
 import '../controllers/chat_controller.dart';
+import '../controllers/groups/client_groups_shelf_controller.dart';
+import '../controllers/groups/client_group_members_shelf_controller.dart';
 
 // Создаем обертки для protected routes
 Handler _protectedHandler(Handler handler) {
@@ -181,4 +183,15 @@ final Router router = Router()
 // Chat routes
   ..get('/api/chats', (Request request) => _protectedHandler(ChatController.getChats)(request))
   ..get('/api/chats/<id>/messages', (Request request, String id) => _protectedHandler((Request req) => ChatController.getMessages(req, id))(request))
-  ..post('/api/chats/private', (Request request) => _protectedHandler(ChatController.createOrGetPrivateChat)(request));
+  ..post('/api/chats/private', (Request request) => _protectedHandler(ChatController.createOrGetPrivateChat)(request))
+
+// Client Group routes (Admin access)
+  ..get('/api/client_groups', (Request request) => _adminHandler(ClientGroupsShelfController.getAllGroups)(request))
+  ..post('/api/client_groups', (Request request) => _adminHandler(ClientGroupsShelfController.createGroup)(request))
+  ..get('/api/client_groups/<id>', (Request request, String id) => _adminHandler((Request req) => ClientGroupsShelfController.getGroupById(req, id))(request))
+  ..put('/api/client_groups/<id>', (Request request, String id) => _adminHandler((Request req) => ClientGroupsShelfController.updateGroup(req, id))(request))
+  ..delete('/api/client_groups/<id>', (Request request, String id) => _adminHandler((Request req) => ClientGroupsShelfController.deleteGroup(req, id))(request))
+// Member routes for a specific group
+  ..get('/api/client_groups/<id>/members', (Request request, String id) => _adminHandler((Request req) => ClientGroupMembersShelfController.getGroupMembers(req, id))(request))
+  ..post('/api/client_groups/<id>/members', (Request request, String id) => _adminHandler((Request req) => ClientGroupMembersShelfController.addGroupMember(req, id))(request))
+  ..delete('/api/client_groups/<id>/members/<memberId>', (Request request, String id, String memberId) => _adminHandler((Request req) => ClientGroupMembersShelfController.removeGroupMember(req, id, memberId))(request));

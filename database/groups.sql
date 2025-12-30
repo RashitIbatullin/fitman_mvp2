@@ -15,6 +15,8 @@ CREATE TABLE client_groups (
     company_id BIGINT NOT NULL DEFAULT -1, -- Для мультитенантности
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id), -- Кто создал
+    updated_by BIGINT REFERENCES users(id), -- Кто последним обновил
     archived_at TIMESTAMPTZ,
     archived_by BIGINT REFERENCES users(id) -- Кто архивировал
 );
@@ -27,8 +29,12 @@ CREATE TABLE client_group_members (
     id BIGSERIAL PRIMARY KEY,
     client_group_id BIGINT NOT NULL REFERENCES client_groups(id) ON DELETE CASCADE,
     client_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- user_id с ролью client
-    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    added_by BIGINT REFERENCES users(id), -- Кто добавил
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by BIGINT REFERENCES users(id), -- Кто добавил
+    updated_by BIGINT REFERENCES users(id), -- Кто последним обновил
+    archived_at TIMESTAMPTZ,
+    archived_by BIGINT REFERENCES users(id), -- Кто архивировал
     UNIQUE (client_group_id, client_id)
 );
 

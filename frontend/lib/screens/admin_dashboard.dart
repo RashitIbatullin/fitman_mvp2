@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../providers/groups/client_groups_provider.dart';
 import 'admin/users_list_screen.dart';
 import 'admin/catalogs_screen.dart';
 import 'admin/groups/client_groups_screen.dart'; // Import ClientGroupsScreen
@@ -35,8 +36,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   }
 
   void _scrollListener() {
-    // Only react to scroll changes if the Users tab is selected (now index 3)
-    if (_selectedIndex != 2) return; // Original index was 2, now it is 3.
+    // Only react to scroll changes if the Users tab is selected (now index 2)
+    if (_selectedIndex != 2) return;
 
     final userScrollDirection = _scrollController.position.userScrollDirection;
 
@@ -105,6 +106,14 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
             leading: widget.showBackButton ? const BackButton() : Container(),
             title: Text(_titles[_selectedIndex]),
             actions: [
+              if (_selectedIndex == 3) // Only show for Groups screen (index 3)
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Обновить',
+                  onPressed: () {
+                    ref.read(clientGroupsProvider.notifier).fetchGroups();
+                  },
+                ),
               IconButton(
                 icon: const Icon(Icons.logout),
                 tooltip: 'Выйти',

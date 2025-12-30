@@ -18,6 +18,14 @@ class GroupCondition {
       value: map['value'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'field': field,
+      'operator': operator,
+      'value': value,
+    };
+  }
 }
 
 class ClientGroup {
@@ -26,8 +34,8 @@ class ClientGroup {
     required this.name,
     required this.type,
     required this.description,
-    required this.conditions,
-    required this.clientIds,
+    this.conditions = const [],
+    this.clientIds = const [],
     required this.isAutoUpdate,
   });
 
@@ -36,19 +44,35 @@ class ClientGroup {
   final ClientGroupType type;
   final String description;
   final List<GroupCondition> conditions; // Условия попадания в группу
-  final List<String> clientIds;         // Участники группы
-  final bool isAutoUpdate;              // Автоматическое обновление состава
+  final List<int> clientIds; // Участники группы
+  final bool isAutoUpdate; // Автоматическое обновление состава
 
-  factory ClientGroup.fromMap(Map<String, dynamic> map) {
+  factory ClientGroup.fromMap(
+    Map<String, dynamic> map, {
+    List<GroupCondition>? conditions,
+    List<int>? clientIds,
+  }) {
     return ClientGroup(
       id: map['id'] as int,
       name: map['name'] as String,
       type: ClientGroupType.values[map['type'] as int],
       description: map['description'] as String,
       isAutoUpdate: map['is_auto_update'] as bool,
-      // TODO: Fetch conditions and clientIds from their respective tables
-      conditions: [],
-      clientIds: [],
+      conditions: conditions ?? [],
+      clientIds: clientIds ?? [],
     );
+  }
+
+  // New: toJson method for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'type': type.index,
+      'is_auto_update': isAutoUpdate,
+      'conditions': conditions.map((c) => c.toJson()).toList(),
+      'clientIds': clientIds,
+    };
   }
 }

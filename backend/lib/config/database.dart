@@ -152,8 +152,8 @@ class Database {
     final conn = await connection;
     await conn.execute(
       Sql.named('''
-        INSERT INTO client_group_members (client_group_id, client_id, added_by)
-        VALUES (@groupId, @clientId, @addedById)
+        INSERT INTO client_group_members (client_group_id, client_id, created_by, updated_by)
+        VALUES (@groupId, @clientId, @addedById, @addedById)
         ON CONFLICT (client_group_id, client_id) DO NOTHING
       '''),
       parameters: {'groupId': groupId, 'clientId': clientId, 'addedById': addedById},

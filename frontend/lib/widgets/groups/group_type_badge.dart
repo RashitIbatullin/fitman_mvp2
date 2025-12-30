@@ -9,7 +9,7 @@ class GroupTypeBadge extends StatelessWidget {
 
   final ClientGroupType type;
 
-  String _getLocalizedTypeName(ClientGroupType type) {
+  static String getLocalizedTypeName(ClientGroupType type) {
     switch (type) {
       case ClientGroupType.trainingProgram:
         return 'Программа тренировок';
@@ -32,7 +32,7 @@ class GroupTypeBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Chip(
       label: Text(
-        _getLocalizedTypeName(type),
+        getLocalizedTypeName(type),
         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white),
       ),
       backgroundColor: _getBadgeColor(type),

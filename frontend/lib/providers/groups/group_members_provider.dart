@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/groups/client_group_member.dart';
 import '../../services/api_service.dart';
-// import 'client_groups_provider.dart'; // To access apiServiceProvider - no longer needed as ApiService methods are static
 
 class GroupMembersState {
   const GroupMembersState({
@@ -46,16 +45,16 @@ class GroupMembersNotifier extends Notifier<GroupMembersState> {
   Future<void> addMember(int groupId, int clientId) async {
     try {
       await ApiService.addGroupMember(groupId, clientId);
-      fetchMembers(groupId); // Refresh
+      fetchMembers(groupId); // Refresh the list
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
   }
 
-    Future<void> removeMember(int groupId, int clientId) async {
+  Future<void> removeMember(int groupId, int clientId) async {
     try {
       await ApiService.removeGroupMember(groupId, clientId);
-      fetchMembers(groupId); // Refresh
+      fetchMembers(groupId); // Refresh the list
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
