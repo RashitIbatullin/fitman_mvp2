@@ -119,6 +119,14 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      // Refresh recommendations when the "Рекомендации" tab (index 3) is selected.
+      if (!_tabController.indexIsChanging && _tabController.index == 3) {
+        if (widget.clientId != null) {
+          ref.invalidate(recommendationProvider(widget.clientId!));
+        }
+      }
+    });
   }
 
   @override
@@ -197,7 +205,6 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Антропометрия'),
-        automaticallyImplyLeading: false, // Remove the back button
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -609,8 +616,9 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
                             ConnectionState.waiting) {
                           return const Text('Расчет...');
                         } else if (snapshot.hasError) {
-                          return Text('Ошибка: ${snapshot.error}',
-                              style: const TextStyle(color: Colors.red));
+                          return const Text('Недостаточно данных',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold));
                         } else if (snapshot.hasData) {
                           return Text(
                             snapshot.data ?? 'Недостаточно данных',
@@ -827,7 +835,7 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
       }
       valueWidget = RichText(
         text: TextSpan(
-          style: DefaultTextStyle.of(context).style,
+          style: Theme.of(context).textTheme.bodyMedium, // Explicitly set style
           children: [
             TextSpan(
                 text:
@@ -877,8 +885,8 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('Персональные рекомендации',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold, color: Colors.blue)),
             const SizedBox(height: 16),
             recommendationAsync.when(
               data: (recommendation) => Text(
