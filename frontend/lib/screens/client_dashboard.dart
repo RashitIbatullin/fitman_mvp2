@@ -41,6 +41,7 @@ class ClientDashboard extends ConsumerWidget {
       'Мой тренер',
       'Мой инструктор',
       'Мой менеджер',
+      'Антропометрия',
       'Занятия',
       'Калории',
       'Прогресс',
@@ -71,6 +72,7 @@ class ClientDashboard extends ConsumerWidget {
       const MyTrainerScreen(),
       const MyInstructorScreen(),
       const MyManagerScreen(),
+      AnthropometryScreen(clientId: user.id),
       const SessionsScreen(),
       const CalorieTrackingScreen(),
       const ProgressScreen(),
@@ -187,19 +189,6 @@ class ClientDashboard extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.accessibility),
               title: const Text('Антропометрия'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AnthropometryScreen(clientId: user.id),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.fitness_center),
-              title: const Text('Занятия'),
               selected: selectedIndex == 5,
               onTap: () {
                 ref.read(clientDashboardIndexProvider.notifier).state = 5;
@@ -207,8 +196,8 @@ class ClientDashboard extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.track_changes),
-              title: const Text('Калории'),
+              leading: const Icon(Icons.fitness_center),
+              title: const Text('Занятия'),
               selected: selectedIndex == 6,
               onTap: () {
                 ref.read(clientDashboardIndexProvider.notifier).state = 6;
@@ -216,8 +205,8 @@ class ClientDashboard extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.show_chart),
-              title: const Text('Прогресс'),
+              leading: const Icon(Icons.track_changes),
+              title: const Text('Калории'),
               selected: selectedIndex == 7,
               onTap: () {
                 ref.read(clientDashboardIndexProvider.notifier).state = 7;
@@ -225,11 +214,20 @@ class ClientDashboard extends ConsumerWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.show_chart),
+              title: const Text('Прогресс'),
+              selected: selectedIndex == 8,
+              onTap: () {
+                ref.read(clientDashboardIndexProvider.notifier).state = 8;
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.chat_bubble),
               title: const Text('Чаты'),
-              selected: selectedIndex == 8, 
+              selected: selectedIndex == 9, // New index for chats
               onTap: () {
-                ref.read(clientDashboardIndexProvider.notifier).state = 8; 
+                ref.read(clientDashboardIndexProvider.notifier).state = 9; // New index for chats
                 Navigator.pop(context);
               },
             ),
@@ -389,7 +387,7 @@ class ClientDashboard extends ConsumerWidget {
           child: Card(
             child: InkWell(
               onTap: () {
-                ref.read(clientDashboardIndexProvider.notifier).state = 5;
+                ref.read(clientDashboardIndexProvider.notifier).state = 6;
               },
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
