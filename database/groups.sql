@@ -1,3 +1,10 @@
+-- Удаление старых таблиц, если они существуют, для идемпотентности скрипта
+DROP TABLE IF EXISTS 
+"group_conditions",
+"client_group_members",
+"client_groups"
+CASCADE;
+
 -- Таблица для хранения групп клиентов
 CREATE TABLE client_groups (
     id BIGSERIAL PRIMARY KEY,

@@ -40,6 +40,9 @@ $DB_PASSWORD = if ($env:DB_PASS) { $env:DB_PASS } else { "postgres" }
 
 # Пути к файлам SQL (учитывая структуру проекта)
 $SETUP_FILE = "database\setup.sql"
+$GROUPS_FILE = "database\groups.sql"
+$LESSONS_FILE = "database\lessons.sql"
+$CHAT_FILE = "database\chat.sql"
 $RECOMMENDATIONS_FILE = "database\recommendations.sql"
 
 Write-Host "Настройки подключения:" -ForegroundColor Yellow
@@ -81,6 +84,9 @@ function Test-SqlFile($file) {
 }
 
 if (-not (Test-SqlFile $SETUP_FILE)) { exit 1 }
+if (-not (Test-SqlFile $GROUPS_FILE)) { exit 1 }
+if (-not (Test-SqlFile $LESSONS_FILE)) { exit 1 }
+if (-not (Test-SqlFile $CHAT_FILE)) { exit 1 }
 if (-not (Test-SqlFile $RECOMMENDATIONS_FILE)) { exit 1 }
 
 # Функция выполнения SQL-файла
@@ -164,8 +170,19 @@ if (-not (Execute-SqlFile -File $SETUP_FILE -Description "Основная ст�
     exit 1
 }
 
-# 3. Выполнение recommendations.sql
-if (-not (Execute-SqlFile -File $RECOMMENDATIONS_FILE -Description "Структура и данные для рекомендаций")) {
+# 3. Выполнение скриптов для модулей
+if (-not (Execute-SqlFile -File $GROUPS_FILE -Description "Структура таблиц для Групп")) {
+    exit 1
+}
+if (-not (Execute-SqlFile -File $LESSONS_FILE -Description "Структура таблиц для Занятий и Планов")) {
+    exit 1
+}
+if (-not (Execute-SqlFile -File $CHAT_FILE -Description "Структура таблиц для Чата")) {
+    exit 1
+}
+
+# 4. Выполнение recommendations.sql
+if (-not (Execute-SqlFile -File $RECOMMENDATIONS_FILE -Description "Структура и данные для Рекомендаций")) {
     exit 1
 }
 

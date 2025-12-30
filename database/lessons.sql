@@ -1,5 +1,9 @@
 -- Удаление старых таблиц, если они существуют, для идемпотентности скрипта
-DROP TABLE IF EXISTS "lessons", "client_training_plans", "training_plan_templates" CASCADE;
+DROP TABLE IF EXISTS 
+"lessons",
+"client_training_plans",
+"training_plan_templates"
+CASCADE;
 
 -- Таблицы планов тренировок
 CREATE TABLE training_plan_templates (

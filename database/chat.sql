@@ -1,3 +1,11 @@
+-- Удаление старых таблиц, если они существуют, для идемпотентности скрипта
+DROP TABLE IF EXISTS 
+"message_statuses",
+"messages",
+"chat_participants"
+"chats"
+CASCADE;
+
 -- Таблица для хранения чатов (бесед)
 CREATE TABLE chats (
     id BIGSERIAL PRIMARY KEY,
