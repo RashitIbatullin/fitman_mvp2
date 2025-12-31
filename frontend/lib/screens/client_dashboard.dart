@@ -1,5 +1,5 @@
 import 'package:fitman_app/screens/shared/profile_screen.dart';
-import 'package:flutter_riverpod/legacy.dart';
+
 
 import '../models/dashboard_data.dart';
 import 'package:fitman_app/providers/dashboard_provider.dart';

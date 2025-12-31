@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:fitman_app/screens/client_dashboard.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_front.dart';
 import '../models/role.dart';

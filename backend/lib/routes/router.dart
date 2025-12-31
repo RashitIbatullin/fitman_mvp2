@@ -16,8 +16,18 @@ import '../controllers/client_preference_controller.dart';
 import '../controllers/catalogs_controller.dart';
 import '../controllers/recommendations_controller.dart';
 import '../controllers/chat_controller.dart';
-import '../controllers/groups/client_groups_shelf_controller.dart';
-import '../controllers/groups/client_group_members_shelf_controller.dart';
+import '../controllers/groups/training_groups_controller.dart'; // New import
+import '../controllers/groups/analytic_groups_controller.dart'; // New import
+import '../controllers/groups/group_schedule_controller.dart'; // New import
+import '../controllers/groups/group_members_controller.dart'; // New import
+import '../config/database.dart'; // Add this import
+
+final Database _db = Database(); // Instantiate Database once
+
+final _trainingGroupsController = TrainingGroupsController(_db);
+final _analyticGroupsController = AnalyticGroupsController(_db);
+final _groupScheduleController = GroupScheduleController(_db);
+final _groupMembersController = GroupMembersController(_db);
 
 // Создаем обертки для protected routes
 Handler _protectedHandler(Handler handler) {
@@ -185,13 +195,13 @@ final Router router = Router()
   ..get('/api/chats/<id>/messages', (Request request, String id) => _protectedHandler((Request req) => ChatController.getMessages(req, id))(request))
   ..post('/api/chats/private', (Request request) => _protectedHandler(ChatController.createOrGetPrivateChat)(request))
 
-// Client Group routes (Admin access)
-  ..get('/api/client_groups', (Request request) => _adminHandler(ClientGroupsShelfController.getAllGroups)(request))
-  ..post('/api/client_groups', (Request request) => _adminHandler(ClientGroupsShelfController.createGroup)(request))
-  ..get('/api/client_groups/<id>', (Request request, String id) => _adminHandler((Request req) => ClientGroupsShelfController.getGroupById(req, id))(request))
-  ..put('/api/client_groups/<id>', (Request request, String id) => _adminHandler((Request req) => ClientGroupsShelfController.updateGroup(req, id))(request))
-  ..delete('/api/client_groups/<id>', (Request request, String id) => _adminHandler((Request req) => ClientGroupsShelfController.deleteGroup(req, id))(request))
-// Member routes for a specific group
-  ..get('/api/client_groups/<id>/members', (Request request, String id) => _adminHandler((Request req) => ClientGroupMembersShelfController.getGroupMembers(req, id))(request))
-  ..post('/api/client_groups/<id>/members', (Request request, String id) => _adminHandler((Request req) => ClientGroupMembersShelfController.addGroupMember(req, id))(request))
-  ..delete('/api/client_groups/<id>/members/<memberId>', (Request request, String id, String memberId) => _adminHandler((Request req) => ClientGroupMembersShelfController.removeGroupMember(req, id, memberId))(request));
+// Training Groups routes (Admin access)
+  ..mount('/api/training_groups', _adminHandler(_trainingGroupsController.router.call))
+// Analytic Groups routes (Admin access)
+  ..mount('/api/analytic_groups', _adminHandler(_analyticGroupsController.router.call))
+// Group Schedule routes (Admin access)
+  ..mount('/api/group_schedules', _adminHandler(_groupScheduleController.router.call))
+// Group Members routes (Admin access) - assuming nested under training_groups
+  ..mount('/api/training_groups', _adminHandler(_groupMembersController.router.call));
+
+

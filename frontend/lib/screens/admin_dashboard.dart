@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
-import '../providers/groups/client_groups_provider.dart';
 import 'admin/users_list_screen.dart';
 import 'admin/catalogs_screen.dart';
-import 'admin/groups/client_groups_screen.dart'; // Import ClientGroupsScreen
+import 'admin/groups/training_groups_screen.dart'; // New import for training groups
+import 'admin/groups/analytic_groups_screen.dart'; // New import for analytic groups
+import '../providers/groups/training_groups_provider.dart'; // New import
+import '../providers/groups/analytic_groups_provider.dart'; // New import
+import 'admin/groups/training_group_edit_screen.dart'; // New import
+import 'admin/groups/analytic_group_edit_screen.dart'; // New import
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final bool showBackButton;
@@ -60,7 +64,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     'Главное',
     'Профиль',
     'Пользователи',
-    'Группы клиентов', // New menu item
+    'Тренировочные группы', // Updated menu item
+    'Аналитические группы', // New menu item
     'Настройки',
     'Аналитика',
     'Каталоги',
@@ -78,7 +83,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       const Center(child: Text('Главное')),
       ProfileScreen(user: user),
       UsersListScreen(scrollController: _scrollController, showToolbar: _showBars),
-      const ClientGroupsScreen(), // New client groups screen
+      const TrainingGroupsScreen(), // New training groups screen
+      const AnalyticGroupsScreen(), // New analytic groups screen
       const Center(child: Text('Настройки - в разработке')),
       const Center(child: Text('Аналитика - в разработке')),
       const CatalogsScreen(),
@@ -106,43 +112,76 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
             leading: widget.showBackButton ? const BackButton() : Container(),
             title: Text(_titles[_selectedIndex]),
             actions: [
-              if (_selectedIndex == 3) // Only show for Groups screen (index 3)
+              if (user.roles.any((element) => element.name == 'admin') && (_selectedIndex == 3 || _selectedIndex == 4)) // Only show for Groups screen (index 3 or 4)
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   tooltip: 'Обновить',
                   onPressed: () {
-                    ref.read(clientGroupsProvider.notifier).fetchGroups();
+                    if (_selectedIndex == 3) {
+                      ref.invalidate(trainingGroupsProvider);
+                    } else if (_selectedIndex == 4) {
+                      ref.invalidate(analyticGroupsProvider);
+                    }
                   },
                 ),
-              IconButton(
-                icon: const Icon(Icons.logout),
-                tooltip: 'Выйти',
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Подтверждение выхода'),
-                        content: const Text('Вы уверены, что хотите выйти?'),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Нет'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('Да'),
-                          ),
-                        ],
-                      );
-                    },
-                  ).then((value) {
-                    if (value == true) {
-                      ref.read(authProvider.notifier).logout();
-                    }
-                  });
-                },
-              ),
+              if (user.roles.any((element) => element.name == 'admin') && (_selectedIndex == 3))
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  tooltip: 'Создать тренировочную группу',
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const TrainingGroupEditScreen()),
+                    );
+                  },
+                ),
+              if (user.roles.any((element) => element.name == 'admin') && (_selectedIndex == 4))
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  tooltip: 'Создать аналитическую группу',
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const AnalyticGroupEditScreen()),
+                    );
+                  },
+                ),
+              if (!widget.showBackButton)
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  tooltip: 'Выйти',
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Подтверждение выхода'),
+                          content: const Text('Вы уверены, что хотите выйти?'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Нет'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('Да'),
+                            ),
+                          ],
+                        );
+                      },
+                    ).then((value) {
+                      if (value == true) {
+                        ref.read(authProvider.notifier).logout();
+                      }
+                    });
+                  },
+                ),
+              if (widget.showBackButton)
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                    tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                  ),
+                ),
             ],
           ),
         ),
@@ -164,17 +203,17 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                   icon: Icon(Icons.people),
                   label: 'Пользователи',
                 ),
-                BottomNavigationBarItem( // New BottomNavigationBarItem
+                BottomNavigationBarItem( // New BottomNavigationBarItem for Training Groups
                   icon: Icon(Icons.group),
-                  label: 'Группы',
+                  label: 'Тренировки',
+                ),
+                BottomNavigationBarItem( // New BottomNavigationBarItem for Analytic Groups
+                  icon: Icon(Icons.analytics),
+                  label: 'Аналитика',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.settings),
                   label: 'Настройки',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.analytics),
-                  label: 'Аналитика',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.folder_open),

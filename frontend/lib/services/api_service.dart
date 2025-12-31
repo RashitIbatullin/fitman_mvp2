@@ -12,8 +12,10 @@ import '../models/chat/chat_models.dart'; // Import chat models
 import '../models/whtr_profiles.dart';
 import '../models/goal_training.dart';
 import '../models/level_training.dart';
-import '../models/groups/client_group.dart';
-import '../models/groups/client_group_member.dart';
+import '../models/groups/training_group.dart'; // New import
+import '../models/groups/analytic_group.dart'; // New import
+import '../models/groups/group_schedule_slot.dart'; // New import
+
 
 class ApiService {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
@@ -720,168 +722,350 @@ class ApiService {
     }
   }
 
-  // --- Client Group API Methods ---
 
-  static Future<List<ClientGroup>> getAllClientGroups() async {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // --- Group API Methods ---
+
+  // Training Groups
+  static Future<List<TrainingGroup>> getAllTrainingGroups() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/client_groups'),
+        Uri.parse('$baseUrl/api/training_groups'),
         headers: _headers,
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
-        return data.map((json) => ClientGroup.fromJson(json)).toList();
+        return data.map((json) => TrainingGroup.fromJson(json)).toList();
       } else {
         final error = jsonDecode(response.body);
-        throw Exception(error['error'] ?? 'Failed to load client groups');
+        throw Exception(error['error'] ?? 'Failed to load training groups');
       }
     } catch (e) {
-      print('Get all client groups error: $e');
+      print('Get all training groups error: $e');
       rethrow;
     }
   }
 
-  static Future<ClientGroup> getClientGroupById(int id) async {
+  static Future<TrainingGroup> getTrainingGroupById(String id) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/client_groups/$id'),
+        Uri.parse('$baseUrl/api/training_groups/$id'),
         headers: _headers,
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return ClientGroup.fromJson(data);
+        return TrainingGroup.fromJson(data);
       } else {
         final error = jsonDecode(response.body);
-        throw Exception(error['error'] ?? 'Failed to load client group $id');
+        throw Exception(error['error'] ?? 'Failed to load training group $id');
       }
     } catch (e) {
-      print('Get client group by ID error: $e');
+      print('Get training group by ID error: $e');
       rethrow;
     }
   }
 
-  static Future<ClientGroup> createClientGroup(ClientGroup group) async {
+  static Future<TrainingGroup> createTrainingGroup(TrainingGroup group) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/client_groups'),
+        Uri.parse('$baseUrl/api/training_groups'),
         headers: _headers,
-        body: jsonEncode({
-          'name': group.name,
-          'description': group.description,
-          'type': group.type.index,
-          'is_auto_update': group.isAutoUpdate,
-          // conditions and clientIds will be handled by specific endpoints or AutoGroupsService
-        }),
+        body: jsonEncode(group.toJson()),
       );
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        return ClientGroup.fromJson(data);
+        return TrainingGroup.fromJson(data);
       } else {
         final error = jsonDecode(response.body);
-        throw Exception(error['error'] ?? 'Failed to create client group');
+        throw Exception(error['error'] ?? 'Failed to create training group');
       }
     } catch (e) {
-      print('Create client group error: $e');
+      print('Create training group error: $e');
       rethrow;
     }
   }
 
-  static Future<ClientGroup> updateClientGroup(ClientGroup group) async {
+  static Future<TrainingGroup> updateTrainingGroup(TrainingGroup group) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/api/client_groups/${group.id}'),
+        Uri.parse('$baseUrl/api/training_groups/${group.id}'),
         headers: _headers,
-        body: jsonEncode({
-          'name': group.name,
-          'description': group.description,
-          'type': group.type.index,
-          'is_auto_update': group.isAutoUpdate,
-        }),
+        body: jsonEncode(group.toJson()),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return ClientGroup.fromJson(data);
+        return TrainingGroup.fromJson(data);
       } else {
         final error = jsonDecode(response.body);
-        throw Exception(error['error'] ?? 'Failed to update client group');
+        throw Exception(error['error'] ?? 'Failed to update training group');
       }
     } catch (e) {
-      print('Update client group error: $e');
+      print('Update training group error: $e');
       rethrow;
     }
   }
 
-  static Future<void> deleteClientGroup(int id) async {
+  static Future<void> deleteTrainingGroup(String id) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/api/client_groups/$id'),
+        Uri.parse('$baseUrl/api/training_groups/$id'),
         headers: _headers,
       );
-      if (response.statusCode != 204) { // 204 No Content for successful deletion
+      if (response.statusCode != 204) {
         final error = jsonDecode(response.body);
-        throw Exception(error['error'] ?? 'Failed to delete client group $id');
+        throw Exception(error['error'] ?? 'Failed to delete training group $id');
       }
     } catch (e) {
-      print('Delete client group error: $e');
+      print('Delete training group error: $e');
       rethrow;
     }
   }
 
-  static Future<List<ClientGroupMember>> getGroupMembers(int groupId) async {
+  // Analytic Groups
+  static Future<List<AnalyticGroup>> getAllAnalyticGroups() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/client_groups/$groupId/members'),
+        Uri.parse('$baseUrl/api/analytic_groups'),
         headers: _headers,
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
-        return data.map((json) => ClientGroupMember.fromJson(json)).toList();
+        return data.map((json) => AnalyticGroup.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load analytic groups');
+      }
+    } catch (e) {
+      print('Get all analytic groups error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<AnalyticGroup> getAnalyticGroupById(String id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/analytic_groups/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return AnalyticGroup.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load analytic group $id');
+      }
+    } catch (e) {
+      print('Get analytic group by ID error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<AnalyticGroup> createAnalyticGroup(AnalyticGroup group) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/analytic_groups'),
+        headers: _headers,
+        body: jsonEncode(group.toJson()),
+      );
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return AnalyticGroup.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create analytic group');
+      }
+    } catch (e) {
+      print('Create analytic group error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<AnalyticGroup> updateAnalyticGroup(AnalyticGroup group) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/analytic_groups/${group.id}'),
+        headers: _headers,
+        body: jsonEncode(group.toJson()),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return AnalyticGroup.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to update analytic group');
+      }
+    } catch (e) {
+      print('Update analytic group error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> deleteAnalyticGroup(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/analytic_groups/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode != 204) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to delete analytic group $id');
+      }
+    } catch (e) {
+      print('Delete analytic group error: $e');
+      rethrow;
+    }
+  }
+
+  // Group Schedule Slots
+  static Future<List<GroupScheduleSlot>> getGroupScheduleSlots(String groupId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/group_schedules/$groupId'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => GroupScheduleSlot.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load group schedule slots for group $groupId');
+      }
+    } catch (e) {
+      print('Get group schedule slots error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<GroupScheduleSlot> createGroupScheduleSlot(String groupId, GroupScheduleSlot slot) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/group_schedules/$groupId'),
+        headers: _headers,
+        body: jsonEncode(slot.toJson()),
+      );
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return GroupScheduleSlot.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create group schedule slot');
+      }
+    } catch (e) {
+      print('Create group schedule slot error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<GroupScheduleSlot> updateGroupScheduleSlot(GroupScheduleSlot slot) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/group_schedules/${slot.id}'),
+        headers: _headers,
+        body: jsonEncode(slot.toJson()),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return GroupScheduleSlot.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to update group schedule slot');
+      }
+    } catch (e) {
+      print('Update group schedule slot error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> deleteGroupScheduleSlot(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/group_schedules/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode != 204) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to delete group schedule slot $id');
+      }
+    } catch (e) {
+      print('Delete group schedule slot error: $e');
+      rethrow;
+    }
+  }
+
+  // Training Group Members
+  static Future<List<String>> getTrainingGroupMembers(String groupId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/training_groups/$groupId/members'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.cast<String>().toList();
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['error'] ?? 'Failed to load group members for group $groupId');
       }
     } catch (e) {
-      print('Get group members error: $e');
+      print('Get training group members error: $e');
       rethrow;
     }
   }
 
-  static Future<void> addGroupMember(int groupId, int clientId) async {
+  static Future<void> addTrainingGroupMember(String groupId, String userId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/client_groups/$groupId/members'),
+        Uri.parse('$baseUrl/api/training_groups/$groupId/members'),
         headers: _headers,
-        body: jsonEncode({'clientId': clientId}),
+        body: jsonEncode({'userId': userId}),
       );
       if (response.statusCode != 200 && response.statusCode != 201) {
         final error = jsonDecode(response.body);
         throw Exception(error['error'] ?? 'Failed to add member to group $groupId');
       }
     } catch (e) {
-      print('Add group member error: $e');
+      print('Add training group member error: $e');
       rethrow;
     }
   }
 
-  static Future<void> removeGroupMember(int groupId, int clientId) async {
+  static Future<void> removeTrainingGroupMember(String groupId, String userId) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/api/client_groups/$groupId/members/$clientId'),
+        Uri.parse('$baseUrl/api/training_groups/$groupId/members/$userId'),
         headers: _headers,
       );
-      if (response.statusCode != 204) { // 204 No Content for successful deletion
+      if (response.statusCode != 204) {
         final error = jsonDecode(response.body);
         throw Exception(error['error'] ?? 'Failed to remove member from group $groupId');
       }
     } catch (e) {
-      print('Remove group member error: $e');
+      print('Remove training group member error: $e');
       rethrow;
     }
   }
 
-  // --- End Client Group API Methods ---
+  // --- End Group API Methods ---
 
-  // Получение данных для дашборда клиента
   static Future<Map<String, dynamic>> getClientDashboardData() async {
     try {
       final response = await http.get(

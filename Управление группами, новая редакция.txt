@@ -1,0 +1,368 @@
+Раздел 3. Система управления группами
+3.1 Общие положения
+
+Система управления группами предназначена для организации работы с клиентами фитнес-центра через два принципиально разных типа групп:
+
+    Тренировочные группы (TrainingGroup) - для проведения групповых занятий с фиксированным составом участников
+
+    Аналитические группы (AnalyticGroup) - для сегментации клиентов по различным критериям для аналитики, маркетинга и управления
+
+3.2 Тренировочные группы (TrainingGroup)
+3.2.1 Назначение
+
+Тренировочные группы предназначены для организации регулярных групповых занятий с фиксированным составом участников. Они используются в расписании занятий и имеют прямые связи с персоналом, оборудованием и локациями.
+3.2.2 Модель данных
+dart
+
+class TrainingGroup {
+  String id;
+  String name;
+  String description;
+  
+  // ПЕРСОНАЛ (обязательные для тренировочного процесса)
+  String primaryTrainerId;     // Основной тренер группы (обязательно)
+  String? primaryInstructorId; // Основной инструктор группы
+  String? responsibleManagerId; // Ответственный менеджер
+  
+  // СОСТАВ ГРУППЫ (фиксированный)
+  List<String> clientIds;      // Фиксированный состав участников
+  
+  // РАСПИСАНИЕ ЗАНЯТИЙ
+  List<GroupScheduleSlot> scheduleSlots;
+  
+  // ПАРАМЕТРЫ ТРЕНИРОВКИ
+  String? programId;           // Ссылка на программу тренировок
+  String? goalId;              // Цель тренировок (похудение, набор массы и т.д.)
+  String? levelId;             // Уровень подготовки группы
+  
+  // ЛИМИТЫ И ОГРАНИЧЕНИЯ
+  DateTime startDate;          // Дата начала работы группы
+  DateTime? endDate;           // Дата окончания (если предусмотрена)
+  int maxParticipants;         // Максимальное количество участников
+  int currentParticipants;     // Текущее количество участников
+  
+  // СТАТУС И СВЯЗИ
+  bool isActive;               // Активна ли группа
+  String? chatId;              // Ссылка на групповой чат (создается автоматически)
+}
+
+3.2.3 Расписание группы (GroupScheduleSlot)
+dart
+
+class GroupScheduleSlot {
+  String id;
+  String groupId;
+  int dayOfWeek;          // 1-7 (понедельник-воскресенье)
+  TimeOfDay startTime;
+  TimeOfDay endTime;
+  bool isActive;
+}
+
+3.2.4 Правила тренировочных групп
+
+    Фиксированный состав - состав участников изменяется только вручную тренером или менеджером
+
+    Обязательный тренер - каждая группа должна иметь основного тренера
+
+    Четкое расписание - группа имеет расписание занятий на неделю
+
+    Прямое участие в расписании - группа используется при создании занятий в модуле расписания
+
+    Автоматический чат - при создании группы автоматически создается групповой чат
+
+3.2.5 Бизнес-процессы
+
+    Создание группы: Тренер или менеджер создает группу, назначает тренера, настраивает расписание
+
+    Набор участников: Ручное добавление клиентов в группу с проверкой лимита
+
+    Проведение занятий: Занятия создаются на основе расписания группы
+
+    Закрытие группы: При достижении endDate группа переводится в неактивное состояние
+
+3.3 Аналитические группы (AnalyticGroup)
+3.3.1 Назначение
+
+Аналитические группы предназначены для сегментации клиентов по различным критериям для целей:
+
+    Маркетинг и рассылки
+
+    Аналитика и отчетность
+
+    Управление клиентской базой
+
+    Финансовый контроль
+
+3.3.2 Типы аналитических групп
+dart
+
+enum AnalyticGroupType {
+  corporate,      // Корпоративные клиенты
+  demographic,    // Демографические (возраст, пол)
+  financial,      // Финансовые (статус оплаты, тип абонемента)
+  behavioral,     // Поведенческие (активность, посещаемость)
+  custom          // Произвольные (ручное создание)
+}
+
+3.3.3 Модель данных
+dart
+
+class AnalyticGroup {
+  String id;
+  String name;
+  String description;
+  AnalyticGroupType type;
+  
+  // АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ
+  bool isAutoUpdate;           // true - группа автоматически обновляется по условиям
+  List<GroupCondition> conditions; // Условия для автоматических групп
+  
+  // ДИНАМИЧЕСКИЙ СОСТАВ
+  List<String> clientIds;      // Кэшированный список клиентов в группе
+  DateTime lastUpdatedAt;      // Время последнего обновления
+  
+  // ДОПОЛНИТЕЛЬНЫЕ ДАННЫЕ
+  Map<String, dynamic> metadata; // Дополнительные данные по типам
+}
+
+3.3.4 Условия для автоматических групп (GroupCondition)
+dart
+
+class GroupCondition {
+  String field;        // Поле для условия (например, 'age', 'subscription_type')
+  String operator;     // Оператор ('equals', 'greater_than', 'less_than', 'contains')
+  String value;        // Значение для сравнения
+}
+
+3.3.5 Правила аналитических групп
+
+    Динамический состав - состав может обновляться автоматически по условиям
+
+    Нет связи с тренировками - группы не участвуют в расписании занятий
+
+    Для аналитики - используются в отчетах, рассылках, анализе
+
+    Гибкая настройка - могут быть как автоматическими, так и ручными
+
+3.3.6 Бизнес-процессы
+
+    Автоматическое обновление: Система ежедневно пересчитывает состав автоматических групп
+
+    Массовые операции: Рассылки, уведомления для всех участников группы
+
+    Аналитика: Построение отчетов по сегментам клиентов
+
+    Управление: Контроль задолженностей, работа с неактивными клиентами
+
+3.4 Структура таблиц
+3.4.1 Таблица тренировочных групп (training_groups)
+sql
+
+CREATE TABLE training_groups (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  
+  -- Персонал
+  primary_trainer_id BIGINT NOT NULL REFERENCES users(id),
+  primary_instructor_id BIGINT REFERENCES users(id),
+  responsible_manager_id BIGINT REFERENCES users(id),
+  
+  -- Программа тренировок
+  program_id BIGINT REFERENCES training_plan_templates(id),
+  goal_id BIGINT REFERENCES goals_training(id),
+  level_id BIGINT REFERENCES levels_training(id),
+  
+  -- Лимиты
+  max_participants INT NOT NULL DEFAULT 15,
+  current_participants INT DEFAULT 0,
+  
+  -- Жизненный цикл
+  start_date DATE NOT NULL,
+  end_date DATE,
+  is_active BOOLEAN DEFAULT true,
+  
+  -- Связи
+  chat_id BIGINT REFERENCES chats(id),
+  
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id)
+);
+
+3.4.2 Таблица расписания групп (group_schedule_slots)
+sql
+
+CREATE TABLE group_schedule_slots (
+  id BIGSERIAL PRIMARY KEY,
+  group_id BIGINT NOT NULL REFERENCES training_groups(id),
+  day_of_week SMALLINT NOT NULL, -- 1-7
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  is_active BOOLEAN DEFAULT true
+);
+
+3.4.3 Таблица участников тренировочных групп (training_group_members)
+sql
+
+CREATE TABLE training_group_members (
+  id BIGSERIAL PRIMARY KEY,
+  training_group_id BIGINT NOT NULL REFERENCES training_groups(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id),
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  added_by BIGINT REFERENCES users(id),
+  UNIQUE(training_group_id, user_id)
+);
+
+3.4.4 Таблица аналитических групп (analytic_groups)
+sql
+
+CREATE TABLE analytic_groups (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  type SMALLINT NOT NULL, -- 0:corporate, 1:demographic, 2:financial, 3:behavioral, 4:custom
+  
+  -- Автоматическое обновление
+  is_auto_update BOOLEAN DEFAULT false,
+  conditions JSONB, -- Условия для автоматических групп
+  
+  -- Метаданные
+  metadata JSONB, -- Дополнительные данные
+  
+  -- Кэшированный состав
+  client_ids_cache JSONB,
+  last_updated_at TIMESTAMPTZ,
+  
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id)
+);
+
+3.5 Архитектура и расположение кода
+3.5.1 Бэкенд
+text
+
+backend/lib/
+├── models/groups/
+│   ├── training_group.dart
+│   ├── analytic_group.dart
+│   ├── group_schedule_slot.dart
+│   └── group_condition.dart
+├── controllers/groups/
+│   ├── training_groups_controller.dart
+│   ├── analytic_groups_controller.dart
+│   ├── group_schedule_controller.dart
+│   └── group_members_controller.dart
+└── services/
+    └── group_sync_service.dart  # Сервис синхронизации аналитических групп
+
+3.5.2 Фронтенд
+text
+
+frontend/lib/
+├── models/groups/
+│   ├── training_group.dart
+│   ├── analytic_group.dart
+│   ├── group_schedule_slot.dart
+│   └── group_condition.dart
+├── providers/groups/
+│   ├── training_groups_provider.dart
+│   ├── analytic_groups_provider.dart
+│   └── group_schedule_provider.dart
+├── screens/admin/groups/
+│   ├── training_groups_screen.dart
+│   ├── analytic_groups_screen.dart
+│   ├── training_group_edit_screen.dart
+│   └── analytic_group_edit_screen.dart
+└── widgets/groups/
+    ├── training_group_card.dart
+    ├── analytic_group_card.dart
+    └── group_member_list.dart
+
+3.6 Интеграция с другими модулями
+3.6.1 С модулем расписания (раздел 17)
+
+    Тренировочные группы используются при создании групповых занятий
+
+    Автоматическая подстановка тренера, инструктора и состава группы
+
+    Проверка доступности зала и оборудования
+
+3.6.2 С модулем чата (раздел 8)
+
+    При создании тренировочной группы автоматически создается групповой чат
+
+    Участники чата: клиенты группы, тренер, инструктор, менеджер
+
+    Для аналитических групп чаты не создаются автоматически
+
+3.6.3 С модулем отчетности (раздел 9)
+
+    Отчеты по эффективности тренировочных групп
+
+    Аналитика по сегментам клиентов (аналитические группы)
+
+    Отслеживание динамики состава групп
+
+3.6.4 С модулем уведомлений (раздел 7)
+
+    Уведомления о расписании групповых занятий
+
+    Массовые рассылки для аналитических групп
+
+    Напоминания о необходимости продления участия в группе
+
+3.7 Пользовательские интерфейсы
+3.7.1 Дашборд управления группами
+
+    Вкладка "Тренировочные группы" - список групп с возможностью просмотра состава и расписания
+
+    Вкладка "Аналитические группы" - список групп с фильтрами по типам
+
+3.7.2 Форма создания/редактирования тренировочной группы
+
+    Основные параметры (название, описание)
+
+    Выбор тренера, инструктора, менеджера
+
+    Настройка расписания (дни недели, время)
+
+    Установка лимитов и сроков
+
+3.7.3 Форма создания/редактирования аналитической группы
+
+    Выбор типа группы
+
+    Настройка условий для автоматических групп
+
+    Ручной выбор участников для неавтоматических групп
+
+    Настройка дополнительных параметров
+
+3.8 Ограничения и валидация
+3.8.1 Тренировочные группы
+
+    Максимальное количество участников не может быть меньше текущего
+
+    Дата окончания не может быть раньше даты начала
+
+    Обязательное наличие тренера
+
+3.8.2 Аналитические группы
+
+    Условия должны быть корректными и выполнимыми
+
+    Для автоматических групп должен быть хотя бы один участник после обновления
+
+Этот раздел полностью заменяет предыдущий раздел 3 и четко разделяет две принципиально разные системы групп с разными целями, правилами и интеграциями.
