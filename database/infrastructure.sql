@@ -40,6 +40,8 @@ DROP TABLE IF EXISTS types_body_build CASCADE;
 DROP TABLE IF EXISTS goals_training CASCADE;
 DROP TABLE IF EXISTS levels_training CASCADE;
 DROP TABLE IF EXISTS kinds_activity_client CASCADE;
+DROP TABLE IF EXISTS room_equipment CASCADE;
+
 
 -- Отключаем проверку внешних ключей для удобства
 SET session_replication_role = 'replica';
@@ -486,6 +488,28 @@ CREATE TABLE equipment_items (
   note VARCHAR(100)
 );
 
+-- ТАБЛИЦА СВЯЗИ ПОМЕЩЕНИЙ И ОБОРУДОВАНИЯ
+CREATE TABLE room_equipment (
+  id BIGSERIAL PRIMARY KEY,
+  room_id BIGINT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+  equipment_item_id BIGINT NOT NULL REFERENCES equipment_items(id) ON DELETE CASCADE,
+  placement_note TEXT,
+  -- Можно добавить quantity INT DEFAULT 1, если оборудования несколько одного типа
+  date_placed TIMESTAMPTZ DEFAULT NOW(),
+  is_active BOOLEAN DEFAULT true, -- Для учета истории перемещений
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT,
+  updated_by BIGINT,
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT,
+  note VARCHAR(100),
+  UNIQUE(room_id, equipment_item_id) -- Оборудование не может числиться в одном помещении дважды
+);
+
+
 -- Бронирование оборудования
 CREATE TABLE equipment_bookings (
   id BIGSERIAL PRIMARY KEY,
@@ -602,11 +626,18 @@ CREATE INDEX idx_equipment_items_status ON equipment_items(status) WHERE status 
 CREATE INDEX idx_equipment_items_inventory ON equipment_items(inventory_number);
 CREATE INDEX idx_equipment_items_active ON equipment_items(company_id) WHERE archived_at IS NULL;
 
+-- ИНДЕКСЫ ДЛЯ ТАБЛИЦЫ СВЯЗИ room_equipment
+CREATE INDEX idx_room_equipment_room ON room_equipment(room_id);
+CREATE INDEX idx_room_equipment_item ON room_equipment(equipment_item_id);
+CREATE INDEX idx_room_equipment_active ON room_equipment(room_id, equipment_item_id) WHERE is_active = true;
+CREATE INDEX idx_room_equipment_active_room ON room_equipment(room_id) WHERE is_active = true;
+
 -- Индексы для equipment_bookings
 CREATE INDEX idx_equipment_bookings_item ON equipment_bookings(equipment_item_id);
 CREATE INDEX idx_equipment_bookings_user ON equipment_bookings(booked_by);
 CREATE INDEX idx_equipment_bookings_time ON equipment_bookings(equipment_item_id, start_time, end_time) WHERE status IN (0, 1);
 CREATE INDEX idx_equipment_bookings_active ON equipment_bookings(company_id) WHERE archived_at IS NULL;
+CREATE INDEX idx_equipment_bookings_time_status ON equipment_bookings(equipment_item_id, start_time, end_time, status);
 
 -- Индексы для таблиц связей
 CREATE INDEX idx_set_exercises_link_set ON set_exercises_templates_exercis_templates(set_exercises_template_id);
@@ -779,7 +810,18 @@ INSERT INTO equipment_items (type_id, inventory_number, serial_number, model, ma
 (9, 'КОВ-001', NULL, 'Professional', 'Manduka', 4, 'Стеллаж для ковриков', 0, 5, '2023-04-01', 2500.00, 'Коврик для йоги 5мм'),
 (10, 'ВЕС-001', 'SN123463', 'BF-350', 'Beurer', 5, 'У входа', 0, 5, '2023-05-10', 8000.00, 'Электронные весы');
 
--- 5.17. Создаем несколько бронирований оборудования (пример)
+-- 5.17. ЗАПОЛНЕНИЕ ТАБЛИЦЫ СВЯЗИ room_equipment на основе данных из equipment_items
+INSERT INTO room_equipment (room_id, equipment_item_id, placement_note, is_active)
+SELECT
+    ei.room_id,
+    ei.id,
+    ei.placement_note,
+    true
+FROM equipment_items ei
+WHERE ei.room_id IS NOT NULL
+ON CONFLICT (room_id, equipment_item_id) DO NOTHING; -- Защита от дубликатов, если скрипт запускаетс
+
+-- 5.18. Создаем несколько бронирований оборудования (пример)
 INSERT INTO equipment_bookings (equipment_item_id, booked_by, start_time, end_time, purpose, notes) VALUES
 (1, 1, '2024-01-15 10:00:00+03', '2024-01-15 11:00:00+03', 'Индивидуальная тренировка', 'Клиент: Иванов И.И.'),
 (2, 1, '2024-01-15 11:00:00+03', '2024-01-15 12:00:00+03', 'Групповое занятие', 'Группа "Кардио для начинающих"'),

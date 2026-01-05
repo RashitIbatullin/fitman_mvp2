@@ -30,7 +30,7 @@ class TrainingGroupsController {
     }
   }
 
-  Future<Response> _getTrainingGroupById(Request request, String id) async {
+  Future<Response> _getTrainingGroupById(Request request, int id) async {
     try {
       final group = await _db.groups.getTrainingGroupById(id);
       if (group == null) {
@@ -56,13 +56,13 @@ class TrainingGroupsController {
     }
   }
 
-  Future<Response> _updateTrainingGroup(Request request, String id) async {
+  Future<Response> _updateTrainingGroup(Request request, int id) async {
     try {
       final payload = jsonDecode(await request.readAsString());
       // TODO: Get updaterId from authenticated user context
       const updaterId = 1; // Placeholder for now
 
-      final updatedGroup = TrainingGroup.fromJson(payload.copyWith({'id': id})); // Ensure ID is from path
+      final updatedGroup = TrainingGroup.fromJson({...payload, 'id': id}); // Ensure ID is from path
       final resultGroup = await _db.groups.updateTrainingGroup(updatedGroup, updaterId);
       return Response.ok(jsonEncode(resultGroup.toJson()));
     } catch (e) {
@@ -70,7 +70,7 @@ class TrainingGroupsController {
     }
   }
 
-  Future<Response> _deleteTrainingGroup(Request request, String id) async {
+  Future<Response> _deleteTrainingGroup(Request request, int id) async {
     try {
       // TODO: Get archiverId from authenticated user context
       const archiverId = 1; // Placeholder for now

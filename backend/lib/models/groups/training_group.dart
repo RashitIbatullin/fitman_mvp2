@@ -5,35 +5,35 @@ part 'training_group.g.dart';
 
 @JsonSerializable()
 class TrainingGroup extends Equatable {
-  final String id;
+  final int id;
   final String name;
   final String? description;
   
   // ПЕРСОНАЛ (обязательные для тренировочного процесса)
-  final String primaryTrainerId;     // Основной тренер группы (обязательно)
-  final String? primaryInstructorId; // Основной инструктор группы
-  final String? responsibleManagerId; // Ответственный менеджер
+  final int primaryTrainerId;     // Основной тренер группы (обязательно)
+  final int? primaryInstructorId; // Основной инструктор группы
+  final int? responsibleManagerId; // Ответственный менеджер
   
   // СОСТАВ ГРУППЫ (фиксированный)
-  final List<String> clientIds;      // Фиксированный состав участников
+  final List<int> clientIds;      // Фиксированный состав участников
   
   // РАСПИСАНИЕ ЗАНЯТИЙ - This will be fetched separately or populated by a service
   // List<GroupScheduleSlot> scheduleSlots; 
   
   // ПАРАМЕТРЫ ТРЕНИРОВКИ
-  final String? programId;           // Ссылка на программу тренировок
-  final String? goalId;              // Цель тренировок (похудение, набор массы и т.д.)
-  final String? levelId;             // Уровень подготовки группы
+  final int? programId;           // Ссылка на программу тренировок
+  final int? goalId;              // Цель тренировок (похудение, набор массы и т.д.)
+  final int? levelId;             // Уровень подготовки группы
   
   // ЛИМИТЫ И ОГРАНИЧЕНИЯ
   final DateTime startDate;          // Дата начала работы группы
   final DateTime? endDate;           // Дата окончания (если предусмотрена)
   final int maxParticipants;         // Максимальное количество участников
-  final int currentParticipants;     // Текущее количество участников
+  final int? currentParticipants;     // Текущее количество участников
   
   // СТАТУС И СВЯЗИ
-  final bool isActive;               // Активна ли группа
-  final String? chatId;              // Ссылка на групповой чат (создается автоматически)
+  final bool? isActive;               // Активна ли группа
+  final int? chatId;              // Ссылка на групповой чат (создается автоматически)
 
   const TrainingGroup({
     required this.id,
@@ -49,8 +49,8 @@ class TrainingGroup extends Equatable {
     required this.startDate,
     this.endDate,
     required this.maxParticipants,
-    this.currentParticipants = 0,
-    required this.isActive,
+    this.currentParticipants, // Теперь nullable, убираем дефолтное значение
+    this.isActive,            // Теперь nullable, убираем дефолтное значение
     this.chatId,
   });
 
@@ -78,22 +78,22 @@ class TrainingGroup extends Equatable {
       ];
 
   TrainingGroup copyWith({
-    String? id,
+    int? id,
     String? name,
     String? description,
-    String? primaryTrainerId,
-    String? primaryInstructorId,
-    String? responsibleManagerId,
-    List<String>? clientIds,
-    String? programId,
-    String? goalId,
-    String? levelId,
+    int? primaryTrainerId,
+    int? primaryInstructorId,
+    int? responsibleManagerId,
+    List<int>? clientIds,
+    int? programId,
+    int? goalId,
+    int? levelId,
     DateTime? startDate,
     DateTime? endDate,
     int? maxParticipants,
     int? currentParticipants,
     bool? isActive,
-    String? chatId,
+    int? chatId,
   }) {
     return TrainingGroup(
       id: id ?? this.id,

@@ -8,8 +8,8 @@ part of 'group_schedule_slot.dart';
 
 GroupScheduleSlot _$GroupScheduleSlotFromJson(Map<String, dynamic> json) =>
     GroupScheduleSlot(
-      id: json['id'] as String,
-      groupId: json['groupId'] as String,
+      id: (json['id'] as num).toInt(),
+      groupId: (json['groupId'] as num).toInt(),
       dayOfWeek: (json['dayOfWeek'] as num).toInt(),
       startTime: _timeOfDayFromJson(json['startTime'] as String),
       endTime: _timeOfDayFromJson(json['endTime'] as String),

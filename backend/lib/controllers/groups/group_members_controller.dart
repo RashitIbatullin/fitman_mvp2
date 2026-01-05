@@ -18,7 +18,7 @@ class GroupMembersController {
     return router;
   }
 
-  Future<Response> _getTrainingGroupMembers(Request request, String groupId) async {
+  Future<Response> _getTrainingGroupMembers(Request request, int groupId) async {
     try {
       final members = await _db.groups.getTrainingGroupMembers(groupId);
       return Response.ok(jsonEncode(members));
@@ -27,10 +27,10 @@ class GroupMembersController {
     }
   }
 
-  Future<Response> _addTrainingGroupMember(Request request, String groupId) async {
+  Future<Response> _addTrainingGroupMember(Request request, int groupId) async {
     try {
       final payload = jsonDecode(await request.readAsString());
-      final String userId = payload['userId'].toString();
+      final int userId = payload['userId'] as int;
       // TODO: Get addedById from authenticated user context
       const addedById = 1; // Placeholder for now
 
@@ -41,7 +41,7 @@ class GroupMembersController {
     }
   }
 
-  Future<Response> _removeTrainingGroupMember(Request request, String groupId, String userId) async {
+  Future<Response> _removeTrainingGroupMember(Request request, int groupId, int userId) async {
     try {
       await _db.groups.removeTrainingGroupMember(groupId, userId);
       return Response(204);

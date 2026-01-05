@@ -20,7 +20,7 @@ class GroupScheduleController {
     return router;
   }
 
-  Future<Response> _getGroupScheduleSlots(Request request, String groupId) async {
+  Future<Response> _getGroupScheduleSlots(Request request, int groupId) async {
     try {
       final slots = await _db.groups.getGroupScheduleSlots(groupId);
       return Response.ok(jsonEncode(slots.map((s) => s.toJson()).toList()));
@@ -29,7 +29,7 @@ class GroupScheduleController {
     }
   }
 
-  Future<Response> _createGroupScheduleSlot(Request request, String groupId) async {
+  Future<Response> _createGroupScheduleSlot(Request request, int groupId) async {
     try {
       final payload = jsonDecode(await request.readAsString());
       final newSlot = GroupScheduleSlot.fromJson({...payload, 'groupId': groupId}); // Ensure groupId is from path
@@ -40,7 +40,7 @@ class GroupScheduleController {
     }
   }
 
-  Future<Response> _updateGroupScheduleSlot(Request request, String id) async {
+  Future<Response> _updateGroupScheduleSlot(Request request, int id) async {
     try {
       final payload = jsonDecode(await request.readAsString());
       final updatedSlot = GroupScheduleSlot.fromJson({...payload, 'id': id}); // Ensure ID is from path
@@ -51,7 +51,7 @@ class GroupScheduleController {
     }
   }
 
-  Future<Response> _deleteGroupScheduleSlot(Request request, String id) async {
+  Future<Response> _deleteGroupScheduleSlot(Request request, int id) async {
     try {
       await _db.groups.deleteGroupScheduleSlot(id);
       return Response(204);
