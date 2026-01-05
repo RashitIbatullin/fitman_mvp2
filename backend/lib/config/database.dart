@@ -6,6 +6,9 @@ import '../models/user_back.dart';
 import '../models/role.dart';
 
 import '../repositories/group_repository.dart'; // New import
+import '../modules/infrastructure/repositories/room.repository.dart';
+import '../modules/infrastructure/repositories/equipment_item.repository.dart';
+import '../modules/infrastructure/repositories/equipment_type.repository.dart';
 
 class Database {
   static final Database _instance = Database._internal();
@@ -16,6 +19,9 @@ class Database {
   bool _isConnecting = false;
   Completer<void>? _connectionCompleter;
   late final GroupRepository groups; // Declare GroupRepository
+  late final RoomRepository rooms;
+  late final EquipmentItemRepository equipmentItems;
+  late final EquipmentTypeRepository equipmentTypes;
 
   Future<Connection> get connection async {
     if (_connection != null) {
@@ -55,6 +61,9 @@ class Database {
             _connection = await Connection.open(endpoint, settings: ConnectionSettings(sslMode: SslMode.disable));
             print('✅ Connected to PostgreSQL database');
             groups = GroupRepository(this); // Initialize GroupRepository
+            rooms = RoomRepositoryImpl(this);
+            equipmentItems = EquipmentItemRepositoryImpl(this);
+            equipmentTypes = EquipmentTypeRepositoryImpl(this);
             _connectionCompleter!.complete();
                                         } catch (e) {
                                           print('❌ Database connection error: $e');

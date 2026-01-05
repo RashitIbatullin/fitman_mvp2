@@ -15,7 +15,9 @@ import '../models/level_training.dart';
 import '../models/groups/training_group.dart'; // New import
 import '../models/groups/analytic_group.dart'; // New import
 import '../models/groups/group_schedule_slot.dart'; // New import
-
+import '../modules/infrastructure/models/room/room.model.dart';
+import '../modules/infrastructure/models/equipment/equipment_item.model.dart'; // New import
+import '../modules/infrastructure/models/equipment/equipment_type.model.dart'; // New import
 
 class ApiService {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
@@ -51,6 +53,87 @@ class ApiService {
     }
     return headers;
   }
+
+  // --- Infrastructure API Methods ---
+
+  static Future<List<Room>> getAllRooms() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/rooms'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => Room.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load rooms');
+      }
+    } catch (e) {
+      print('Get all rooms error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Room> getRoomById(String id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/rooms/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Room.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load room $id');
+      }
+    } catch (e) {
+      print('Get room by ID error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<EquipmentItem>> getAllEquipmentItems() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/equipment/items'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => EquipmentItem.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load equipment items');
+      }
+    } catch (e) {
+      print('Get all equipment items error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<EquipmentType>> getAllEquipmentTypes() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/equipment/types'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => EquipmentType.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load equipment types');
+      }
+    } catch (e) {
+      print('Get all equipment types error: $e');
+      rethrow;
+    }
+  }
+  
+
+  // --- End Infrastructure API Methods ---
 
   // Аутентификация
   static Future<AuthResponse> login(String email, String password) async {

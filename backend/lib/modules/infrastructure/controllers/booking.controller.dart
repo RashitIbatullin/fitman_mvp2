@@ -18,11 +18,12 @@ class BookingController {
     });
 
     router.get('/equipment/<id>', (Request request, String id) async {
-      final booking = await _bookingService.getById(id);
-      if (booking == null) {
+      try {
+        final booking = await _bookingService.getById(id);
+        return Response.ok(jsonEncode(booking));
+      } catch (e) {
         return Response.notFound('Booking not found');
       }
-      return Response.ok(jsonEncode(booking));
     });
 
     // Other routes will be added here

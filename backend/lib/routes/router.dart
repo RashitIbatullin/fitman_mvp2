@@ -20,6 +20,9 @@ import '../controllers/groups/training_groups_controller.dart'; // New import
 import '../controllers/groups/analytic_groups_controller.dart'; // New import
 import '../controllers/groups/group_schedule_controller.dart'; // New import
 import '../controllers/groups/group_members_controller.dart'; // New import
+import '../modules/infrastructure/controllers/room.controller.dart';
+import '../modules/infrastructure/controllers/equipment_item.controller.dart';
+import '../modules/infrastructure/controllers/equipment_type.controller.dart';
 import '../config/database.dart'; // Add this import
 
 final Database _db = Database(); // Instantiate Database once
@@ -28,6 +31,11 @@ final _trainingGroupsController = TrainingGroupsController(_db);
 final _analyticGroupsController = AnalyticGroupsController(_db);
 final _groupScheduleController = GroupScheduleController(_db);
 final _groupMembersController = GroupMembersController(_db);
+
+// Infrastructure controllers
+final _roomController = RoomController(_db);
+final _equipmentItemController = EquipmentItemController(_db);
+final _equipmentTypeController = EquipmentTypeController(_db);
 
 // Создаем обертки для protected routes
 Handler _protectedHandler(Handler handler) {
@@ -202,6 +210,10 @@ final Router router = Router()
 // Group Schedule routes (Admin access)
   ..mount('/api/group_schedules', _adminHandler(_groupScheduleController.router.call))
 // Group Members routes (Admin access) - assuming nested under training_groups
-  ..mount('/api/training_groups', _adminHandler(_groupMembersController.router.call));
+  ..mount('/api/training_groups', _adminHandler(_groupMembersController.router.call))
 
-
+// Infrastructure routes
+  ..get('/api/rooms', (Request request) => _adminHandler(_roomController.getAllRooms)(request))
+  ..get('/api/rooms/<id>', (Request request, String id) => _adminHandler((Request req) => _roomController.getRoomById(req, id))(request))
+  ..get('/api/equipment/items', (Request request) => _adminHandler(_equipmentItemController.getAllEquipmentItems)(request))
+  ..get('/api/equipment/types', (Request request) => _adminHandler(_equipmentTypeController.getAllEquipmentTypes)(request));

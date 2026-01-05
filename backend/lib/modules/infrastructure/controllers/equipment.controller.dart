@@ -18,11 +18,12 @@ class EquipmentController {
     });
 
     router.get('/types/<id>', (Request request, String id) async {
-      final type = await _equipmentService.getTypeById(id);
-      if (type == null) {
+      try {
+        final type = await _equipmentService.getTypeById(id);
+        return Response.ok(jsonEncode(type));
+      } catch (e) {
         return Response.notFound('EquipmentType not found');
       }
-      return Response.ok(jsonEncode(type));
     });
 
     router.get('/items', (Request request) async {
@@ -31,11 +32,12 @@ class EquipmentController {
     });
 
     router.get('/items/<id>', (Request request, String id) async {
-      final item = await _equipmentService.getItemById(id);
-      if (item == null) {
+      try {
+        final item = await _equipmentService.getItemById(id);
+        return Response.ok(jsonEncode(item));
+      } catch (e) {
         return Response.notFound('EquipmentItem not found');
       }
-      return Response.ok(jsonEncode(item));
     });
 
     // Other routes will be added here

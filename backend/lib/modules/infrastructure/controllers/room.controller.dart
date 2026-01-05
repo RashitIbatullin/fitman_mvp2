@@ -1,32 +1,32 @@
 import 'dart:convert';
-
-import 'package:fitman_backend/modules/infrastructure/services/room.service.dart';
+import 'package:fitman_backend/config/database.dart';
 import 'package:shelf/shelf.dart';
-import 'package:shelf_router/shelf_router.dart';
 
 class RoomController {
-  RoomController(this._roomService);
+  RoomController(this._db);
 
-  final RoomService _roomService;
+  final Database _db;
 
-  Router get router {
-    final router = Router();
+  Future<Response> getAllRooms(Request request) async {
+    try {
+      final rooms = await _db.rooms.getAll();
+      final roomsJson = rooms.map((r) => r.toJson()).toList();
+      return Response.ok(jsonEncode(roomsJson));
+    } catch (e) {
+      return Response.internalServerError(body: '{"error": "Error fetching rooms: $e"}');
+    }
+  }
 
-    router.get('/', (Request request) async {
-      final rooms = await _roomService.getAll();
-      return Response.ok(jsonEncode(rooms));
-    });
-
-    router.get('/<id>', (Request request, String id) async {
-      final room = await _roomService.getById(id);
-      if (room == null) {
-        return Response.notFound('Room not found');
+  Future<Response> getRoomById(Request request, String id) async {
+    try {
+      final room = await _db.rooms.getById(id);
+      return Response.ok(jsonEncode(room.toJson()));
+    } on Exception catch (e) {
+      // Specifically catch the "not found" exception from the repository
+      if (e.toString().contains('not found')) {
+        return Response.notFound('{"error": "${e.toString()}"}');
       }
-      return Response.ok(jsonEncode(room));
-    });
-
-    // Other routes for create, update, delete, etc. will be added here.
-
-    return router;
+      return Response.internalServerError(body: '{"error": "Error fetching room: $e"}');
+    }
   }
 }

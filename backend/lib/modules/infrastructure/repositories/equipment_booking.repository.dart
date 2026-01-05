@@ -1,5 +1,4 @@
 import 'package:fitman_backend/modules/infrastructure/models/booking/equipment_booking.model.dart';
-import 'package:postgres/postgres.dart';
 
 abstract class EquipmentBookingRepository {
   Future<EquipmentBooking> getById(String id);
@@ -10,9 +9,9 @@ abstract class EquipmentBookingRepository {
 }
 
 class EquipmentBookingRepositoryImpl implements EquipmentBookingRepository {
-  EquipmentBookingRepositoryImpl(this._db);
+  // EquipmentBookingRepositoryImpl(this._db);
 
-  final Connection _db;
+  // final Connection _db;
 
   @override
   Future<EquipmentBooking> create(EquipmentBooking equipmentBooking) {

@@ -41,4 +41,40 @@ class EquipmentType {
 
   // Статус
   final bool isActive;
+
+  factory EquipmentType.fromMap(Map<String, dynamic> map) {
+    return EquipmentType(
+      id: map['id'].toString(),
+      name: map['name'] as String,
+      description: map['description'] as String?,
+      category: EquipmentCategory.values[map['category'] as int],
+      subType: map['sub_type'] != null ? EquipmentSubType.values[map['sub_type'] as int] : null,
+      weightRange: map['weight_range'] as String?,
+      dimensions: map['dimensions'] as String?,
+      powerRequirements: map['power_requirements'] as String?,
+      isMobile: map['is_mobile'] as bool,
+      exerciseTypeId: map['exercise_type_id']?.toString(), // exercise_type_id can be null
+      photoUrl: map['photo_url'] as String?,
+      manualUrl: map['manual_url'] as String?,
+      isActive: map['is_active'] as bool,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'category': category.index, // Revert to index
+      'subType': subType?.index, // Revert to index
+      'weightRange': weightRange,
+      'dimensions': dimensions,
+      'powerRequirements': powerRequirements,
+      'isMobile': isMobile,
+      'exerciseTypeId': exerciseTypeId,
+      'photoUrl': photoUrl,
+      'manualUrl': manualUrl,
+      'isActive': isActive,
+    };
+  }
 }

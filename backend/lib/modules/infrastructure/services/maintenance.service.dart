@@ -1,6 +1,5 @@
 
 import 'package:fitman_backend/modules/infrastructure/models/equipment/equipment_item.model.dart';
-import 'package:fitman_backend/modules/infrastructure/repositories/equipment_item.repository.dart';
 
 abstract class MaintenanceService {
   Future<void> scheduleMaintenance(String equipmentId, DateTime date);
@@ -9,9 +8,9 @@ abstract class MaintenanceService {
 }
 
 class MaintenanceServiceImpl implements MaintenanceService {
-  MaintenanceServiceImpl(this._equipmentItemRepository);
+  // MaintenanceServiceImpl(this._equipmentItemRepository);
 
-  final EquipmentItemRepository _equipmentItemRepository;
+  // final EquipmentItemRepository _equipmentItemRepository;
 
   @override
   Future<void> completeMaintenance(String equipmentId, String notes) {
