@@ -213,7 +213,10 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
           Expanded(
             child: TextFormField(
               initialValue: condition.field,
-              decoration: const InputDecoration(labelText: 'Поле'),
+              decoration: const InputDecoration(
+                labelText: 'Поле',
+                helperText: 'Доступные поля: age, gender, subscription_type, last_visit_date',
+              ),
               onChanged: (value) => _conditions[index] = _conditions[index].copyWith(field: value),
             ),
           ),

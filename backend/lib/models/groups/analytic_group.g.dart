@@ -8,27 +8,28 @@ part of 'analytic_group.dart';
 
 AnalyticGroup _$AnalyticGroupFromJson(Map<String, dynamic> json) =>
     AnalyticGroup(
-      id: json['id'] as String,
+      id: (json['id'] as num?)?.toInt(),
       name: json['name'] as String,
       description: json['description'] as String?,
       type: const AnalyticGroupTypeConverter().fromJson(
         (json['type'] as num).toInt(),
       ),
-      isAutoUpdate: json['isAutoUpdate'] as bool? ?? false,
-      conditions:
-          (json['conditions'] as List<dynamic>?)
-              ?.map((e) => GroupCondition.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-      clientIds:
-          (json['clientIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      lastUpdatedAt: json['lastUpdatedAt'] == null
-          ? null
-          : DateTime.parse(json['lastUpdatedAt'] as String),
+      isAutoUpdate: json['is_auto_update'] as bool? ?? false,
+      conditions: json['conditions'] == null
+          ? const []
+          : _conditionsFromJson(json['conditions']),
+      clientIds: json['client_ids_cache'] == null
+          ? const []
+          : _clientIdsFromJson(json['client_ids_cache']),
+      lastUpdatedAt: _nullableDateTimeFromJson(json['last_updated_at']),
       metadata: json['metadata'] as Map<String, dynamic>?,
+      companyId: (json['company_id'] as num?)?.toInt(),
+      createdAt: _nullableDateTimeFromJson(json['created_at']),
+      updatedAt: _nullableDateTimeFromJson(json['updated_at']),
+      createdBy: (json['created_by'] as num?)?.toInt(),
+      updatedBy: (json['updated_by'] as num?)?.toInt(),
+      archivedAt: _nullableDateTimeFromJson(json['archived_at']),
+      archivedBy: (json['archived_by'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$AnalyticGroupToJson(AnalyticGroup instance) =>
@@ -37,9 +38,16 @@ Map<String, dynamic> _$AnalyticGroupToJson(AnalyticGroup instance) =>
       'name': instance.name,
       'description': instance.description,
       'type': const AnalyticGroupTypeConverter().toJson(instance.type),
-      'isAutoUpdate': instance.isAutoUpdate,
+      'is_auto_update': instance.isAutoUpdate,
       'conditions': instance.conditions,
-      'clientIds': instance.clientIds,
-      'lastUpdatedAt': instance.lastUpdatedAt?.toIso8601String(),
+      'client_ids_cache': instance.clientIds,
+      'last_updated_at': instance.lastUpdatedAt?.toIso8601String(),
       'metadata': instance.metadata,
+      'company_id': instance.companyId,
+      'created_at': instance.createdAt?.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
+      'created_by': instance.createdBy,
+      'updated_by': instance.updatedBy,
+      'archived_at': instance.archivedAt?.toIso8601String(),
+      'archived_by': instance.archivedBy,
     };

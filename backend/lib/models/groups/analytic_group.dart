@@ -1,8 +1,17 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/equatable.dart';
-import 'group_condition.dart'; // Corrected import path
+import 'group_condition.dart';
 
 part 'analytic_group.g.dart';
+
+// Helper functions for robust DateTime parsing
+DateTime? _nullableDateTimeFromJson(dynamic json) {
+  if (json == null) return null;
+  if (json is DateTime) return json;
+  if (json is String) return DateTime.parse(json);
+  throw ArgumentError('Invalid type for nullable DateTime: ${json.runtimeType}');
+}
+
 
 @JsonEnum(valueField: 'index')
 enum AnalyticGroupType {
@@ -23,26 +32,59 @@ class AnalyticGroupTypeConverter implements JsonConverter<AnalyticGroupType, int
   int toJson(AnalyticGroupType object) => object.index;
 }
 
+List<GroupCondition> _conditionsFromJson(dynamic json) {
+  if (json is List) {
+    return json.map((e) => GroupCondition.fromJson(e as Map<String, dynamic>)).toList();
+  }
+  return []; // Return empty list if it's not a list (e.g., a map or null)
+}
+
+List<int> _clientIdsFromJson(dynamic json) {
+  if (json is List) {
+    // Ensure all items are integers, handling potential parsing errors
+    return json.map<int>((e) => e is int ? e : int.parse(e.toString())).toList();
+  }
+  return []; // Return empty list if it's not a list (e.g., a map or null)
+}
+
 @JsonSerializable(converters: [AnalyticGroupTypeConverter()])
 class AnalyticGroup extends Equatable {
-  final String id;
+  final int? id;
   final String name;
   final String? description;
   final AnalyticGroupType type;
   
-  // АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ
-  final bool isAutoUpdate;           // true - группа автоматически обновляется по условиям
-  final List<GroupCondition> conditions; // Условия для автоматических групп
+  @JsonKey(name: 'is_auto_update')
+  final bool isAutoUpdate;
+  @JsonKey(fromJson: _conditionsFromJson)
+  final List<GroupCondition> conditions;
   
-  // ДИНАМИЧЕСКИЙ СОСТАВ
-  final List<String> clientIds;      // Кэшированный список клиентов в группе
-  final DateTime? lastUpdatedAt;      // Время последнего обновления
+  @JsonKey(name: 'client_ids_cache', fromJson: _clientIdsFromJson)
+  final List<int> clientIds;
   
-  // ДОПОЛНИТЕЛЬНЫЕ ДАННЫЕ
-  final Map<String, dynamic>? metadata; // Дополнительные данные по типам
+  @JsonKey(name: 'last_updated_at', fromJson: _nullableDateTimeFromJson)
+  final DateTime? lastUpdatedAt;
+  
+  final Map<String, dynamic>? metadata;
+
+  // System fields
+  @JsonKey(name: 'company_id')
+  final int? companyId;
+  @JsonKey(name: 'created_at', fromJson: _nullableDateTimeFromJson)
+  final DateTime? createdAt;
+  @JsonKey(name: 'updated_at', fromJson: _nullableDateTimeFromJson)
+  final DateTime? updatedAt;
+  @JsonKey(name: 'created_by')
+  final int? createdBy;
+  @JsonKey(name: 'updated_by')
+  final int? updatedBy;
+  @JsonKey(name: 'archived_at', fromJson: _nullableDateTimeFromJson)
+  final DateTime? archivedAt;
+  @JsonKey(name: 'archived_by')
+  final int? archivedBy;
 
   const AnalyticGroup({
-    required this.id,
+    this.id,
     required this.name,
     this.description,
     required this.type,
@@ -51,6 +93,13 @@ class AnalyticGroup extends Equatable {
     this.clientIds = const [],
     this.lastUpdatedAt,
     this.metadata,
+    this.companyId,
+    this.createdAt,
+    this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
+    this.archivedAt,
+    this.archivedBy,
   });
 
   factory AnalyticGroup.fromJson(Map<String, dynamic> json) => _$AnalyticGroupFromJson(json);
@@ -67,18 +116,32 @@ class AnalyticGroup extends Equatable {
         clientIds,
         lastUpdatedAt,
         metadata,
+        companyId,
+        createdAt,
+        updatedAt,
+        createdBy,
+        updatedBy,
+        archivedAt,
+        archivedBy,
       ];
 
   AnalyticGroup copyWith({
-    String? id,
+    int? id,
     String? name,
     String? description,
     AnalyticGroupType? type,
     bool? isAutoUpdate,
     List<GroupCondition>? conditions,
-    List<String>? clientIds,
+    List<int>? clientIds,
     DateTime? lastUpdatedAt,
     Map<String, dynamic>? metadata,
+    int? companyId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? createdBy,
+    int? updatedBy,
+    DateTime? archivedAt,
+    int? archivedBy,
   }) {
     return AnalyticGroup(
       id: id ?? this.id,
@@ -90,6 +153,13 @@ class AnalyticGroup extends Equatable {
       clientIds: clientIds ?? this.clientIds,
       lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
       metadata: metadata ?? this.metadata,
+      companyId: companyId ?? this.companyId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      createdBy: createdBy ?? this.createdBy,
+      updatedBy: updatedBy ?? this.updatedBy,
+      archivedAt: archivedAt ?? this.archivedAt,
+      archivedBy: archivedBy ?? this.archivedBy,
     );
   }
 }

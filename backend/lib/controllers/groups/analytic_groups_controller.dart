@@ -33,7 +33,8 @@ class AnalyticGroupsController {
 
   Future<Response> _getAnalyticGroupById(Request request, String id) async {
     try {
-      final group = await _db.groups.getAnalyticGroupById(id);
+      final groupId = int.parse(id);
+      final group = await _db.groups.getAnalyticGroupById(groupId);
       if (group == null) {
         return Response.notFound(jsonEncode({'error': 'AnalyticGroup not found'}));
       }
@@ -49,16 +50,7 @@ class AnalyticGroupsController {
       // TODO: Get creatorId from authenticated user context
       const creatorId = 1; // Placeholder for now
 
-      // Manually parse conditions because fromJson might not handle List<dynamic> directly
-      final List<dynamic>? conditionsJson = payload['conditions'];
-      final List<GroupCondition> conditions = conditionsJson != null
-          ? conditionsJson.map((c) => GroupCondition.fromJson(c as Map<String, dynamic>)).toList()
-          : [];
-
-      final newGroup = AnalyticGroup.fromJson({
-        ...payload,
-        'conditions': conditions, // Use parsed conditions
-      });
+      final newGroup = AnalyticGroup.fromJson(payload);
       final createdGroup = await _db.groups.createAnalyticGroup(newGroup, creatorId);
       return Response(201, headers: {'Content-Type': 'application/json', 'Location': '/analytic_groups/${createdGroup.id}'}, body: jsonEncode(createdGroup.toJson()));
     } catch (e) {
@@ -68,20 +60,14 @@ class AnalyticGroupsController {
 
   Future<Response> _updateAnalyticGroup(Request request, String id) async {
     try {
+      final groupId = int.parse(id);
       final payload = jsonDecode(await request.readAsString());
       // TODO: Get updaterId from authenticated user context
       const updaterId = 1; // Placeholder for now
 
-      // Manually parse conditions for update
-      final List<dynamic>? conditionsJson = payload['conditions'];
-      final List<GroupCondition> conditions = conditionsJson != null
-          ? conditionsJson.map((c) => GroupCondition.fromJson(c as Map<String, dynamic>)).toList()
-          : [];
-
       final updatedGroup = AnalyticGroup.fromJson({
         ...payload,
-        'id': id, // Ensure ID is from path
-        'conditions': conditions, // Use parsed conditions
+        'id': groupId, // Ensure ID is from path and is an int
       });
       final resultGroup = await _db.groups.updateAnalyticGroup(updatedGroup, updaterId);
       return Response.ok(jsonEncode(resultGroup.toJson()));
@@ -92,9 +78,10 @@ class AnalyticGroupsController {
 
   Future<Response> _deleteAnalyticGroup(Request request, String id) async {
     try {
+      final groupId = int.parse(id);
       // TODO: Get archiverId from authenticated user context
       const archiverId = 1; // Placeholder for now
-      await _db.groups.deleteAnalyticGroup(id, archiverId);
+      await _db.groups.deleteAnalyticGroup(groupId, archiverId);
       return Response(204);
     } catch (e) {
       return Response.internalServerError(body: jsonEncode({'error': e.toString()}));

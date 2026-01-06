@@ -14,7 +14,7 @@ class GroupSyncService {
       for (final group in autoGroups.where((g) => g.isAutoUpdate)) {
         print('Processing auto-update group: ${group.name} (ID: ${group.id})');
         
-        final List<String> matchingClientIds = await _findMatchingClients(group.conditions);
+        final List<int> matchingClientIds = await _findMatchingClients(group.conditions);
         
         // Update the group with new client_ids_cache and last_updated_at
         final updatedGroup = group.copyWith(
@@ -31,7 +31,7 @@ class GroupSyncService {
     }
   }
 
-  Future<List<String>> _findMatchingClients(List<GroupCondition> conditions) async {
+  Future<List<int>> _findMatchingClients(List<GroupCondition> conditions) async {
     if (conditions.isEmpty) {
       return [];
     }
@@ -103,6 +103,6 @@ class GroupSyncService {
     final conn = await _db.connection;
     final results = await conn.execute(Sql.named(sql), parameters: parameters);
 
-    return results.map((row) => (row[0] as int).toString()).toList();
+    return results.map((row) => row[0] as int).toList();
   }
 }

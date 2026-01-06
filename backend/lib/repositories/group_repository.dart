@@ -149,14 +149,20 @@ class GroupRepository {
   Future<List<AnalyticGroup>> getAllAnalyticGroups() async {
     final conn = await _db.connection;
     final results = await conn.execute('SELECT * FROM analytic_groups WHERE archived_at IS NULL');
-    return results.map((row) => AnalyticGroup.fromJson(row.toColumnMap())).toList();
+    return results.map((row) {
+      final map = row.toColumnMap();
+      print('--- Raw Analytic Group DB Row Map ---');
+      print(map);
+      print('------------------------------------');
+      return AnalyticGroup.fromJson(map);
+    }).toList();
   }
 
-  Future<AnalyticGroup?> getAnalyticGroupById(String id) async {
+  Future<AnalyticGroup?> getAnalyticGroupById(int id) async {
     final conn = await _db.connection;
     final results = await conn.execute(
       Sql.named('SELECT * FROM analytic_groups WHERE id = @id AND archived_at IS NULL'),
-      parameters: {'id': int.parse(id)},
+      parameters: {'id': id},
     );
     if (results.isEmpty) return null;
     return AnalyticGroup.fromJson(results.first.toColumnMap());
@@ -168,11 +174,11 @@ class GroupRepository {
       Sql.named('''
         INSERT INTO analytic_groups (
           name, description, type, is_auto_update, conditions, metadata,
-          client_ids_cache, last_updated_at, company_id, created_by, updated_by
+          client_ids_cache, created_by, updated_by
         )
         VALUES (
           @name, @description, @type, @is_auto_update, @conditions, @metadata,
-          @client_ids_cache, @last_updated_at, @company_id, @created_by, @updated_by
+          @client_ids_cache, @created_by, @updated_by
         )
         RETURNING *
       '''),
@@ -181,11 +187,9 @@ class GroupRepository {
         'description': group.description,
         'type': group.type.index,
         'is_auto_update': group.isAutoUpdate,
-        'conditions': group.conditions.map((e) => e.toJson()).toList(), // Convert list of objects to JSON
+        'conditions': group.conditions.map((e) => e.toJson()).toList(),
         'metadata': group.metadata,
-        'client_ids_cache': group.clientIds, // Storing List<String> directly as JSONB
-        'last_updated_at': group.lastUpdatedAt,
-        'company_id': -1, // Assuming default company_id for now
+        'client_ids_cache': group.clientIds,
         'created_by': creatorId,
         'updated_by': creatorId,
       },
@@ -205,30 +209,26 @@ class GroupRepository {
           is_auto_update = @is_auto_update,
           conditions = @conditions,
           metadata = @metadata,
-          client_ids_cache = @client_ids_cache,
-          last_updated_at = @last_updated_at,
           updated_by = @updaterId,
           updated_at = NOW()
         WHERE id = @id
         RETURNING *
       '''),
       parameters: {
-        'id': int.parse(group.id),
+        'id': group.id,
         'name': group.name,
         'description': group.description,
         'type': group.type.index,
         'is_auto_update': group.isAutoUpdate,
-        'conditions': group.conditions.map((e) => e.toJson()).toList(), // Convert list of objects to JSON
+        'conditions': group.conditions.map((e) => e.toJson()).toList(),
         'metadata': group.metadata,
-        'client_ids_cache': group.clientIds, // Storing List<String> directly as JSONB
-        'last_updated_at': group.lastUpdatedAt,
         'updaterId': updaterId,
       },
     );
     return AnalyticGroup.fromJson(result.first.toColumnMap());
   }
 
-  Future<void> deleteAnalyticGroup(String id, int archiverId) async {
+  Future<void> deleteAnalyticGroup(int id, int archiverId) async {
     final conn = await _db.connection;
     await conn.execute(
       Sql.named('''
@@ -236,7 +236,7 @@ class GroupRepository {
         SET archived_at = NOW(), archived_by = @archiverId
         WHERE id = @id
       '''),
-      parameters: {'id': int.parse(id), 'archiverId': archiverId},
+      parameters: {'id': id, 'archiverId': archiverId},
     );
   }
 
