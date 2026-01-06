@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/providers/groups/analytic_groups_provider.dart';
 import 'package:fitman_app/models/groups/analytic_group.dart';
 import 'package:fitman_app/models/groups/group_condition.dart';
+import 'package:intl/intl.dart';
 
 class AnalyticGroupEditScreen extends ConsumerStatefulWidget {
   final String? groupId;
@@ -206,31 +207,66 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
 
   Widget _buildConditionRow(GroupCondition condition) {
     int index = _conditions.indexOf(condition);
+
+    List<DropdownMenuItem<String>> _getOperatorsForField(String field) {
+      switch (field) {
+        case 'age':
+        case 'last_visit_date':
+          return const [
+            DropdownMenuItem(value: 'equals', child: Text('=')),
+            DropdownMenuItem(value: 'greater_than', child: Text('>')),
+            DropdownMenuItem(value: 'less_than', child: Text('<')),
+          ];
+        case 'gender':
+        case 'subscription_type':
+          return const [
+            DropdownMenuItem(value: 'equals', child: Text('=')),
+          ];
+        default:
+          return const [
+            DropdownMenuItem(value: 'equals', child: Text('=')),
+            DropdownMenuItem(value: 'contains', child: Text('содержит')),
+          ];
+      }
+    }
+    
+    final operatorItems = _getOperatorsForField(condition.field);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: TextFormField(
-              initialValue: condition.field,
-              decoration: const InputDecoration(
-                labelText: 'Поле',
-                helperText: 'Доступные поля: age, gender, subscription_type, last_visit_date',
-              ),
-              onChanged: (value) => _conditions[index] = _conditions[index].copyWith(field: value),
+            flex: 2,
+            child: DropdownButtonFormField<String>(
+              value: condition.field.isEmpty ? null : condition.field,
+              decoration: const InputDecoration(labelText: 'Поле'),
+              items: const [
+                DropdownMenuItem(value: 'age', child: Text('Возраст')),
+                DropdownMenuItem(value: 'gender', child: Text('Пол')),
+                DropdownMenuItem(value: 'subscription_type', child: Text('Тип абонемента')),
+                DropdownMenuItem(value: 'last_visit_date', child: Text('Дата посл. визита')),
+              ],
+              onChanged: (value) => setState(() {
+                final newOperator = _getOperatorsForField(value!).first.value!;
+                _conditions[index] = _conditions[index].copyWith(field: value, value: '', operator: newOperator);
+              }),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Выберите поле';
+                }
+                return null;
+              },
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
+            flex: 2,
             child: DropdownButtonFormField<String>(
-              initialValue: condition.operator,
+              value: condition.operator,
               decoration: const InputDecoration(labelText: 'Оператор'),
-              items: const [
-                DropdownMenuItem(value: 'equals', child: Text('=')),
-                DropdownMenuItem(value: 'greater_than', child: Text('>')),
-                DropdownMenuItem(value: 'less_than', child: Text('<')),
-                DropdownMenuItem(value: 'contains', child: Text('содержит')),
-              ],
+              items: operatorItems,
               onChanged: (value) => setState(() {
                 _conditions[index] = _conditions[index].copyWith(operator: value!);
               }),
@@ -238,11 +274,8 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: TextFormField(
-              initialValue: condition.value,
-              decoration: const InputDecoration(labelText: 'Значение'),
-              onChanged: (value) => _conditions[index] = _conditions[index].copyWith(value: value),
-            ),
+            flex: 3,
+            child: _buildValueWidget(condition, index),
           ),
           IconButton(
             icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
@@ -255,5 +288,71 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
         ],
       ),
     );
+  }
+
+  Widget _buildValueWidget(GroupCondition condition, int index) {
+    switch (condition.field) {
+      case 'gender':
+        return DropdownButtonFormField<String>(
+          value: condition.value.isEmpty ? null : condition.value,
+          decoration: const InputDecoration(labelText: 'Значение'),
+          items: const [
+            DropdownMenuItem(value: 'мужской', child: Text('Мужской')),
+            DropdownMenuItem(value: 'женский', child: Text('Женский')),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _conditions[index] = _conditions[index].copyWith(value: value!);
+            });
+          },
+        );
+      case 'subscription_type':
+        // TODO: Fetch subscription types from a catalog
+        return DropdownButtonFormField<String>(
+          value: condition.value.isEmpty ? null : condition.value,
+          decoration: const InputDecoration(labelText: 'Значение'),
+          items: const [
+            DropdownMenuItem(value: 'standard', child: Text('Стандарт')),
+            DropdownMenuItem(value: 'premium', child: Text('Премиум')),
+            DropdownMenuItem(value: 'annual', child: Text('Годовой')),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _conditions[index] = _conditions[index].copyWith(value: value!);
+            });
+          },
+        );
+      case 'last_visit_date':
+        return InkWell(
+          onTap: () async {
+            final pickedDate = await showDatePicker(
+              context: context,
+              initialDate: DateTime.tryParse(condition.value) ?? DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+            );
+            if (pickedDate != null) {
+              setState(() {
+                _conditions[index] = _conditions[index].copyWith(value: pickedDate.toIso8601String().substring(0, 10));
+              });
+            }
+          },
+          child: InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Значение',
+            ),
+            child: Text(
+              condition.value.isEmpty ? 'Выберите дату' : DateFormat('dd.MM.yyyy').format(DateTime.parse(condition.value)),
+            ),
+          ),
+        );
+      default: // age, etc.
+        return TextFormField(
+          key: ValueKey(condition.field), // Ensure TextFormField rebuilds when field changes
+          initialValue: condition.value,
+          decoration: const InputDecoration(labelText: 'Значение'),
+          onChanged: (value) => _conditions[index] = _conditions[index].copyWith(value: value),
+        );
+    }
   }
 }
