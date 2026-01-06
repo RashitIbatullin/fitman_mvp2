@@ -8,6 +8,7 @@ class TrainingGroup extends Equatable {
   final String id;
   final String name;
   final String? description;
+  final int trainingGroupTypeId;
   
   // ПЕРСОНАЛ (обязательные для тренировочного процесса)
   final String primaryTrainerId;     // Основной тренер группы (обязательно)
@@ -39,6 +40,7 @@ class TrainingGroup extends Equatable {
     required this.id,
     required this.name,
     this.description,
+    required this.trainingGroupTypeId,
     required this.primaryTrainerId,
     this.primaryInstructorId,
     this.responsibleManagerId,
@@ -62,6 +64,7 @@ class TrainingGroup extends Equatable {
         id,
         name,
         description,
+        trainingGroupTypeId,
         primaryTrainerId,
         primaryInstructorId,
         responsibleManagerId,

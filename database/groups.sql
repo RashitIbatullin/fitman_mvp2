@@ -1,15 +1,40 @@
 -- Удаление старых таблиц, если они существуют, для идемпотентности скрипта
 DROP TABLE IF EXISTS 
 "group_conditions",
+"group_schedule_slots",
+"training_group_members",
 "client_group_members",
-"client_groups"
+"client_groups",
+"training_group_types",
+"training_groups",
+"analytic_groups"	
 CASCADE;
 
+-- Типы тренировочных групп
+CREATE TABLE training_group_types (
+  id SMALLSERIAL PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,          -- 'group', 'semi_personal', 'individual'
+  title VARCHAR(100) NOT NULL,        -- 'Групповое занятие', 'Полуперсональная тренировка', 'Индивидуальное занятие'
+  min_participants INT NOT NULL DEFAULT 1,
+  max_participants INT NOT NULL DEFAULT 1,
+  description TEXT,
+  icon VARCHAR(50),                   -- Иконка для UI
+  color VARCHAR(7)                    -- Цвет для UI (#RRGGBB)
+);
+
+-- Заполняем стандартные значения
+INSERT INTO training_group_types (name, title, min_participants, max_participants) VALUES
+  ('individual', 'Индивидуальное занятие', 1, 1),
+  ('semi_personal', 'Полуперсональная тренировка', 2, 3),
+  ('group', 'Групповое занятие', 4, 50);
+  
+  
 -- Таблица для хранения тренировочных групп
 CREATE TABLE training_groups (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
+  training_group_type_id SMALLINT NOT NULL DEFAULT 3 REFERENCES training_group_types(id),
   
   -- Персонал
   primary_trainer_id BIGINT NOT NULL REFERENCES users(id),
@@ -44,6 +69,8 @@ CREATE TABLE training_groups (
 );
 
 COMMENT ON TABLE training_groups IS 'Хранит информацию о тренировочных группах с фиксированным составом и расписанием';
+COMMENT ON COLUMN training_groups.description IS 'Описание группы';
+COMMENT ON COLUMN training_groups.training_group_type_id IS 'Ссылка на тип тренировочной группы';
 COMMENT ON COLUMN training_groups.primary_trainer_id IS 'Ссылка на основного тренера группы';
 COMMENT ON COLUMN training_groups.primary_instructor_id IS 'Ссылка на основного инструктора группы';
 COMMENT ON COLUMN training_groups.responsible_manager_id IS 'Ссылка на ответственного менеджера группы';

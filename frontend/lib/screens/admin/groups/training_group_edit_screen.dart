@@ -19,6 +19,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
+  int? _selectedGroupTypeId;
   String? _selectedPrimaryTrainerId;
   String? _selectedPrimaryInstructorId;
   String? _selectedResponsibleManagerId;
@@ -74,6 +75,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
         _initialGroup = group;
         _nameController.text = group.name;
         _descriptionController.text = group.description ?? '';
+        _selectedGroupTypeId = group.trainingGroupTypeId;
         _selectedPrimaryTrainerId = group.primaryTrainerId;
         _selectedPrimaryInstructorId = group.primaryInstructorId;
         _selectedResponsibleManagerId = group.responsibleManagerId;
@@ -110,6 +112,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
         id: widget.groupId ?? '', // ID will be assigned by backend for new groups
         name: _nameController.text,
         description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+        trainingGroupTypeId: _selectedGroupTypeId!,
         primaryTrainerId: _selectedPrimaryTrainerId!,
         primaryInstructorId: _selectedPrimaryInstructorId,
         responsibleManagerId: _selectedResponsibleManagerId,
@@ -178,6 +181,31 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Описание'),
                 maxLines: 3,
+              ),
+              ref.watch(trainingGroupTypesProvider).when(
+                data: (types) => DropdownButtonFormField<int>(
+                  initialValue: _selectedGroupTypeId,
+                  decoration: const InputDecoration(labelText: 'Тип группы'),
+                  items: types.map((type) {
+                    return DropdownMenuItem(
+                      value: type.id,
+                      child: Text(type.title),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedGroupTypeId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Пожалуйста, выберите тип группы';
+                    }
+                    return null;
+                  },
+                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Ошибка: $err')),
               ),
               DropdownButtonFormField<String>(
                 initialValue: _selectedPrimaryTrainerId,

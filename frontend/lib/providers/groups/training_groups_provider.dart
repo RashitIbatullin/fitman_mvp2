@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:fitman_app/models/groups/training_group.dart';
+import 'package:fitman_app/models/groups/training_group_type.dart';
 
 part 'training_groups_provider.g.dart';
 
@@ -40,4 +41,9 @@ class TrainingGroups extends _$TrainingGroups {
       state = AsyncValue.error(e, st);
     }
   }
+}
+
+@Riverpod(keepAlive: true)
+Future<List<TrainingGroupType>> trainingGroupTypes(TrainingGroupTypesRef ref) async {
+  return ApiService.getAllTrainingGroupTypes();
 }

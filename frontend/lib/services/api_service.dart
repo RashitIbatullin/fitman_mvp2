@@ -15,6 +15,7 @@ import '../models/level_training.dart';
 import '../models/groups/training_group.dart'; // New import
 import '../models/groups/analytic_group.dart'; // New import
 import '../models/groups/group_schedule_slot.dart'; // New import
+import '../models/groups/training_group_type.dart';
 import '../modules/infrastructure/models/room/room.model.dart';
 import '../modules/infrastructure/models/equipment/equipment_item.model.dart'; // New import
 import '../modules/infrastructure/models/equipment/equipment_type.model.dart'; // New import
@@ -825,6 +826,25 @@ class ApiService {
 
 
 
+
+  static Future<List<TrainingGroupType>> getAllTrainingGroupTypes() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/training_group_types'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => TrainingGroupType.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load training group types');
+      }
+    } catch (e) {
+      print('Get all training group types error: $e');
+      rethrow;
+    }
+  }
 
   // --- Group API Methods ---
 

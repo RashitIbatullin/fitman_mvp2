@@ -20,6 +20,7 @@ import '../controllers/groups/training_groups_controller.dart'; // New import
 import '../controllers/groups/analytic_groups_controller.dart'; // New import
 import '../controllers/groups/group_schedule_controller.dart'; // New import
 import '../controllers/groups/group_members_controller.dart'; // New import
+import '../controllers/groups/training_group_types_controller.dart'; // New import
 import '../modules/infrastructure/controllers/room.controller.dart';
 import '../modules/infrastructure/controllers/equipment_item.controller.dart';
 import '../modules/infrastructure/controllers/equipment_type.controller.dart';
@@ -31,6 +32,7 @@ final _trainingGroupsController = TrainingGroupsController(_db);
 final _analyticGroupsController = AnalyticGroupsController(_db);
 final _groupScheduleController = GroupScheduleController(_db);
 final _groupMembersController = GroupMembersController(_db);
+final _trainingGroupTypesController = TrainingGroupTypesController(_db);
 
 // Infrastructure controllers
 final _roomController = RoomController(_db);
@@ -117,6 +119,7 @@ final Router router = Router()
   ..get('/api/profile', (Request request) => _protectedHandler(UsersController.getProfile)(request))
   ..get('/api/catalogs/goals-training', (Request request) => _protectedHandler(CatalogsController.getGoalsTraining)(request))
   ..get('/api/catalogs/levels-training', (Request request) => _protectedHandler(CatalogsController.getLevelsTraining)(request))
+  ..mount('/api/training_group_types', (Request request) => _protectedHandler(_trainingGroupTypesController.router.call)(request))
 
 // User management routes (только для админа)
   ..get('/api/users', (Request request) => _adminHandler(UsersController.getUsers)(request))

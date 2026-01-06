@@ -3,6 +3,7 @@ import '../config/database.dart';
 import '../models/groups/analytic_group.dart';
 import '../models/groups/group_schedule_slot.dart';
 import '../models/groups/training_group.dart';
+import '../models/groups/training_group_type.dart';
 
 class GroupRepository {
   final Database _db;
@@ -32,13 +33,13 @@ class GroupRepository {
     final result = await conn.execute(
       Sql.named('''
         INSERT INTO training_groups (
-          name, description, primary_trainer_id, primary_instructor_id,
+          name, description, training_group_type_id, primary_trainer_id, primary_instructor_id,
           responsible_manager_id, program_id, goal_id, level_id,
           max_participants, current_participants, start_date, end_date,
           is_active, chat_id, company_id, created_by, updated_by
         )
         VALUES (
-          @name, @description, @primary_trainer_id, @primary_instructor_id,
+          @name, @description, @training_group_type_id, @primary_trainer_id, @primary_instructor_id,
           @responsible_manager_id, @program_id, @goal_id, @level_id,
           @max_participants, @current_participants, @start_date, @end_date,
           @is_active, @chat_id, @company_id, @created_by, @updated_by
@@ -48,6 +49,7 @@ class GroupRepository {
       parameters: {
         'name': group.name,
         'description': group.description,
+        'training_group_type_id': group.trainingGroupTypeId,
         'primary_trainer_id': group.primaryTrainerId,
         'primary_instructor_id': group.primaryInstructorId,
         'responsible_manager_id': group.responsibleManagerId,
@@ -76,6 +78,7 @@ class GroupRepository {
         SET
           name = @name,
           description = @description,
+          training_group_type_id = @training_group_type_id,
           primary_trainer_id = @primary_trainer_id,
           primary_instructor_id = @primary_instructor_id,
           responsible_manager_id = @responsible_manager_id,
@@ -97,6 +100,7 @@ class GroupRepository {
         'id': group.id,
         'name': group.name,
         'description': group.description,
+        'training_group_type_id': group.trainingGroupTypeId,
         'primary_trainer_id': group.primaryTrainerId,
         'primary_instructor_id': group.primaryInstructorId,
         'responsible_manager_id': group.responsibleManagerId,
@@ -125,6 +129,12 @@ class GroupRepository {
       '''),
       parameters: {'id': id, 'archiverId': archiverId},
     );
+  }
+
+  Future<List<TrainingGroupType>> getAllTrainingGroupTypes() async {
+    final conn = await _db.connection;
+    final results = await conn.execute('SELECT * FROM training_group_types ORDER BY id');
+    return results.map((row) => TrainingGroupType.fromJson(row.toColumnMap())).toList();
   }
 
   // --- Analytic Group Methods ---
