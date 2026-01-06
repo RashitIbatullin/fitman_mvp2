@@ -15,7 +15,13 @@ class GroupRepository {
   Future<List<TrainingGroup>> getAllTrainingGroups() async {
     final conn = await _db.connection;
     final results = await conn.execute('SELECT * FROM training_groups WHERE archived_at IS NULL');
-    return results.map((row) => TrainingGroup.fromJson(row.toColumnMap())).toList();
+    return results.map((row) {
+      final map = row.toColumnMap();
+      print('--- Raw DB Row Map ---');
+      print(map);
+      print('----------------------');
+      return TrainingGroup.fromJson(map);
+    }).toList();
   }
 
   Future<TrainingGroup?> getTrainingGroupById(int id) async {
@@ -36,13 +42,13 @@ class GroupRepository {
           name, description, training_group_type_id, primary_trainer_id, primary_instructor_id,
           responsible_manager_id, program_id, goal_id, level_id,
           max_participants, current_participants, start_date, end_date,
-          is_active, chat_id, company_id, created_by, updated_by
+          is_active, chat_id, company_id, created_at, updated_at, created_by, updated_by, archived_at, archived_by
         )
         VALUES (
-          @name, @description, @training_group_type_id, @primary_trainer_id, @primary_instructor_id,
+          @name, @description, @training_group_type_id, @primary_trainer_id,
           @responsible_manager_id, @program_id, @goal_id, @level_id,
           @max_participants, @current_participants, @start_date, @end_date,
-          @is_active, @chat_id, @company_id, @created_by, @updated_by
+          @is_active, @chat_id, @company_id, @created_at, @updated_at, @created_by, @updated_by, @archived_at, @archived_by
         )
         RETURNING *
       '''),
@@ -58,13 +64,17 @@ class GroupRepository {
         'level_id': group.levelId,
         'max_participants': group.maxParticipants,
         'current_participants': group.currentParticipants,
-        'start_date': group.startDate,
-        'end_date': group.endDate,
+        'start_date': group.startDate.toIso8601String(),
+        'end_date': group.endDate?.toIso8601String(),
         'is_active': group.isActive,
         'chat_id': group.chatId,
-        'company_id': -1, // Assuming default company_id for now
-        'created_by': creatorId,
-        'updated_by': creatorId,
+        'company_id': group.companyId ?? -1,
+        'created_at': group.createdAt.toIso8601String(),
+        'updated_at': group.updatedAt.toIso8601String(),
+        'created_by': group.createdBy ?? creatorId,
+        'updated_by': group.updatedBy ?? creatorId,
+        'archived_at': group.archivedAt?.toIso8601String(),
+        'archived_by': group.archivedBy,
       },
     );
     return TrainingGroup.fromJson(result.first.toColumnMap());
@@ -91,8 +101,13 @@ class GroupRepository {
           end_date = @end_date,
           is_active = @is_active,
           chat_id = @chat_id,
+          company_id = @company_id,
+          created_at = @created_at,
+          created_by = @created_by,
+          archived_at = @archived_at,
+          archived_by = @archived_by,
           updated_by = @updated_by,
-          updated_at = NOW()
+          updated_at = @updated_at
         WHERE id = @id
         RETURNING *
       '''),
@@ -109,11 +124,17 @@ class GroupRepository {
         'level_id': group.levelId,
         'max_participants': group.maxParticipants,
         'current_participants': group.currentParticipants,
-        'start_date': group.startDate,
-        'end_date': group.endDate,
+        'start_date': group.startDate.toIso8601String(),
+        'end_date': group.endDate?.toIso8601String(),
         'is_active': group.isActive,
         'chat_id': group.chatId,
-        'updated_by': updaterId,
+        'updated_by': group.updatedBy,
+        'updated_at': group.updatedAt.toIso8601String(),
+        'company_id': group.companyId,
+        'created_at': group.createdAt.toIso8601String(),
+        'created_by': group.createdBy,
+        'archived_at': group.archivedAt?.toIso8601String(),
+        'archived_by': group.archivedBy,
       },
     );
     return TrainingGroup.fromJson(result.first.toColumnMap());

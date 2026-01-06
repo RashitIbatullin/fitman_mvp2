@@ -6,7 +6,7 @@ part of 'group_members_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$groupMembersHash() => r'f4f13eca56e91d510c4bc90519cb6c45c95cc351';
+String _$groupMembersHash() => r'd6f242ca8cf847fc306b4810a44035de544a3a2b';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,10 +29,10 @@ class _SystemHash {
   }
 }
 
-abstract class _$GroupMembers extends BuildlessAsyncNotifier<List<String>> {
-  late final String groupId;
+abstract class _$GroupMembers extends BuildlessAsyncNotifier<List<int>> {
+  late final int groupId;
 
-  FutureOr<List<String>> build(String groupId);
+  FutureOr<List<int>> build(int groupId);
 }
 
 /// See also [GroupMembers].
@@ -40,12 +40,12 @@ abstract class _$GroupMembers extends BuildlessAsyncNotifier<List<String>> {
 const groupMembersProvider = GroupMembersFamily();
 
 /// See also [GroupMembers].
-class GroupMembersFamily extends Family<AsyncValue<List<String>>> {
+class GroupMembersFamily extends Family<AsyncValue<List<int>>> {
   /// See also [GroupMembers].
   const GroupMembersFamily();
 
   /// See also [GroupMembers].
-  GroupMembersProvider call(String groupId) {
+  GroupMembersProvider call(int groupId) {
     return GroupMembersProvider(groupId);
   }
 
@@ -73,9 +73,9 @@ class GroupMembersFamily extends Family<AsyncValue<List<String>>> {
 
 /// See also [GroupMembers].
 class GroupMembersProvider
-    extends AsyncNotifierProviderImpl<GroupMembers, List<String>> {
+    extends AsyncNotifierProviderImpl<GroupMembers, List<int>> {
   /// See also [GroupMembers].
-  GroupMembersProvider(String groupId)
+  GroupMembersProvider(int groupId)
     : this._internal(
         () => GroupMembers()..groupId = groupId,
         from: groupMembersProvider,
@@ -99,10 +99,10 @@ class GroupMembersProvider
     required this.groupId,
   }) : super.internal();
 
-  final String groupId;
+  final int groupId;
 
   @override
-  FutureOr<List<String>> runNotifierBuild(covariant GroupMembers notifier) {
+  FutureOr<List<int>> runNotifierBuild(covariant GroupMembers notifier) {
     return notifier.build(groupId);
   }
 
@@ -123,7 +123,7 @@ class GroupMembersProvider
   }
 
   @override
-  AsyncNotifierProviderElement<GroupMembers, List<String>> createElement() {
+  AsyncNotifierProviderElement<GroupMembers, List<int>> createElement() {
     return _GroupMembersProviderElement(this);
   }
 
@@ -143,18 +143,18 @@ class GroupMembersProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin GroupMembersRef on AsyncNotifierProviderRef<List<String>> {
+mixin GroupMembersRef on AsyncNotifierProviderRef<List<int>> {
   /// The parameter `groupId` of this provider.
-  String get groupId;
+  int get groupId;
 }
 
 class _GroupMembersProviderElement
-    extends AsyncNotifierProviderElement<GroupMembers, List<String>>
+    extends AsyncNotifierProviderElement<GroupMembers, List<int>>
     with GroupMembersRef {
   _GroupMembersProviderElement(super.provider);
 
   @override
-  String get groupId => (origin as GroupMembersProvider).groupId;
+  int get groupId => (origin as GroupMembersProvider).groupId;
 }
 
 // ignore_for_file: type=lint

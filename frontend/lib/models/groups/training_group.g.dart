@@ -8,29 +8,29 @@ part of 'training_group.dart';
 
 TrainingGroup _$TrainingGroupFromJson(Map<String, dynamic> json) =>
     TrainingGroup(
-      id: json['id'] as String,
+      id: (json['id'] as num?)?.toInt(),
       name: json['name'] as String,
       description: json['description'] as String?,
-      trainingGroupTypeId: (json['trainingGroupTypeId'] as num).toInt(),
-      primaryTrainerId: json['primaryTrainerId'] as String,
-      primaryInstructorId: json['primaryInstructorId'] as String?,
-      responsibleManagerId: json['responsibleManagerId'] as String?,
+      trainingGroupTypeId: (json['training_group_type_id'] as num).toInt(),
+      primaryTrainerId: (json['primary_trainer_id'] as num).toInt(),
+      primaryInstructorId: (json['primary_instructor_id'] as num?)?.toInt(),
+      responsibleManagerId: (json['responsible_manager_id'] as num?)?.toInt(),
       clientIds:
-          (json['clientIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
+          (json['client_ids'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
               .toList() ??
-          const [],
-      programId: json['programId'] as String?,
-      goalId: json['goalId'] as String?,
-      levelId: json['levelId'] as String?,
-      startDate: DateTime.parse(json['startDate'] as String),
-      endDate: json['endDate'] == null
+          [],
+      programId: (json['program_id'] as num?)?.toInt(),
+      goalId: (json['goal_id'] as num?)?.toInt(),
+      levelId: (json['level_id'] as num?)?.toInt(),
+      startDate: DateTime.parse(json['start_date'] as String),
+      endDate: json['end_date'] == null
           ? null
-          : DateTime.parse(json['endDate'] as String),
-      maxParticipants: (json['maxParticipants'] as num).toInt(),
-      currentParticipants: (json['currentParticipants'] as num?)?.toInt() ?? 0,
-      isActive: json['isActive'] as bool,
-      chatId: json['chatId'] as String?,
+          : DateTime.parse(json['end_date'] as String),
+      maxParticipants: (json['max_participants'] as num).toInt(),
+      currentParticipants: (json['current_participants'] as num?)?.toInt(),
+      isActive: json['is_active'] as bool?,
+      chatId: (json['chat_id'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$TrainingGroupToJson(TrainingGroup instance) =>
@@ -38,18 +38,18 @@ Map<String, dynamic> _$TrainingGroupToJson(TrainingGroup instance) =>
       'id': instance.id,
       'name': instance.name,
       'description': instance.description,
-      'trainingGroupTypeId': instance.trainingGroupTypeId,
-      'primaryTrainerId': instance.primaryTrainerId,
-      'primaryInstructorId': instance.primaryInstructorId,
-      'responsibleManagerId': instance.responsibleManagerId,
-      'clientIds': instance.clientIds,
-      'programId': instance.programId,
-      'goalId': instance.goalId,
-      'levelId': instance.levelId,
-      'startDate': instance.startDate.toIso8601String(),
-      'endDate': instance.endDate?.toIso8601String(),
-      'maxParticipants': instance.maxParticipants,
-      'currentParticipants': instance.currentParticipants,
-      'isActive': instance.isActive,
-      'chatId': instance.chatId,
+      'training_group_type_id': instance.trainingGroupTypeId,
+      'primary_trainer_id': instance.primaryTrainerId,
+      'primary_instructor_id': instance.primaryInstructorId,
+      'responsible_manager_id': instance.responsibleManagerId,
+      'client_ids': instance.clientIds,
+      'program_id': instance.programId,
+      'goal_id': instance.goalId,
+      'level_id': instance.levelId,
+      'start_date': instance.startDate.toIso8601String(),
+      'end_date': instance.endDate?.toIso8601String(),
+      'max_participants': instance.maxParticipants,
+      'current_participants': instance.currentParticipants,
+      'is_active': instance.isActive,
+      'chat_id': instance.chatId,
     };

@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added import for Ref
 import 'package:fitman_app/services/api_service.dart';
 import 'package:fitman_app/models/groups/training_group.dart';
 import 'package:fitman_app/models/groups/training_group_type.dart';
@@ -32,7 +33,7 @@ class TrainingGroups extends _$TrainingGroups {
     }
   }
 
-  Future<void> deleteTrainingGroup(String id) async {
+  Future<void> deleteTrainingGroup(int id) async {
     state = const AsyncValue.loading();
     try {
       await ApiService.deleteTrainingGroup(id);
@@ -44,6 +45,6 @@ class TrainingGroups extends _$TrainingGroups {
 }
 
 @Riverpod(keepAlive: true)
-Future<List<TrainingGroupType>> trainingGroupTypes(TrainingGroupTypesRef ref) async {
+Future<List<TrainingGroupType>> trainingGroupTypes(Ref ref) async {
   return ApiService.getAllTrainingGroupTypes();
 }

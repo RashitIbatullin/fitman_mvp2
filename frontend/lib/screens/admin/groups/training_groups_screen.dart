@@ -29,11 +29,12 @@ class TrainingGroupsScreen extends ConsumerWidget {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => TrainingGroupEditScreen(groupId: group.id),
+                      builder: (context) => TrainingGroupEditScreen(groupId: group.id?.toString()),
                     ),
                   );
                 },
                 onDelete: () async {
+                  if (group.id == null) return; // Should not happen for existing groups
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -52,7 +53,7 @@ class TrainingGroupsScreen extends ConsumerWidget {
                     ),
                   );
                   if (confirmed == true) {
-                    ref.read(trainingGroupsProvider.notifier).deleteTrainingGroup(group.id);
+                    ref.read(trainingGroupsProvider.notifier).deleteTrainingGroup(group.id!);
                   }
                 },
               );

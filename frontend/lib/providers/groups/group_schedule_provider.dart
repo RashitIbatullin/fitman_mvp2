@@ -7,7 +7,7 @@ part 'group_schedule_provider.g.dart';
 @Riverpod(keepAlive: true)
 class GroupSchedule extends _$GroupSchedule {
   @override
-  Future<List<GroupScheduleSlot>> build(String groupId) async {
+  Future<List<GroupScheduleSlot>> build(int groupId) async {
     return ApiService.getGroupScheduleSlots(groupId);
   }
 
@@ -31,7 +31,7 @@ class GroupSchedule extends _$GroupSchedule {
     }
   }
 
-  Future<void> deleteGroupScheduleSlot(String id) async {
+  Future<void> deleteGroupScheduleSlot(int id) async {
     state = const AsyncValue.loading();
     try {
       await ApiService.deleteGroupScheduleSlot(id);

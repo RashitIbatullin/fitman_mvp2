@@ -6,7 +6,7 @@ part of 'group_schedule_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$groupScheduleHash() => r'e884ab0ead87d2014eb9e417d9a9da65f686d792';
+String _$groupScheduleHash() => r'6a2408296bb333d71c0072a49e383ee239e6142a';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,9 +31,9 @@ class _SystemHash {
 
 abstract class _$GroupSchedule
     extends BuildlessAsyncNotifier<List<GroupScheduleSlot>> {
-  late final String groupId;
+  late final int groupId;
 
-  FutureOr<List<GroupScheduleSlot>> build(String groupId);
+  FutureOr<List<GroupScheduleSlot>> build(int groupId);
 }
 
 /// See also [GroupSchedule].
@@ -46,7 +46,7 @@ class GroupScheduleFamily extends Family<AsyncValue<List<GroupScheduleSlot>>> {
   const GroupScheduleFamily();
 
   /// See also [GroupSchedule].
-  GroupScheduleProvider call(String groupId) {
+  GroupScheduleProvider call(int groupId) {
     return GroupScheduleProvider(groupId);
   }
 
@@ -76,7 +76,7 @@ class GroupScheduleFamily extends Family<AsyncValue<List<GroupScheduleSlot>>> {
 class GroupScheduleProvider
     extends AsyncNotifierProviderImpl<GroupSchedule, List<GroupScheduleSlot>> {
   /// See also [GroupSchedule].
-  GroupScheduleProvider(String groupId)
+  GroupScheduleProvider(int groupId)
     : this._internal(
         () => GroupSchedule()..groupId = groupId,
         from: groupScheduleProvider,
@@ -100,7 +100,7 @@ class GroupScheduleProvider
     required this.groupId,
   }) : super.internal();
 
-  final String groupId;
+  final int groupId;
 
   @override
   FutureOr<List<GroupScheduleSlot>> runNotifierBuild(
@@ -149,7 +149,7 @@ class GroupScheduleProvider
 // ignore: unused_element
 mixin GroupScheduleRef on AsyncNotifierProviderRef<List<GroupScheduleSlot>> {
   /// The parameter `groupId` of this provider.
-  String get groupId;
+  int get groupId;
 }
 
 class _GroupScheduleProviderElement
@@ -158,7 +158,7 @@ class _GroupScheduleProviderElement
   _GroupScheduleProviderElement(super.provider);
 
   @override
-  String get groupId => (origin as GroupScheduleProvider).groupId;
+  int get groupId => (origin as GroupScheduleProvider).groupId;
 }
 
 // ignore_for_file: type=lint

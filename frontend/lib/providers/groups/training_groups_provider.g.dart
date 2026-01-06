@@ -7,7 +7,7 @@ part of 'training_groups_provider.dart';
 // **************************************************************************
 
 String _$trainingGroupTypesHash() =>
-    r'9be2564683279563fc2a5f461aa6f5b7f9ddfbfb';
+    r'de323388739fb8043cd0e1696b8efdfb9815b83c';
 
 /// See also [trainingGroupTypes].
 @ProviderFor(trainingGroupTypes)
@@ -25,7 +25,7 @@ final trainingGroupTypesProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TrainingGroupTypesRef = FutureProviderRef<List<TrainingGroupType>>;
-String _$trainingGroupsHash() => r'8a064a0b4126a452297e6c4d6e46b23b13b99191';
+String _$trainingGroupsHash() => r'65bfaac4cf971dce1a1c72cbd3a4bb723f651915';
 
 /// See also [TrainingGroups].
 @ProviderFor(TrainingGroups)

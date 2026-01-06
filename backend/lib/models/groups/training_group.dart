@@ -3,41 +3,81 @@ import 'package:equatable/equatable.dart';
 
 part 'training_group.g.dart';
 
+DateTime _dateTimeFromJson(dynamic json) {
+  if (json == null) return DateTime(0);
+  if (json is DateTime) {
+    return json;
+  }
+  if (json is String) {
+    return DateTime.parse(json);
+  }
+  throw ArgumentError('Invalid type for DateTime: ${json.runtimeType}');
+}
+
 @JsonSerializable()
 class TrainingGroup extends Equatable {
-  final int id;
+  final int? id;
   final String name;
   final String? description;
+  @JsonKey(name: 'training_group_type_id')
   final int trainingGroupTypeId;
   
   // ПЕРСОНАЛ (обязательные для тренировочного процесса)
+  @JsonKey(name: 'primary_trainer_id')
   final int primaryTrainerId;     // Основной тренер группы (обязательно)
+  @JsonKey(name: 'primary_instructor_id')
   final int? primaryInstructorId; // Основной инструктор группы
+  @JsonKey(name: 'responsible_manager_id')
   final int? responsibleManagerId; // Ответственный менеджер
   
   // СОСТАВ ГРУППЫ (фиксированный)
+  @JsonKey(name: 'client_ids', defaultValue: [])
   final List<int> clientIds;      // Фиксированный состав участников
   
   // РАСПИСАНИЕ ЗАНЯТИЙ - This will be fetched separately or populated by a service
   // List<GroupScheduleSlot> scheduleSlots; 
   
   // ПАРАМЕТРЫ ТРЕНИРОВКИ
+  @JsonKey(name: 'program_id')
   final int? programId;           // Ссылка на программу тренировок
+  @JsonKey(name: 'goal_id')
   final int? goalId;              // Цель тренировок (похудение, набор массы и т.д.)
+  @JsonKey(name: 'level_id')
   final int? levelId;             // Уровень подготовки группы
   
   // ЛИМИТЫ И ОГРАНИЧЕНИЯ
+  @JsonKey(name: 'start_date', fromJson: _dateTimeFromJson)
   final DateTime startDate;          // Дата начала работы группы
+  @JsonKey(name: 'end_date', fromJson: _dateTimeFromJson)
   final DateTime? endDate;           // Дата окончания (если предусмотрена)
+  @JsonKey(name: 'max_participants')
   final int maxParticipants;         // Максимальное количество участников
+  @JsonKey(name: 'current_participants')
   final int? currentParticipants;     // Текущее количество участников
   
   // СТАТУС И СВЯЗИ
+  @JsonKey(name: 'is_active')
   final bool? isActive;               // Активна ли группа
+  @JsonKey(name: 'chat_id')
   final int? chatId;              // Ссылка на групповой чат (создается автоматически)
 
+  @JsonKey(name: 'company_id')
+  final int? companyId;
+  @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
+  final DateTime createdAt;
+  @JsonKey(name: 'updated_at', fromJson: _dateTimeFromJson)
+  final DateTime updatedAt;
+  @JsonKey(name: 'created_by')
+  final int? createdBy;
+  @JsonKey(name: 'updated_by')
+  final int? updatedBy;
+  @JsonKey(name: 'archived_at', fromJson: _dateTimeFromJson)
+  final DateTime? archivedAt;
+  @JsonKey(name: 'archived_by')
+  final int? archivedBy;
+
   const TrainingGroup({
-    required this.id,
+    this.id,
     required this.name,
     this.description,
     required this.trainingGroupTypeId,
@@ -51,9 +91,16 @@ class TrainingGroup extends Equatable {
     required this.startDate,
     this.endDate,
     required this.maxParticipants,
-    this.currentParticipants, // Теперь nullable, убираем дефолтное значение
-    this.isActive,            // Теперь nullable, убираем дефолтное значение
+    this.currentParticipants,
+    this.isActive,
     this.chatId,
+    this.companyId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
+    this.archivedAt,
+    this.archivedBy,
   });
 
   factory TrainingGroup.fromJson(Map<String, dynamic> json) => _$TrainingGroupFromJson(json);
@@ -78,6 +125,13 @@ class TrainingGroup extends Equatable {
         currentParticipants,
         isActive,
         chatId,
+        companyId,
+        createdAt,
+        updatedAt,
+        createdBy,
+        updatedBy,
+        archivedAt,
+        archivedBy,
       ];
 
   TrainingGroup copyWith({
@@ -98,6 +152,13 @@ class TrainingGroup extends Equatable {
     int? currentParticipants,
     bool? isActive,
     int? chatId,
+    int? companyId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? createdBy,
+    int? updatedBy,
+    DateTime? archivedAt,
+    int? archivedBy,
   }) {
     return TrainingGroup(
       id: id ?? this.id,
@@ -117,6 +178,13 @@ class TrainingGroup extends Equatable {
       currentParticipants: currentParticipants ?? this.currentParticipants,
       isActive: isActive ?? this.isActive,
       chatId: chatId ?? this.chatId,
+      companyId: companyId ?? this.companyId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      createdBy: createdBy ?? this.createdBy,
+      updatedBy: updatedBy ?? this.updatedBy,
+      archivedAt: archivedAt ?? this.archivedAt,
+      archivedBy: archivedBy ?? this.archivedBy,
     );
   }
 }

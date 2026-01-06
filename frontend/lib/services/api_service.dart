@@ -857,7 +857,19 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
-        return data.map((json) => TrainingGroup.fromJson(json)).toList();
+        final List<TrainingGroup> groups = [];
+        for (final json in data) {
+          try {
+            groups.add(TrainingGroup.fromJson(json));
+          } catch (e) {
+            print('--- ERROR PARSING TRAINING GROUP ---');
+            print('Problematic JSON: $json');
+            print('Error: $e');
+            print('------------------------------------');
+            rethrow;
+          }
+        }
+        return groups;
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['error'] ?? 'Failed to load training groups');
@@ -868,7 +880,7 @@ class ApiService {
     }
   }
 
-  static Future<TrainingGroup> getTrainingGroupById(String id) async {
+  static Future<TrainingGroup> getTrainingGroupById(int id) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/training_groups/$id'),
@@ -927,7 +939,7 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteTrainingGroup(String id) async {
+  static Future<void> deleteTrainingGroup(int id) async {
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/api/training_groups/$id'),
@@ -963,7 +975,7 @@ class ApiService {
     }
   }
 
-  static Future<AnalyticGroup> getAnalyticGroupById(String id) async {
+  static Future<AnalyticGroup> getAnalyticGroupById(int id) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/analytic_groups/$id'),
@@ -1022,7 +1034,7 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteAnalyticGroup(String id) async {
+  static Future<void> deleteAnalyticGroup(int id) async {
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/api/analytic_groups/$id'),
@@ -1039,7 +1051,7 @@ class ApiService {
   }
 
   // Group Schedule Slots
-  static Future<List<GroupScheduleSlot>> getGroupScheduleSlots(String groupId) async {
+  static Future<List<GroupScheduleSlot>> getGroupScheduleSlots(int groupId) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/group_schedules/$groupId'),
@@ -1058,7 +1070,7 @@ class ApiService {
     }
   }
 
-  static Future<GroupScheduleSlot> createGroupScheduleSlot(String groupId, GroupScheduleSlot slot) async {
+  static Future<GroupScheduleSlot> createGroupScheduleSlot(int groupId, GroupScheduleSlot slot) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/group_schedules/$groupId'),
@@ -1098,7 +1110,7 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteGroupScheduleSlot(String id) async {
+  static Future<void> deleteGroupScheduleSlot(int id) async {
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/api/group_schedules/$id'),
@@ -1115,7 +1127,7 @@ class ApiService {
   }
 
   // Training Group Members
-  static Future<List<String>> getTrainingGroupMembers(String groupId) async {
+  static Future<List<int>> getTrainingGroupMembers(int groupId) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/training_groups/$groupId/members'),
@@ -1123,7 +1135,7 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
-        return data.cast<String>().toList();
+        return data.cast<int>().toList();
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['error'] ?? 'Failed to load group members for group $groupId');
@@ -1134,7 +1146,7 @@ class ApiService {
     }
   }
 
-  static Future<void> addTrainingGroupMember(String groupId, String userId) async {
+  static Future<void> addTrainingGroupMember(int groupId, int userId) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/training_groups/$groupId/members'),
@@ -1151,7 +1163,7 @@ class ApiService {
     }
   }
 
-  static Future<void> removeTrainingGroupMember(String groupId, String userId) async {
+  static Future<void> removeTrainingGroupMember(int groupId, int userId) async {
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/api/training_groups/$groupId/members/$userId'),

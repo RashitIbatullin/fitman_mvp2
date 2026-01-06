@@ -5,7 +5,7 @@ import 'package:fitman_app/services/api_service.dart';
 import 'package:fitman_app/models/user_front.dart';
 
 class GroupMemberList extends ConsumerWidget {
-  final String groupId;
+  final int groupId;
   const GroupMemberList({super.key, required this.groupId});
 
   @override
@@ -26,7 +26,7 @@ class GroupMemberList extends ConsumerWidget {
             }
             return allUsersAsync.when(
               data: (allUsers) {
-                final members = allUsers.where((user) => memberIds.contains(user.id.toString())).toList();
+                final members = allUsers.where((user) => memberIds.contains(user.id)).toList();
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -38,7 +38,7 @@ class GroupMemberList extends ConsumerWidget {
                       trailing: IconButton(
                         icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
                         onPressed: () {
-                          ref.read(groupMembersProvider(groupId).notifier).removeMember(groupId, member.id.toString());
+                          ref.read(groupMembersProvider(groupId).notifier).removeMember(groupId, member.id);
                         },
                       ),
                     );
@@ -64,8 +64,8 @@ class GroupMemberList extends ConsumerWidget {
     );
   }
 
-  void _showAddMemberDialog(BuildContext context, WidgetRef ref, List<User> allUsers, List<String> currentMemberIds) {
-    final availableUsers = allUsers.where((user) => !currentMemberIds.contains(user.id.toString())).toList();
+  void _showAddMemberDialog(BuildContext context, WidgetRef ref, List<User> allUsers, List<int> currentMemberIds) {
+    final availableUsers = allUsers.where((user) => !currentMemberIds.contains(user.id)).toList();
 
     showDialog(
       context: context,
@@ -84,7 +84,7 @@ class GroupMemberList extends ConsumerWidget {
                       return ListTile(
                         title: Text(user.fullName),
                         onTap: () {
-                          ref.read(groupMembersProvider(groupId).notifier).addMember(groupId, user.id.toString());
+                          ref.read(groupMembersProvider(groupId).notifier).addMember(groupId, user.id);
                           Navigator.of(context).pop();
                         },
                       );

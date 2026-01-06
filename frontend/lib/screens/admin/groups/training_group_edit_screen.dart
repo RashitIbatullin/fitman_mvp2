@@ -17,18 +17,19 @@ class TrainingGroupEditScreen extends ConsumerStatefulWidget {
 
 class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final int? _groupId;
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   int? _selectedGroupTypeId;
-  String? _selectedPrimaryTrainerId;
-  String? _selectedPrimaryInstructorId;
-  String? _selectedResponsibleManagerId;
+  int? _selectedPrimaryTrainerId;
+  int? _selectedPrimaryInstructorId;
+  int? _selectedResponsibleManagerId;
   late TextEditingController _maxParticipantsController;
   late TextEditingController _currentParticipantsController;
   late DateTime _startDate;
   DateTime? _endDate;
   bool _isActive = true;
-  String? _chatId; // Assuming chat_id is managed elsewhere or auto-generated
+  int? _chatId; // Assuming chat_id is managed elsewhere or auto-generated
 
   TrainingGroup? _initialGroup;
   List<User> _trainers = [];
@@ -38,6 +39,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
   @override
   void initState() {
     super.initState();
+    _groupId = widget.groupId != null ? int.tryParse(widget.groupId!) : null;
     _nameController = TextEditingController();
     _descriptionController = TextEditingController();
     _maxParticipantsController = TextEditingController();
@@ -45,7 +47,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
     _startDate = DateTime.now();
     _fetchUsers();
 
-    if (widget.groupId != null) {
+    if (_groupId != null) {
       _loadGroupData();
     } else {
       _maxParticipantsController.text = '15';
@@ -68,8 +70,10 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
   }
 
   Future<void> _loadGroupData() async {
+    if (_groupId == null) return;
     try {
-      final group = await ApiService.getTrainingGroupById(widget.groupId!);
+      // Temp change to ApiService is needed here
+      final group = await ApiService.getTrainingGroupById(_groupId);
       if (!mounted) return; // Add check
       setState(() {
         _initialGroup = group;
@@ -83,12 +87,14 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
         _currentParticipantsController.text = group.currentParticipants.toString();
         _startDate = group.startDate;
         _endDate = group.endDate;
-        _isActive = group.isActive;
+        _isActive = group.isActive ?? true;
         _chatId = group.chatId;
       });
-    } catch (e) {
+    }
+    catch (e) {
       // Handle error
       print('Failed to load group data: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load group: $e')),
       );
@@ -109,7 +115,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
       _formKey.currentState!.save();
 
       final newGroup = TrainingGroup(
-        id: widget.groupId ?? '', // ID will be assigned by backend for new groups
+        id: _groupId, // Use the int? _groupId
         name: _nameController.text,
         description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
         trainingGroupTypeId: _selectedGroupTypeId!,
@@ -126,7 +132,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
       );
 
       try {
-        if (widget.groupId == null) {
+        if (_groupId == null) {
           // Create new group
           await ref.read(trainingGroupsProvider.notifier).createTrainingGroup(newGroup);
         } else {
@@ -152,7 +158,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.groupId == null ? 'Создать тренировочную группу' : 'Редактировать тренировочную группу'),
+        title: Text(_groupId == null ? 'Создать тренировочную группу' : 'Редактировать тренировочную группу'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -207,12 +213,12 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Center(child: Text('Ошибка: $err')),
               ),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<int>(
                 initialValue: _selectedPrimaryTrainerId,
                 decoration: const InputDecoration(labelText: 'Основной тренер'),
                 items: _trainers.map((user) {
                   return DropdownMenuItem(
-                    value: user.id.toString(),
+                    value: user.id,
                     child: Text(user.fullName),
                   );
                 }).toList(),
@@ -222,23 +228,23 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
                   });
                 },
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null) {
                     return 'Пожалуйста, выберите основного тренера';
                   }
                   return null;
                 },
               ),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<int>(
                 initialValue: _selectedPrimaryInstructorId,
                 decoration: const InputDecoration(labelText: 'Основной инструктор (опционально)'),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('Нет')),
                   ..._instructors.map((user) {
                     return DropdownMenuItem(
-                      value: user.id.toString(),
+                      value: user.id,
                       child: Text(user.fullName),
                     );
-                  }), // Removed .toList()
+                  }),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -246,17 +252,17 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
                   });
                 },
               ),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<int>(
                 initialValue: _selectedResponsibleManagerId,
                 decoration: const InputDecoration(labelText: 'Ответственный менеджер (опционально)'),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('Нет')),
                   ..._managers.map((user) {
                     return DropdownMenuItem(
-                      value: user.id.toString(),
+                      value: user.id,
                       child: Text(user.fullName),
                     );
-                  }), // Removed .toList()
+                  }),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -331,8 +337,8 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
               ),
               const Divider(),
               Text('Члены группы', style: Theme.of(context).textTheme.titleMedium),
-              if (widget.groupId != null) ...[
-                GroupMemberList(groupId: widget.groupId!), // Placeholder for member list widget
+              if (_groupId != null) ...[
+                GroupMemberList(groupId: _groupId), // Placeholder for member list widget
               ] else ...[
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
@@ -341,7 +347,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
               ],
               const Divider(),
               Text('Расписание группы', style: Theme.of(context).textTheme.titleMedium),
-              if (widget.groupId != null) ...[
+              if (_groupId != null) ...[
                 // TODO: Implement Group Schedule Slots management widget
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.0),

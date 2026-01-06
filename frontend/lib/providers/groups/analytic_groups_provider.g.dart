@@ -6,7 +6,7 @@ part of 'analytic_groups_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$analyticGroupsHash() => r'155e20970c2b4eea02b67c5e6be3ce05dda807f2';
+String _$analyticGroupsHash() => r'0996b7a606522ae4c00eae089c501987229b441f';
 
 /// See also [AnalyticGroups].
 @ProviderFor(AnalyticGroups)

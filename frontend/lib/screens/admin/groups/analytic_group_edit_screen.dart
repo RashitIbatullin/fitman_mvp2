@@ -14,6 +14,7 @@ class AnalyticGroupEditScreen extends ConsumerStatefulWidget {
 
 class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final int? _groupId;
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   AnalyticGroupType? _selectedType;
@@ -25,10 +26,11 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
   @override
   void initState() {
     super.initState();
+    _groupId = widget.groupId != null ? int.tryParse(widget.groupId!) : null;
     _nameController = TextEditingController();
     _descriptionController = TextEditingController();
 
-    if (widget.groupId != null) {
+    if (_groupId != null) {
       _loadGroupData();
     }
   }
@@ -36,7 +38,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
   Future<void> _loadGroupData() async {
     try {
       final group = await ref.read(analyticGroupsProvider.future)
-          .then((groups) => groups.firstWhere((g) => g.id == widget.groupId));
+          .then((groups) => groups.firstWhere((g) => g.id == _groupId));
       if (!mounted) return; // Add check
       setState(() {
         _initialGroup = group;
@@ -66,7 +68,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
       _formKey.currentState!.save();
 
       final newGroup = AnalyticGroup(
-        id: widget.groupId ?? '', // ID will be assigned by backend for new groups
+        id: _groupId, // Use the integer _groupId
         name: _nameController.text,
         description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
         type: _selectedType!,
@@ -77,7 +79,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
       );
 
       try {
-        if (widget.groupId == null) {
+        if (_groupId == null) {
           // Create new group
           await ref.read(analyticGroupsProvider.notifier).createAnalyticGroup(newGroup);
         } else {

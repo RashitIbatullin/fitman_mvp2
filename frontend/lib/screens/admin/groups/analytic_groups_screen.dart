@@ -29,11 +29,12 @@ class AnalyticGroupsScreen extends ConsumerWidget {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => AnalyticGroupEditScreen(groupId: group.id),
+                      builder: (context) => AnalyticGroupEditScreen(groupId: group.id?.toString()),
                     ),
                   );
                 },
                 onDelete: () async {
+                  if (group.id == null) return;
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -52,7 +53,7 @@ class AnalyticGroupsScreen extends ConsumerWidget {
                     ),
                   );
                   if (confirmed == true) {
-                    ref.read(analyticGroupsProvider.notifier).deleteAnalyticGroup(group.id);
+                    ref.read(analyticGroupsProvider.notifier).deleteAnalyticGroup(group.id!);
                   }
                 },
               );

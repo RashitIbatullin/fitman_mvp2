@@ -8,26 +8,26 @@ part of 'analytic_group.dart';
 
 AnalyticGroup _$AnalyticGroupFromJson(Map<String, dynamic> json) =>
     AnalyticGroup(
-      id: json['id'] as String,
+      id: (json['id'] as num?)?.toInt(),
       name: json['name'] as String,
       description: json['description'] as String?,
       type: const AnalyticGroupTypeConverter().fromJson(
         (json['type'] as num).toInt(),
       ),
-      isAutoUpdate: json['isAutoUpdate'] as bool? ?? false,
+      isAutoUpdate: json['is_auto_update'] as bool? ?? false,
       conditions:
           (json['conditions'] as List<dynamic>?)
               ?.map((e) => GroupCondition.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
       clientIds:
-          (json['clientIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
+          (json['client_ids_cache'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
               .toList() ??
-          const [],
-      lastUpdatedAt: json['lastUpdatedAt'] == null
+          [],
+      lastUpdatedAt: json['last_updated_at'] == null
           ? null
-          : DateTime.parse(json['lastUpdatedAt'] as String),
+          : DateTime.parse(json['last_updated_at'] as String),
       metadata: json['metadata'] as Map<String, dynamic>?,
     );
 
@@ -37,9 +37,9 @@ Map<String, dynamic> _$AnalyticGroupToJson(AnalyticGroup instance) =>
       'name': instance.name,
       'description': instance.description,
       'type': const AnalyticGroupTypeConverter().toJson(instance.type),
-      'isAutoUpdate': instance.isAutoUpdate,
+      'is_auto_update': instance.isAutoUpdate,
       'conditions': instance.conditions,
-      'clientIds': instance.clientIds,
-      'lastUpdatedAt': instance.lastUpdatedAt?.toIso8601String(),
+      'client_ids_cache': instance.clientIds,
+      'last_updated_at': instance.lastUpdatedAt?.toIso8601String(),
       'metadata': instance.metadata,
     };

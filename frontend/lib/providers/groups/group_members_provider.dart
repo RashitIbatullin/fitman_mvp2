@@ -6,11 +6,11 @@ part 'group_members_provider.g.dart';
 @Riverpod(keepAlive: true)
 class GroupMembers extends _$GroupMembers {
   @override
-  Future<List<String>> build(String groupId) async {
+  Future<List<int>> build(int groupId) async {
     return ApiService.getTrainingGroupMembers(groupId);
   }
 
-  Future<void> addMember(String groupId, String userId) async {
+  Future<void> addMember(int groupId, int userId) async {
     state = const AsyncValue.loading();
     try {
       await ApiService.addTrainingGroupMember(groupId, userId);
@@ -20,7 +20,7 @@ class GroupMembers extends _$GroupMembers {
     }
   }
 
-  Future<void> removeMember(String groupId, String userId) async {
+  Future<void> removeMember(int groupId, int userId) async {
     state = const AsyncValue.loading();
     try {
       await ApiService.removeTrainingGroupMember(groupId, userId);

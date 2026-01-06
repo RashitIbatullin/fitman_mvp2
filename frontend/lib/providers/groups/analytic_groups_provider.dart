@@ -31,7 +31,7 @@ class AnalyticGroups extends _$AnalyticGroups {
     }
   }
 
-  Future<void> deleteAnalyticGroup(String id) async {
+  Future<void> deleteAnalyticGroup(int id) async {
     state = const AsyncValue.loading();
     try {
       await ApiService.deleteAnalyticGroup(id);
