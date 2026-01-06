@@ -29,8 +29,9 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
   late DateTime _startDate;
   DateTime? _endDate;
   bool _isActive = true;
-  int? _chatId; // Assuming chat_id is managed elsewhere or auto-generated
+  int? _chatId;
 
+  bool _isLoading = true;
   TrainingGroup? _initialGroup;
   List<User> _trainers = [];
   List<User> _instructors = [];
@@ -45,54 +46,60 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
     _maxParticipantsController = TextEditingController();
     _currentParticipantsController = TextEditingController();
     _startDate = DateTime.now();
-    _fetchUsers();
+    _initialize();
+  }
 
+  Future<void> _initialize() async {
+    setState(() => _isLoading = true);
+    // Fetch users first
+    await _fetchUsers();
+    // If it's an existing group, load its data
     if (_groupId != null) {
-      _loadGroupData();
+      await _loadGroupData();
     } else {
+      // Set defaults for a new group
       _maxParticipantsController.text = '15';
       _currentParticipantsController.text = '0';
+      _selectedGroupTypeId = 3; // Default to 'Group' type
     }
+    setState(() => _isLoading = false);
   }
 
   Future<void> _fetchUsers() async {
     try {
       final users = await ApiService.getUsers();
-      setState(() {
-        _trainers = users.where((u) => u.roles.any((r) => r.name == 'trainer')).toList();
-        _instructors = users.where((u) => u.roles.any((r) => r.name == 'instructor')).toList();
-        _managers = users.where((u) => u.roles.any((r) => r.name == 'manager')).toList();
-      });
+      if (!mounted) return;
+      _trainers = users.where((u) => u.roles.any((r) => r.name == 'trainer')).toList();
+      _instructors = users.where((u) => u.roles.any((r) => r.name == 'instructor')).toList();
+      _managers = users.where((u) => u.roles.any((r) => r.name == 'manager')).toList();
     } catch (e) {
-      // Handle error
       print('Failed to fetch users: $e');
+      if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch users: $e')),
+      );
     }
   }
 
   Future<void> _loadGroupData() async {
-    if (_groupId == null) return;
     try {
-      // Temp change to ApiService is needed here
-      final group = await ApiService.getTrainingGroupById(_groupId);
-      if (!mounted) return; // Add check
-      setState(() {
-        _initialGroup = group;
-        _nameController.text = group.name;
-        _descriptionController.text = group.description ?? '';
-        _selectedGroupTypeId = group.trainingGroupTypeId;
-        _selectedPrimaryTrainerId = group.primaryTrainerId;
-        _selectedPrimaryInstructorId = group.primaryInstructorId;
-        _selectedResponsibleManagerId = group.responsibleManagerId;
-        _maxParticipantsController.text = group.maxParticipants.toString();
-        _currentParticipantsController.text = group.currentParticipants.toString();
-        _startDate = group.startDate;
-        _endDate = group.endDate;
-        _isActive = group.isActive ?? true;
-        _chatId = group.chatId;
-      });
+      final group = await ApiService.getTrainingGroupById(_groupId!);
+      if (!mounted) return;
+      _initialGroup = group;
+      _nameController.text = group.name;
+      _descriptionController.text = group.description ?? '';
+      _selectedGroupTypeId = group.trainingGroupTypeId;
+      _selectedPrimaryTrainerId = group.primaryTrainerId;
+      _selectedPrimaryInstructorId = group.primaryInstructorId;
+      _selectedResponsibleManagerId = group.responsibleManagerId;
+      _maxParticipantsController.text = group.maxParticipants.toString();
+      _currentParticipantsController.text = (group.currentParticipants ?? 0).toString();
+      _startDate = group.startDate;
+      _endDate = group.endDate;
+      _isActive = group.isActive ?? true;
+      _chatId = group.chatId;
     }
     catch (e) {
-      // Handle error
       print('Failed to load group data: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -162,11 +169,13 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: _saveForm,
+            onPressed: _isLoading ? null : _saveForm,
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -210,7 +219,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
                     return null;
                   },
                 ),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const SizedBox.shrink(),
                 error: (err, stack) => Center(child: Text('Ошибка: $err')),
               ),
               DropdownButtonFormField<int>(
@@ -338,7 +347,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
               const Divider(),
               Text('Члены группы', style: Theme.of(context).textTheme.titleMedium),
               if (_groupId != null) ...[
-                GroupMemberList(groupId: _groupId), // Placeholder for member list widget
+                GroupMemberList(groupId: _groupId),
               ] else ...[
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
@@ -348,7 +357,6 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
               const Divider(),
               Text('Расписание группы', style: Theme.of(context).textTheme.titleMedium),
               if (_groupId != null) ...[
-                // TODO: Implement Group Schedule Slots management widget
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
                   child: Text('Расписание можно настроить после создания группы.'),

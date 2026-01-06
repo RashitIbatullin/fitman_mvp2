@@ -3,8 +3,19 @@ import 'package:equatable/equatable.dart';
 
 part 'training_group.g.dart';
 
+DateTime? _nullableDateTimeFromJson(dynamic json) {
+  if (json == null) return null;
+  if (json is DateTime) {
+    return json;
+  }
+  if (json is String) {
+    return DateTime.parse(json);
+  }
+  throw ArgumentError('Invalid type for nullable DateTime: ${json.runtimeType}');
+}
+
 DateTime _dateTimeFromJson(dynamic json) {
-  if (json == null) return DateTime(0);
+  if (json == null) throw ArgumentError('A null value was provided for a non-nullable DateTime field.');
   if (json is DateTime) {
     return json;
   }
@@ -48,7 +59,7 @@ class TrainingGroup extends Equatable {
   // ЛИМИТЫ И ОГРАНИЧЕНИЯ
   @JsonKey(name: 'start_date', fromJson: _dateTimeFromJson)
   final DateTime startDate;          // Дата начала работы группы
-  @JsonKey(name: 'end_date', fromJson: _dateTimeFromJson)
+  @JsonKey(name: 'end_date', fromJson: _nullableDateTimeFromJson)
   final DateTime? endDate;           // Дата окончания (если предусмотрена)
   @JsonKey(name: 'max_participants')
   final int maxParticipants;         // Максимальное количество участников
@@ -63,15 +74,15 @@ class TrainingGroup extends Equatable {
 
   @JsonKey(name: 'company_id')
   final int? companyId;
-  @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
-  final DateTime createdAt;
-  @JsonKey(name: 'updated_at', fromJson: _dateTimeFromJson)
-  final DateTime updatedAt;
+  @JsonKey(name: 'created_at', fromJson: _nullableDateTimeFromJson)
+  final DateTime? createdAt;
+  @JsonKey(name: 'updated_at', fromJson: _nullableDateTimeFromJson)
+  final DateTime? updatedAt;
   @JsonKey(name: 'created_by')
   final int? createdBy;
   @JsonKey(name: 'updated_by')
   final int? updatedBy;
-  @JsonKey(name: 'archived_at', fromJson: _dateTimeFromJson)
+  @JsonKey(name: 'archived_at', fromJson: _nullableDateTimeFromJson)
   final DateTime? archivedAt;
   @JsonKey(name: 'archived_by')
   final int? archivedBy;
@@ -95,8 +106,8 @@ class TrainingGroup extends Equatable {
     this.isActive,
     this.chatId,
     this.companyId,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
     this.createdBy,
     this.updatedBy,
     this.archivedAt,

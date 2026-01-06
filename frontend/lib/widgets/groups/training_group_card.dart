@@ -1,8 +1,13 @@
+import 'package:fitman_app/models/groups/training_group_type.dart';
+import 'package:fitman_app/models/user_front.dart';
+import 'package:fitman_app/providers/groups/training_groups_provider.dart';
+import 'package:fitman_app/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:fitman_app/models/groups/training_group.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class TrainingGroupCard extends StatelessWidget {
+class TrainingGroupCard extends ConsumerWidget {
   final TrainingGroup group;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -15,7 +20,59 @@ class TrainingGroupCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usersState = ref.watch(usersProvider);
+    final groupTypesAsync = ref.watch(trainingGroupTypesProvider);
+
+    Widget buildPersonnelInfo() {
+      if (usersState.isLoading) {
+        return _buildInfoRow(context, Icons.person, 'Тренер:', 'Загрузка...');
+      }
+      if (usersState.error != null) {
+        return _buildInfoRow(context, Icons.person, 'Тренер:', 'Ошибка');
+      }
+
+      User? findUser(int? userId) {
+        if (userId == null) return null;
+        try {
+          return usersState.users.firstWhere((user) => user.id == userId);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      final trainer = findUser(group.primaryTrainerId);
+      final instructor = findUser(group.primaryInstructorId);
+      final manager = findUser(group.responsibleManagerId);
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoRow(context, Icons.person, 'Тренер:', trainer?.fullName ?? 'Неизвестно'),
+          if (instructor != null)
+            _buildInfoRow(context, Icons.person_outline, 'Инструктор:', instructor.fullName),
+          if (manager != null)
+            _buildInfoRow(context, Icons.manage_accounts, 'Менеджер:', manager.fullName),
+        ],
+      );
+    }
+    
+    Widget buildGroupTypeInfo() {
+      return groupTypesAsync.when(
+        data: (types) {
+          TrainingGroupType? type;
+          try {
+            type = types.firstWhere((t) => t.id == group.trainingGroupTypeId);
+          } catch (e) {
+            type = null;
+          }
+          return _buildInfoRow(context, Icons.groups, 'Тип:', type?.title ?? 'Неизвестно');
+        },
+        loading: () => _buildInfoRow(context, Icons.groups, 'Тип:', 'Загрузка...'),
+        error: (e, st) => _buildInfoRow(context, Icons.groups, 'Тип:', 'Ошибка'),
+      );
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
@@ -51,13 +108,34 @@ class TrainingGroupCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              const SizedBox(height: 8.0),
-              _buildInfoRow(context, Icons.person, 'Тренер:', group.primaryTrainerId.toString()),
-              _buildInfoRow(context, Icons.people, 'Участники:', '${group.currentParticipants ?? 0}/${group.maxParticipants}'),
-              _buildInfoRow(context, Icons.calendar_today, 'Начало:', DateFormat('dd.MM.yyyy').format(group.startDate)),
-              if (group.endDate != null)
-                _buildInfoRow(context, Icons.calendar_today, 'Окончание:', DateFormat('dd.MM.yyyy').format(group.endDate!)),
-              _buildInfoRow(context, Icons.check_circle, 'Активна:', (group.isActive ?? false) ? 'Да' : 'Нет'),
+              const SizedBox(height: 12.0),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        buildPersonnelInfo(),
+                        buildGroupTypeInfo(),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildInfoRow(context, Icons.calendar_today, 'Начало:', DateFormat('dd.MM.yyyy').format(group.startDate)),
+                        if (group.endDate != null)
+                          _buildInfoRow(context, Icons.calendar_today, 'Окончание:', DateFormat('dd.MM.yyyy').format(group.endDate!)),
+                        _buildInfoRow(context, Icons.check_circle, 'Активна:', (group.isActive ?? false) ? 'Да' : 'Нет'),
+                        _buildInfoRow(context, Icons.people, 'Участники:', '${group.currentParticipants ?? 0}/${group.maxParticipants}'),
+                      ],
+                    ),
+                  ),
+                ],
+              )
             ],
           ),
         ),

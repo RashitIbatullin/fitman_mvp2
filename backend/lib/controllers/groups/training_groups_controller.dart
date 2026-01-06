@@ -13,13 +13,20 @@ class TrainingGroupsController {
     final router = Router();
 
     router.get('/', _getAllTrainingGroups);
-    router.get('/<id>', _getTrainingGroupById);
     router.post('/', _createTrainingGroup);
+    router.get('/<id>', _getTrainingGroupById);
     router.put('/<id>', _updateTrainingGroup);
     router.delete('/<id>', _deleteTrainingGroup);
 
+    // Member routes
+    router.get('/<id>/members', _getTrainingGroupMembers);
+    router.post('/<id>/members', _addTrainingGroupMember);
+    router.delete('/<id>/members/<userId>', _removeTrainingGroupMember);
+    
     return router;
   }
+
+  // --- Group Methods ---
 
   Future<Response> _getAllTrainingGroups(Request request) async {
     try {
@@ -30,9 +37,10 @@ class TrainingGroupsController {
     }
   }
 
-  Future<Response> _getTrainingGroupById(Request request, int id) async {
+  Future<Response> _getTrainingGroupById(Request request, String id) async {
     try {
-      final group = await _db.groups.getTrainingGroupById(id);
+      final groupId = int.parse(id);
+      final group = await _db.groups.getTrainingGroupById(groupId);
       if (group == null) {
         return Response.notFound(jsonEncode({'error': 'TrainingGroup not found'}));
       }
@@ -45,9 +53,7 @@ class TrainingGroupsController {
   Future<Response> _createTrainingGroup(Request request) async {
     try {
       final payload = jsonDecode(await request.readAsString());
-      // TODO: Get creatorId from authenticated user context
-      const creatorId = 1; // Placeholder for now
-
+      const creatorId = 1; // Placeholder
       final newGroup = TrainingGroup.fromJson(payload);
       final createdGroup = await _db.groups.createTrainingGroup(newGroup, creatorId);
       return Response(201, headers: {'Content-Type': 'application/json', 'Location': '/training_groups/${createdGroup.id}'}, body: jsonEncode(createdGroup.toJson()));
@@ -56,13 +62,12 @@ class TrainingGroupsController {
     }
   }
 
-  Future<Response> _updateTrainingGroup(Request request, int id) async {
+  Future<Response> _updateTrainingGroup(Request request, String id) async {
     try {
+      final groupId = int.parse(id);
       final payload = jsonDecode(await request.readAsString());
-      // TODO: Get updaterId from authenticated user context
-      const updaterId = 1; // Placeholder for now
-
-      final updatedGroup = TrainingGroup.fromJson({...payload, 'id': id}); // Ensure ID is from path
+      const updaterId = 1; // Placeholder
+      final updatedGroup = TrainingGroup.fromJson({...payload, 'id': groupId});
       final resultGroup = await _db.groups.updateTrainingGroup(updatedGroup, updaterId);
       return Response.ok(jsonEncode(resultGroup.toJson()));
     } catch (e) {
@@ -70,11 +75,48 @@ class TrainingGroupsController {
     }
   }
 
-  Future<Response> _deleteTrainingGroup(Request request, int id) async {
+  Future<Response> _deleteTrainingGroup(Request request, String id) async {
     try {
-      // TODO: Get archiverId from authenticated user context
-      const archiverId = 1; // Placeholder for now
-      await _db.groups.deleteTrainingGroup(id, archiverId);
+      final groupId = int.parse(id);
+      const archiverId = 1; // Placeholder
+      await _db.groups.deleteTrainingGroup(groupId, archiverId);
+      return Response(204);
+    } catch (e) {
+      return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
+    }
+  }
+
+  // --- Member Methods ---
+
+  Future<Response> _getTrainingGroupMembers(Request request, String id) async {
+    try {
+      final groupId = int.parse(id);
+      final members = await _db.groups.getTrainingGroupMembers(groupId);
+      return Response.ok(jsonEncode(members));
+    } catch (e) {
+      return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
+    }
+  }
+
+  Future<Response> _addTrainingGroupMember(Request request, String id) async {
+    try {
+      final groupId = int.parse(id);
+      final payload = jsonDecode(await request.readAsString());
+      final int userId = payload['userId'] as int;
+      const addedById = 1; // Placeholder
+
+      await _db.groups.addTrainingGroupMember(groupId, userId, addedById);
+      return Response.ok(jsonEncode({'message': 'Member added successfully'}));
+    } catch (e) {
+      return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
+    }
+  }
+
+  Future<Response> _removeTrainingGroupMember(Request request, String id, String userId) async {
+    try {
+      final gId = int.parse(id);
+      final uId = int.parse(userId);
+      await _db.groups.removeTrainingGroupMember(gId, uId);
       return Response(204);
     } catch (e) {
       return Response.internalServerError(body: jsonEncode({'error': e.toString()}));

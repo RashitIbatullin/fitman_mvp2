@@ -19,7 +19,6 @@ import '../controllers/chat_controller.dart';
 import '../controllers/groups/training_groups_controller.dart'; // New import
 import '../controllers/groups/analytic_groups_controller.dart'; // New import
 import '../controllers/groups/group_schedule_controller.dart'; // New import
-import '../controllers/groups/group_members_controller.dart'; // New import
 import '../controllers/groups/training_group_types_controller.dart'; // New import
 import '../modules/infrastructure/controllers/room.controller.dart';
 import '../modules/infrastructure/controllers/equipment_item.controller.dart';
@@ -28,11 +27,12 @@ import '../config/database.dart'; // Add this import
 
 final Database _db = Database(); // Instantiate Database once
 
+// Group-related controllers
 final _trainingGroupsController = TrainingGroupsController(_db);
 final _analyticGroupsController = AnalyticGroupsController(_db);
 final _groupScheduleController = GroupScheduleController(_db);
-final _groupMembersController = GroupMembersController(_db);
 final _trainingGroupTypesController = TrainingGroupTypesController(_db);
+
 
 // Infrastructure controllers
 final _roomController = RoomController(_db);
@@ -212,8 +212,6 @@ final Router router = Router()
   ..mount('/api/analytic_groups', _adminHandler(_analyticGroupsController.router.call))
 // Group Schedule routes (Admin access)
   ..mount('/api/group_schedules', _adminHandler(_groupScheduleController.router.call))
-// Group Members routes (Admin access) - assuming nested under training_groups
-  ..mount('/api/training_groups', _adminHandler(_groupMembersController.router.call))
 
 // Infrastructure routes
   ..get('/api/rooms', (Request request) => _adminHandler(_roomController.getAllRooms)(request))

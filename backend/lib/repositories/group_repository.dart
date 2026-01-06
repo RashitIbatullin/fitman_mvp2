@@ -42,13 +42,13 @@ class GroupRepository {
           name, description, training_group_type_id, primary_trainer_id, primary_instructor_id,
           responsible_manager_id, program_id, goal_id, level_id,
           max_participants, current_participants, start_date, end_date,
-          is_active, chat_id, company_id, created_at, updated_at, created_by, updated_by, archived_at, archived_by
+          is_active, chat_id, created_by, updated_by
         )
         VALUES (
-          @name, @description, @training_group_type_id, @primary_trainer_id,
+          @name, @description, @training_group_type_id, @primary_trainer_id, @primary_instructor_id,
           @responsible_manager_id, @program_id, @goal_id, @level_id,
           @max_participants, @current_participants, @start_date, @end_date,
-          @is_active, @chat_id, @company_id, @created_at, @updated_at, @created_by, @updated_by, @archived_at, @archived_by
+          @is_active, @chat_id, @created_by, @updated_by
         )
         RETURNING *
       '''),
@@ -68,13 +68,8 @@ class GroupRepository {
         'end_date': group.endDate?.toIso8601String(),
         'is_active': group.isActive,
         'chat_id': group.chatId,
-        'company_id': group.companyId ?? -1,
-        'created_at': group.createdAt.toIso8601String(),
-        'updated_at': group.updatedAt.toIso8601String(),
-        'created_by': group.createdBy ?? creatorId,
-        'updated_by': group.updatedBy ?? creatorId,
-        'archived_at': group.archivedAt?.toIso8601String(),
-        'archived_by': group.archivedBy,
+        'created_by': creatorId,
+        'updated_by': creatorId,
       },
     );
     return TrainingGroup.fromJson(result.first.toColumnMap());
@@ -101,13 +96,8 @@ class GroupRepository {
           end_date = @end_date,
           is_active = @is_active,
           chat_id = @chat_id,
-          company_id = @company_id,
-          created_at = @created_at,
-          created_by = @created_by,
-          archived_at = @archived_at,
-          archived_by = @archived_by,
           updated_by = @updated_by,
-          updated_at = @updated_at
+          updated_at = NOW()
         WHERE id = @id
         RETURNING *
       '''),
@@ -128,13 +118,7 @@ class GroupRepository {
         'end_date': group.endDate?.toIso8601String(),
         'is_active': group.isActive,
         'chat_id': group.chatId,
-        'updated_by': group.updatedBy,
-        'updated_at': group.updatedAt.toIso8601String(),
-        'company_id': group.companyId,
-        'created_at': group.createdAt.toIso8601String(),
-        'created_by': group.createdBy,
-        'archived_at': group.archivedAt?.toIso8601String(),
-        'archived_by': group.archivedBy,
+        'updated_by': updaterId,
       },
     );
     return TrainingGroup.fromJson(result.first.toColumnMap());
