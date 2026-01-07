@@ -151,12 +151,13 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
               ),
               const SizedBox(width: 16.0), // Spacer
 
-              ChoiceChip(
-                label: const Text('Все (Актив)'),
-                selected: _isActiveFilter == null,
-                onSelected: (selected) {
+              // PopupMenuButton for Active/Inactive status
+              PopupMenuButton<bool?>(
+                tooltip: 'Фильтр по активности',
+                initialValue: _isActiveFilter,
+                onSelected: (bool? value) {
                   setState(() {
-                    _isActiveFilter = null;
+                    _isActiveFilter = value;
                   });
                   ref.invalidate(trainingGroupsProvider(
                     searchQuery: _searchQuery,
@@ -168,57 +169,38 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                     managerId: _selectedManagerId,
                   ));
                 },
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: ChoiceChip(
-                  label: const Text('Активные'),
-                  selected: _isActiveFilter == true,
-                  onSelected: (selected) {
-                    setState(() {
-                      _isActiveFilter = selected ? true : null;
-                    });
-                    ref.invalidate(trainingGroupsProvider(
-                      searchQuery: _searchQuery,
-                      groupTypeId: _selectedGroupTypeId,
-                      isActive: _isActiveFilter,
-                      isArchived: _isArchivedFilter,
-                      trainerId: _selectedTrainerId,
-                      instructorId: _selectedInstructorId,
-                      managerId: _selectedManagerId,
-                    ));
-                  },
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<bool?>>[
+                  const PopupMenuItem<bool?>(
+                    value: null,
+                    child: Text('Все (Активность)'),
+                  ),
+                  const PopupMenuItem<bool?>(
+                    value: true,
+                    child: Text('Активные'),
+                  ),
+                  const PopupMenuItem<bool?>(
+                    value: false,
+                    child: Text('Неактивные'),
+                  ),
+                ],
+                child: Chip(
+                  label: Text(
+                    _isActiveFilter == null
+                        ? 'Статус: Все'
+                        : (_isActiveFilter! ? 'Статус: Активные' : 'Статус: Неактивные'),
+                  ),
+                  avatar: const Icon(Icons.filter_alt),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: ChoiceChip(
-                  label: const Text('Неактивные'),
-                  selected: _isActiveFilter == false,
-                  onSelected: (selected) {
-                    setState(() {
-                      _isActiveFilter = selected ? false : null;
-                    });
-                    ref.invalidate(trainingGroupsProvider(
-                      searchQuery: _searchQuery,
-                      groupTypeId: _selectedGroupTypeId,
-                      isActive: _isActiveFilter,
-                      isArchived: _isArchivedFilter,
-                      trainerId: _selectedTrainerId,
-                      instructorId: _selectedInstructorId,
-                      managerId: _selectedManagerId,
-                    ));
-                  },
-                ),
-              ),
-              const SizedBox(width: 16.0), // Spacer
+              const SizedBox(width: 8.0), // Spacer
 
-              ChoiceChip(
-                label: const Text('Все (Архив)'),
-                selected: _isArchivedFilter == null,
-                onSelected: (selected) {
+              // PopupMenuButton for Archived status
+              PopupMenuButton<bool?>(
+                tooltip: 'Фильтр по архивации',
+                initialValue: _isArchivedFilter,
+                onSelected: (bool? value) {
                   setState(() {
-                    _isArchivedFilter = null;
+                    _isArchivedFilter = value;
                   });
                   ref.invalidate(trainingGroupsProvider(
                     searchQuery: _searchQuery,
@@ -230,47 +212,27 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                     managerId: _selectedManagerId,
                   ));
                 },
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: ChoiceChip(
-                  label: const Text('Архивные'),
-                  selected: _isArchivedFilter == true,
-                  onSelected: (selected) {
-                    setState(() {
-                      _isArchivedFilter = selected ? true : null;
-                    });
-                    ref.invalidate(trainingGroupsProvider(
-                      searchQuery: _searchQuery,
-                      groupTypeId: _selectedGroupTypeId,
-                      isActive: _isActiveFilter,
-                      isArchived: _isArchivedFilter,
-                      trainerId: _selectedTrainerId,
-                      instructorId: _selectedInstructorId,
-                      managerId: _selectedManagerId,
-                    ));
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: ChoiceChip(
-                  label: const Text('Неархивные'),
-                  selected: _isArchivedFilter == false,
-                  onSelected: (selected) {
-                    setState(() {
-                      _isArchivedFilter = selected ? false : null;
-                    });
-                    ref.invalidate(trainingGroupsProvider(
-                      searchQuery: _searchQuery,
-                      groupTypeId: _selectedGroupTypeId,
-                      isActive: _isActiveFilter,
-                      isArchived: _isArchivedFilter,
-                      trainerId: _selectedTrainerId,
-                      instructorId: _selectedInstructorId,
-                      managerId: _selectedManagerId,
-                    ));
-                  },
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<bool?>>[
+                  const PopupMenuItem<bool?>(
+                    value: null,
+                    child: Text('Все (Архив)'),
+                  ),
+                  const PopupMenuItem<bool?>(
+                    value: true,
+                    child: Text('Архивные'),
+                  ),
+                  const PopupMenuItem<bool?>(
+                    value: false,
+                    child: Text('Неархивные'),
+                  ),
+                ],
+                child: Chip(
+                  label: Text(
+                    _isArchivedFilter == null
+                        ? 'Архив: Все'
+                        : (_isArchivedFilter! ? 'Архив: Архивные' : 'Архив: Неархивные'),
+                  ),
+                  avatar: const Icon(Icons.archive),
                 ),
               ),
             ],
