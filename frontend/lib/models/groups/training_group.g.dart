@@ -31,6 +31,10 @@ TrainingGroup _$TrainingGroupFromJson(Map<String, dynamic> json) =>
       currentParticipants: (json['current_participants'] as num?)?.toInt(),
       isActive: json['is_active'] as bool?,
       chatId: (json['chat_id'] as num?)?.toInt(),
+      archivedAt: json['archived_at'] == null
+          ? null
+          : DateTime.parse(json['archived_at'] as String),
+      archivedBy: (json['archived_by'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$TrainingGroupToJson(TrainingGroup instance) =>
@@ -52,4 +56,6 @@ Map<String, dynamic> _$TrainingGroupToJson(TrainingGroup instance) =>
       'current_participants': instance.currentParticipants,
       'is_active': instance.isActive,
       'chat_id': instance.chatId,
+      'archived_at': instance.archivedAt?.toIso8601String(),
+      'archived_by': instance.archivedBy,
     };

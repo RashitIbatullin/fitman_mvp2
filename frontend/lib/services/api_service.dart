@@ -849,10 +849,24 @@ class ApiService {
   // --- Group API Methods ---
 
   // Training Groups
-  static Future<List<TrainingGroup>> getAllTrainingGroups() async {
+  static Future<List<TrainingGroup>> getAllTrainingGroups({
+    bool? isActive,
+    bool? isArchived,
+  }) async {
     try {
+      final queryParameters = <String, String>{};
+      if (isActive != null) {
+        queryParameters['isActive'] = isActive.toString();
+      }
+      if (isArchived != null) {
+        queryParameters['isArchived'] = isArchived.toString();
+      }
+
+      final uri = Uri.parse('$baseUrl/api/training_groups')
+          .replace(queryParameters: queryParameters.isNotEmpty ? queryParameters : null);
+
       final response = await http.get(
-        Uri.parse('$baseUrl/api/training_groups'),
+        uri,
         headers: _headers,
       );
       if (response.statusCode == 200) {
@@ -956,10 +970,24 @@ class ApiService {
   }
 
   // Analytic Groups
-  static Future<List<AnalyticGroup>> getAllAnalyticGroups() async {
+  static Future<List<AnalyticGroup>> getAllAnalyticGroups({
+    bool? isActive,
+    bool? isArchived,
+  }) async {
     try {
+      final queryParameters = <String, String>{};
+      if (isActive != null) {
+        queryParameters['isActive'] = isActive.toString();
+      }
+      if (isArchived != null) {
+        queryParameters['isArchived'] = isArchived.toString();
+      }
+
+      final uri = Uri.parse('$baseUrl/api/analytic_groups')
+          .replace(queryParameters: queryParameters.isNotEmpty ? queryParameters : null);
+
       final response = await http.get(
-        Uri.parse('$baseUrl/api/analytic_groups'),
+        uri,
         headers: _headers,
       );
       if (response.statusCode == 200) {

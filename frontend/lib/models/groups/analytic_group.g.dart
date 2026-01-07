@@ -29,6 +29,10 @@ AnalyticGroup _$AnalyticGroupFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['last_updated_at'] as String),
       metadata: json['metadata'] as Map<String, dynamic>?,
+      archivedAt: json['archived_at'] == null
+          ? null
+          : DateTime.parse(json['archived_at'] as String),
+      archivedBy: (json['archived_by'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$AnalyticGroupToJson(AnalyticGroup instance) =>
@@ -42,4 +46,6 @@ Map<String, dynamic> _$AnalyticGroupToJson(AnalyticGroup instance) =>
       'client_ids_cache': instance.clientIds,
       'last_updated_at': instance.lastUpdatedAt?.toIso8601String(),
       'metadata': instance.metadata,
+      'archived_at': instance.archivedAt?.toIso8601String(),
+      'archived_by': instance.archivedBy,
     };

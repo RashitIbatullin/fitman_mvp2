@@ -30,7 +30,14 @@ class TrainingGroupsController {
 
   Future<Response> _getAllTrainingGroups(Request request) async {
     try {
-      final groups = await _db.groups.getAllTrainingGroups();
+      final queryParams = request.url.queryParameters;
+      final bool? isActive = queryParams['isActive'] != null ? bool.parse(queryParams['isActive']!) : null;
+      final bool? isArchived = queryParams['isArchived'] != null ? bool.parse(queryParams['isArchived']!) : null;
+
+      final groups = await _db.groups.getAllTrainingGroups(
+        isActive: isActive,
+        isArchived: isArchived,
+      );
       return Response.ok(jsonEncode(groups.map((g) => g.toJson()).toList()));
     } catch (e) {
       return Response.internalServerError(body: jsonEncode({'error': e.toString()}));

@@ -12,9 +12,32 @@ class GroupRepository {
 
   // --- Training Group Methods ---
 
-  Future<List<TrainingGroup>> getAllTrainingGroups() async {
+  Future<List<TrainingGroup>> getAllTrainingGroups({bool? isActive, bool? isArchived}) async {
     final conn = await _db.connection;
-    final results = await conn.execute('SELECT * FROM training_groups WHERE archived_at IS NULL');
+    final List<String> whereClauses = [];
+    final Map<String, dynamic> parameters = {};
+
+    if (isActive != null) {
+      whereClauses.add('is_active = @isActive');
+      parameters['isActive'] = isActive;
+    }
+
+    if (isArchived != null) {
+      if (isArchived) {
+        whereClauses.add('archived_at IS NOT NULL');
+      } else {
+        whereClauses.add('archived_at IS NULL');
+      }
+    } else {
+      // By default, only show non-archived groups if isArchived is not specified
+      whereClauses.add('archived_at IS NULL');
+    }
+
+    final whereString = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
+    final results = await conn.execute(
+      Sql.named('SELECT * FROM training_groups $whereString'),
+      parameters: parameters,
+    );
     return results.map((row) {
       final map = row.toColumnMap();
       print('--- Raw DB Row Map ---');
@@ -146,9 +169,27 @@ class GroupRepository {
 
   // --- Analytic Group Methods ---
 
-  Future<List<AnalyticGroup>> getAllAnalyticGroups() async {
+  Future<List<AnalyticGroup>> getAllAnalyticGroups({bool? isArchived}) async {
     final conn = await _db.connection;
-    final results = await conn.execute('SELECT * FROM analytic_groups WHERE archived_at IS NULL');
+    final List<String> whereClauses = [];
+    final Map<String, dynamic> parameters = {};
+
+    if (isArchived != null) {
+      if (isArchived) {
+        whereClauses.add('archived_at IS NOT NULL');
+      } else {
+        whereClauses.add('archived_at IS NULL');
+      }
+    } else {
+      // By default, only show non-archived groups if isArchived is not specified
+      whereClauses.add('archived_at IS NULL');
+    }
+
+    final whereString = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
+    final results = await conn.execute(
+      Sql.named('SELECT * FROM analytic_groups $whereString'),
+      parameters: parameters,
+    );
     return results.map((row) {
       final map = row.toColumnMap();
       print('--- Raw Analytic Group DB Row Map ---');

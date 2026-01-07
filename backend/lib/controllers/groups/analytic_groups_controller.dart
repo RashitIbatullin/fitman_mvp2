@@ -3,7 +3,6 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import '../../config/database.dart';
 import '../../models/groups/analytic_group.dart';
-import '../../models/groups/group_condition.dart'; // Import GroupCondition
 
 class AnalyticGroupsController {
   final Database _db;
@@ -24,7 +23,12 @@ class AnalyticGroupsController {
 
   Future<Response> _getAllAnalyticGroups(Request request) async {
     try {
-      final groups = await _db.groups.getAllAnalyticGroups();
+      final queryParams = request.url.queryParameters;
+      final bool? isArchived = queryParams['isArchived'] != null ? bool.parse(queryParams['isArchived']!) : null;
+
+      final groups = await _db.groups.getAllAnalyticGroups(
+        isArchived: isArchived,
+      );
       return Response.ok(jsonEncode(groups.map((g) => g.toJson()).toList()));
     } catch (e) {
       return Response.internalServerError(body: jsonEncode({'error': e.toString()}));

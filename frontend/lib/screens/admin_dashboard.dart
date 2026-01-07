@@ -1,4 +1,5 @@
-import 'package:fitman_app/screens/admin/groups_dashboard_screen.dart';
+import 'package:fitman_app/screens/admin/groups/analytic_groups_screen.dart';
+import 'package:fitman_app/screens/admin/groups/training_groups_screen.dart';
 import 'package:fitman_app/screens/shared/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -49,7 +50,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   final List<String> _titles = const [
     'Главное',
     'Пользователи',
-    'Группы',
+    'Группы тренинга', // This title is now associated with a push, not IndexedStack
   ];
 
   Widget _buildDrawer(BuildContext context, WidgetRef ref) {
@@ -86,6 +87,22 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
             onTap: () {
               Navigator.pop(context); // Close drawer
               Navigator.push(context, MaterialPageRoute(builder: (context) => const CatalogsScreen()));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.group),
+            title: const Text('Группы тренинга'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const TrainingGroupsScreen()));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.analytics),
+            title: const Text('Группы анализа'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const AnalyticGroupsScreen()));
             },
           ),
           ListTile(
@@ -152,18 +169,19 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // Only include screens for IndexedStack. TrainingGroupsScreen will be pushed.
     final List<Widget> views = [
       const Center(child: Text('Главное')),
       UsersListScreen(scrollController: _scrollController, showToolbar: _showBars),
-      Container(), // Empty container for the groups tab
+      // TrainingGroupsScreen is removed from IndexedStack views
     ];
 
     void onItemTapped(int index) {
-      if (index == 2) { // Groups tab
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const GroupsDashboardScreen()),
+      if (index == 2) { // 'Группы тренинга' bottom nav item
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const TrainingGroupsScreen()),
         );
+        // Do not update _selectedIndex, stay on current tab (e.g., 'Главное')
         return;
       }
       if (index != _selectedIndex && !_showBars) {
@@ -203,7 +221,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.group),
-                  label: 'Группы',
+                  label: 'Группы тренинга', // Label updated
                 ),
               ],
               currentIndex: _selectedIndex,

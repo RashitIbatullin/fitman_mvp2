@@ -4,6 +4,7 @@ import 'package:fitman_app/providers/groups/analytic_groups_provider.dart';
 import 'package:fitman_app/models/groups/analytic_group.dart';
 import 'package:fitman_app/models/groups/group_condition.dart';
 import 'package:intl/intl.dart';
+import 'package:fitman_app/services/api_service.dart'; // Add this import
 
 class AnalyticGroupEditScreen extends ConsumerStatefulWidget {
   final String? groupId;
@@ -21,6 +22,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
   AnalyticGroupType? _selectedType;
   bool _isAutoUpdate = false;
   List<GroupCondition> _conditions = [];
+  bool _isArchived = false; // New state for archived status
 
   AnalyticGroup? _initialGroup;
 
@@ -38,8 +40,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
 
   Future<void> _loadGroupData() async {
     try {
-      final group = await ref.read(analyticGroupsProvider.future)
-          .then((groups) => groups.firstWhere((g) => g.id == _groupId));
+      final group = await ApiService.getAnalyticGroupById(_groupId!); // Use API service directly
       if (!mounted) return; // Add check
       setState(() {
         _initialGroup = group;
@@ -48,6 +49,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
         _selectedType = group.type;
         _isAutoUpdate = group.isAutoUpdate;
         _conditions = List.from(group.conditions);
+        _isArchived = group.archivedAt != null; // Set archived status
       });
     } catch (e) {
       print('Failed to load group data: $e');
@@ -69,23 +71,24 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
       _formKey.currentState!.save();
 
       final newGroup = AnalyticGroup(
-        id: _groupId, // Use the integer _groupId
+        id: _groupId,
         name: _nameController.text,
         description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
         type: _selectedType!,
         isAutoUpdate: _isAutoUpdate,
         conditions: _isAutoUpdate ? _conditions : [],
-        clientIds: _initialGroup?.clientIds ?? [], // ClientIds are managed by sync service
+        clientIds: _initialGroup?.clientIds ?? [],
         lastUpdatedAt: _initialGroup?.lastUpdatedAt,
+        archivedAt: _isArchived ? (_initialGroup?.archivedAt ?? DateTime.now()) : null, // Set archivedAt
       );
 
       try {
         if (_groupId == null) {
           // Create new group
-          await ref.read(analyticGroupsProvider.notifier).createAnalyticGroup(newGroup);
+          await ref.read(analyticGroupsProvider().notifier).createAnalyticGroup(newGroup);
         } else {
           // Update existing group
-          await ref.read(analyticGroupsProvider.notifier).updateAnalyticGroup(newGroup);
+          await ref.read(analyticGroupsProvider().notifier).updateAnalyticGroup(newGroup);
         }
         if (!mounted) return; // Add check
         ScaffoldMessenger.of(context).showSnackBar(
@@ -109,6 +112,28 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
       case AnalyticGroupType.financial: return 'Финансовая';
       case AnalyticGroupType.behavioral: return 'Поведенческая';
       case AnalyticGroupType.custom: return 'Произвольная';
+    }
+  }
+
+  List<DropdownMenuItem<String>> _getOperatorsForField(String field) {
+    switch (field) {
+      case 'age':
+      case 'last_visit_date':
+        return const [
+          DropdownMenuItem(value: 'equals', child: Text('=')),
+          DropdownMenuItem(value: 'greater_than', child: Text('>')),
+          DropdownMenuItem(value: 'less_than', child: Text('<')),
+        ];
+      case 'gender':
+      case 'subscription_type':
+        return const [
+          DropdownMenuItem(value: 'equals', child: Text('=')),
+        ];
+      default:
+        return const [
+          DropdownMenuItem(value: 'equals', child: Text('=')),
+          DropdownMenuItem(value: 'contains', child: Text('содержит')),
+        ];
     }
   }
 
@@ -179,6 +204,15 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
                         });
                       },
               ),
+              SwitchListTile(
+                title: const Text('В архиве'),
+                value: _isArchived,
+                onChanged: (value) {
+                  setState(() {
+                    _isArchived = value;
+                  });
+                },
+              ),
               if (_isAutoUpdate) ...[
                 const Divider(),
                 Text('Условия для автоматического обновления', style: Theme.of(context).textTheme.titleMedium),
@@ -208,7 +242,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
   Widget _buildConditionRow(GroupCondition condition) {
     int index = _conditions.indexOf(condition);
 
-    List<DropdownMenuItem<String>> _getOperatorsForField(String field) {
+    List<DropdownMenuItem<String>> getOperatorsForField(String field) {
       switch (field) {
         case 'age':
         case 'last_visit_date':
@@ -240,7 +274,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
           Expanded(
             flex: 2,
             child: DropdownButtonFormField<String>(
-              value: condition.field.isEmpty ? null : condition.field,
+              initialValue: condition.field.isEmpty ? null : condition.field,
               decoration: const InputDecoration(labelText: 'Поле'),
               items: const [
                 DropdownMenuItem(value: 'age', child: Text('Возраст')),
@@ -249,7 +283,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
                 DropdownMenuItem(value: 'last_visit_date', child: Text('Дата посл. визита')),
               ],
               onChanged: (value) => setState(() {
-                final newOperator = _getOperatorsForField(value!).first.value!;
+                final newOperator = getOperatorsForField(value!).first.value!;
                 _conditions[index] = _conditions[index].copyWith(field: value, value: '', operator: newOperator);
               }),
               validator: (value) {
@@ -264,7 +298,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
           Expanded(
             flex: 2,
             child: DropdownButtonFormField<String>(
-              value: condition.operator,
+              initialValue: condition.operator,
               decoration: const InputDecoration(labelText: 'Оператор'),
               items: operatorItems,
               onChanged: (value) => setState(() {
@@ -294,7 +328,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
     switch (condition.field) {
       case 'gender':
         return DropdownButtonFormField<String>(
-          value: condition.value.isEmpty ? null : condition.value,
+          initialValue: condition.value.isEmpty ? null : condition.value,
           decoration: const InputDecoration(labelText: 'Значение'),
           items: const [
             DropdownMenuItem(value: 'мужской', child: Text('Мужской')),
@@ -309,7 +343,7 @@ class _AnalyticGroupEditScreenState extends ConsumerState<AnalyticGroupEditScree
       case 'subscription_type':
         // TODO: Fetch subscription types from a catalog
         return DropdownButtonFormField<String>(
-          value: condition.value.isEmpty ? null : condition.value,
+          initialValue: condition.value.isEmpty ? null : condition.value,
           decoration: const InputDecoration(labelText: 'Значение'),
           items: const [
             DropdownMenuItem(value: 'standard', child: Text('Стандарт')),

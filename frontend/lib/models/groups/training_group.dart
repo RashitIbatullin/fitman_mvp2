@@ -49,6 +49,10 @@ class TrainingGroup extends Equatable {
   final bool? isActive;               // Активна ли группа
   @JsonKey(name: 'chat_id')
   final int? chatId;              // Ссылка на групповой чат (создается автоматически)
+  @JsonKey(name: 'archived_at')
+  final DateTime? archivedAt;
+  @JsonKey(name: 'archived_by')
+  final int? archivedBy;
 
   const TrainingGroup({
     this.id,
@@ -68,6 +72,8 @@ class TrainingGroup extends Equatable {
     this.currentParticipants,
     this.isActive,
     this.chatId,
+    this.archivedAt,
+    this.archivedBy,
   });
 
   factory TrainingGroup.fromJson(Map<String, dynamic> json) => _$TrainingGroupFromJson(json);
@@ -92,5 +98,7 @@ class TrainingGroup extends Equatable {
         currentParticipants,
         isActive,
         chatId,
+        archivedAt,
+        archivedBy,
       ];
 }

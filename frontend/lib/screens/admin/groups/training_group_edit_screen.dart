@@ -141,10 +141,10 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
       try {
         if (_groupId == null) {
           // Create new group
-          await ref.read(trainingGroupsProvider.notifier).createTrainingGroup(newGroup);
+          await ref.read(trainingGroupsProvider().notifier).createTrainingGroup(newGroup);
         } else {
           // Update existing group
-          await ref.read(trainingGroupsProvider.notifier).updateTrainingGroup(newGroup);
+          await ref.read(trainingGroupsProvider().notifier).updateTrainingGroup(newGroup);
         }
         if (!mounted) return; // Add check
         ScaffoldMessenger.of(context).showSnackBar(

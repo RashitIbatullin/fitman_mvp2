@@ -44,6 +44,10 @@ class AnalyticGroup extends Equatable {
   
   // ДОПОЛНИТЕЛЬНЫЕ ДАННЫЕ
   final Map<String, dynamic>? metadata; // Дополнительные данные по типам
+  @JsonKey(name: 'archived_at')
+  final DateTime? archivedAt;
+  @JsonKey(name: 'archived_by')
+  final int? archivedBy;
 
   const AnalyticGroup({
     this.id,
@@ -55,6 +59,8 @@ class AnalyticGroup extends Equatable {
     this.clientIds = const [],
     this.lastUpdatedAt,
     this.metadata,
+    this.archivedAt,
+    this.archivedBy,
   });
 
   factory AnalyticGroup.fromJson(Map<String, dynamic> json) => _$AnalyticGroupFromJson(json);
@@ -71,5 +77,7 @@ class AnalyticGroup extends Equatable {
         clientIds,
         lastUpdatedAt,
         metadata,
+        archivedAt,
+        archivedBy,
       ];
 }

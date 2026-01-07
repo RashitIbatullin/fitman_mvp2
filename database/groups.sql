@@ -24,9 +24,9 @@ CREATE TABLE training_group_types (
 
 -- Заполняем стандартные значения
 INSERT INTO training_group_types (name, title, min_participants, max_participants) VALUES
-  ('individual', 'Индивидуальное занятие', 1, 1),
-  ('semi_personal', 'Полуперсональная тренировка', 2, 3),
-  ('group', 'Групповое занятие', 4, 50);
+  ('individual', 'Индивид.', 1, 1),
+  ('semi_personal', 'Полуперсон.', 2, 2),
+  ('group', 'Группа', 4, 50);
   
   
 -- Таблица для хранения тренировочных групп
