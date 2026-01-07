@@ -850,16 +850,36 @@ class ApiService {
 
   // Training Groups
   static Future<List<TrainingGroup>> getAllTrainingGroups({
+    String? searchQuery,
+    int? groupTypeId,
     bool? isActive,
     bool? isArchived,
+    int? trainerId,
+    int? instructorId,
+    int? managerId,
   }) async {
     try {
       final queryParameters = <String, String>{};
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        queryParameters['q'] = searchQuery;
+      }
+      if (groupTypeId != null) {
+        queryParameters['groupTypeId'] = groupTypeId.toString();
+      }
       if (isActive != null) {
         queryParameters['isActive'] = isActive.toString();
       }
       if (isArchived != null) {
         queryParameters['isArchived'] = isArchived.toString();
+      }
+      if (trainerId != null) {
+        queryParameters['trainerId'] = trainerId.toString();
+      }
+      if (instructorId != null) {
+        queryParameters['instructorId'] = instructorId.toString();
+      }
+      if (managerId != null) {
+        queryParameters['managerId'] = managerId.toString();
       }
 
       final uri = Uri.parse('$baseUrl/api/training_groups')

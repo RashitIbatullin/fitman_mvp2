@@ -5,6 +5,8 @@ import 'package:fitman_app/providers/groups/training_groups_provider.dart';
 import 'package:fitman_app/screens/admin/groups/training_group_edit_screen.dart';
 import 'package:fitman_app/widgets/groups/training_group_card.dart';
 import 'package:fitman_app/models/groups/training_group.dart'; // Import for TrainingGroup
+import 'package:fitman_app/services/api_service.dart'; // Import ApiService
+import 'package:fitman_app/models/user_front.dart'; // Import User
 
 class TrainingGroupsScreen extends ConsumerStatefulWidget {
   const TrainingGroupsScreen({super.key});
@@ -18,21 +20,46 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
   int? _selectedGroupTypeId;
   bool? _isActiveFilter; // null for 'All', true for 'Active', false for 'Inactive'
   bool? _isArchivedFilter; // null for 'All', true for 'Archived', false for 'Not Archived'
+  int? _selectedTrainerId;
+  int? _selectedInstructorId;
+  int? _selectedManagerId;
+
+  List<User> _trainers = [];
+  List<User> _instructors = [];
+  List<User> _managers = [];
+
   final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(usersProvider.notifier).fetchUsers();
-      // Ensure group types are also fetched if not already available
       ref.read(trainingGroupTypesProvider);
+      await _fetchUsersByRole();
     });
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text;
       });
     });
+  }
+
+  Future<void> _fetchUsersByRole() async {
+    try {
+      final allUsers = await ApiService.getUsers();
+      if (!mounted) return;
+      setState(() {
+        _trainers = allUsers.where((user) => user.roles.any((role) => role.name == 'trainer')).toList();
+        _instructors = allUsers.where((user) => user.roles.any((role) => role.name == 'instructor')).toList();
+        _managers = allUsers.where((user) => user.roles.any((role) => role.name == 'manager')).toList();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки пользователей: $e')),
+      );
+    }
   }
 
     @override
@@ -66,26 +93,38 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
   }
 
   Widget _buildFilterChips() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Row(
-        children: [
-          // Existing Group Type Filter
-          ref.watch(trainingGroupTypesProvider).when(
-            data: (types) => Row(
-              children: [
-                ChoiceChip(
-                  label: const Text('Все типы'),
-                  selected: _selectedGroupTypeId == null,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedGroupTypeId = null;
-                    });
-                  },
-                ),
-                ...types.map((type) {
-                  return Padding(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // First row of filters (Type, Active/Inactive, Archived/Not Archived)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min, // Crucial for horizontal scrolling
+            children: [
+              // Existing Group Type Filter
+              ...ref.watch(trainingGroupTypesProvider).when(
+                data: (types) => [
+                  ChoiceChip(
+                    label: const Text('Все типы'),
+                    selected: _selectedGroupTypeId == null,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedGroupTypeId = null;
+                      });
+                      ref.invalidate(trainingGroupsProvider(
+                        searchQuery: _searchQuery,
+                        groupTypeId: _selectedGroupTypeId,
+                        isActive: _isActiveFilter,
+                        isArchived: _isArchivedFilter,
+                        trainerId: _selectedTrainerId,
+                        instructorId: _selectedInstructorId,
+                        managerId: _selectedManagerId,
+                      ));
+                    },
+                  ),
+                  ...types.map((type) => Padding(
                     padding: const EdgeInsets.only(left: 8.0),
                     child: ChoiceChip(
                       label: Text(type.title),
@@ -94,94 +133,295 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                         setState(() {
                           _selectedGroupTypeId = selected ? type.id : null;
                         });
+                        ref.invalidate(trainingGroupsProvider(
+                          searchQuery: _searchQuery,
+                          groupTypeId: _selectedGroupTypeId,
+                          isActive: _isActiveFilter,
+                          isArchived: _isArchivedFilter,
+                          trainerId: _selectedTrainerId,
+                          instructorId: _selectedInstructorId,
+                          managerId: _selectedManagerId,
+                        ));
                       },
                     ),
-                  );
-                }),
-              ],
-            ),
-            loading: () => const SizedBox.shrink(),
-            error: (e, st) => Center(child: Text('Ошибка загрузки типов: $e')),
-          ),
-          const SizedBox(width: 16.0), // Spacer
+                  )),
+                ],
+                loading: () => [const SizedBox.shrink()],
+                error: (e, st) => [Center(child: Text('Ошибка загрузки типов: $e'))],
+              ),
+              const SizedBox(width: 16.0), // Spacer
 
-          ChoiceChip(
-            label: const Text('Все (Актив)'),
-            selected: _isActiveFilter == null,
-            onSelected: (selected) {
-              setState(() {
-                _isActiveFilter = null;
-              });
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: ChoiceChip(
-              label: const Text('Активные'),
-              selected: _isActiveFilter == true,
-              onSelected: (selected) {
-                setState(() {
-                  _isActiveFilter = selected ? true : null;
-                });
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: ChoiceChip(
-              label: const Text('Неактивные'),
-              selected: _isActiveFilter == false,
-              onSelected: (selected) {
-                setState(() {
-                  _isActiveFilter = selected ? false : null;
-                });
-              },
-            ),
-          ),
-          const SizedBox(width: 16.0), // Spacer
+              ChoiceChip(
+                label: const Text('Все (Актив)'),
+                selected: _isActiveFilter == null,
+                onSelected: (selected) {
+                  setState(() {
+                    _isActiveFilter = null;
+                  });
+                  ref.invalidate(trainingGroupsProvider(
+                    searchQuery: _searchQuery,
+                    groupTypeId: _selectedGroupTypeId,
+                    isActive: _isActiveFilter,
+                    isArchived: _isArchivedFilter,
+                    trainerId: _selectedTrainerId,
+                    instructorId: _selectedInstructorId,
+                    managerId: _selectedManagerId,
+                  ));
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: ChoiceChip(
+                  label: const Text('Активные'),
+                  selected: _isActiveFilter == true,
+                  onSelected: (selected) {
+                    setState(() {
+                      _isActiveFilter = selected ? true : null;
+                    });
+                    ref.invalidate(trainingGroupsProvider(
+                      searchQuery: _searchQuery,
+                      groupTypeId: _selectedGroupTypeId,
+                      isActive: _isActiveFilter,
+                      isArchived: _isArchivedFilter,
+                      trainerId: _selectedTrainerId,
+                      instructorId: _selectedInstructorId,
+                      managerId: _selectedManagerId,
+                    ));
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: ChoiceChip(
+                  label: const Text('Неактивные'),
+                  selected: _isActiveFilter == false,
+                  onSelected: (selected) {
+                    setState(() {
+                      _isActiveFilter = selected ? false : null;
+                    });
+                    ref.invalidate(trainingGroupsProvider(
+                      searchQuery: _searchQuery,
+                      groupTypeId: _selectedGroupTypeId,
+                      isActive: _isActiveFilter,
+                      isArchived: _isArchivedFilter,
+                      trainerId: _selectedTrainerId,
+                      instructorId: _selectedInstructorId,
+                      managerId: _selectedManagerId,
+                    ));
+                  },
+                ),
+              ),
+              const SizedBox(width: 16.0), // Spacer
 
-          ChoiceChip(
-            label: const Text('Все (Архив)'),
-            selected: _isArchivedFilter == null,
-            onSelected: (selected) {
-              setState(() {
-                _isArchivedFilter = null;
-              });
-            },
+              ChoiceChip(
+                label: const Text('Все (Архив)'),
+                selected: _isArchivedFilter == null,
+                onSelected: (selected) {
+                  setState(() {
+                    _isArchivedFilter = null;
+                  });
+                  ref.invalidate(trainingGroupsProvider(
+                    searchQuery: _searchQuery,
+                    groupTypeId: _selectedGroupTypeId,
+                    isActive: _isActiveFilter,
+                    isArchived: _isArchivedFilter,
+                    trainerId: _selectedTrainerId,
+                    instructorId: _selectedInstructorId,
+                    managerId: _selectedManagerId,
+                  ));
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: ChoiceChip(
+                  label: const Text('Архивные'),
+                  selected: _isArchivedFilter == true,
+                  onSelected: (selected) {
+                    setState(() {
+                      _isArchivedFilter = selected ? true : null;
+                    });
+                    ref.invalidate(trainingGroupsProvider(
+                      searchQuery: _searchQuery,
+                      groupTypeId: _selectedGroupTypeId,
+                      isActive: _isActiveFilter,
+                      isArchived: _isArchivedFilter,
+                      trainerId: _selectedTrainerId,
+                      instructorId: _selectedInstructorId,
+                      managerId: _selectedManagerId,
+                    ));
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: ChoiceChip(
+                  label: const Text('Неархивные'),
+                  selected: _isArchivedFilter == false,
+                  onSelected: (selected) {
+                    setState(() {
+                      _isArchivedFilter = selected ? false : null;
+                    });
+                    ref.invalidate(trainingGroupsProvider(
+                      searchQuery: _searchQuery,
+                      groupTypeId: _selectedGroupTypeId,
+                      isActive: _isActiveFilter,
+                      isArchived: _isArchivedFilter,
+                      trainerId: _selectedTrainerId,
+                      instructorId: _selectedInstructorId,
+                      managerId: _selectedManagerId,
+                    ));
+                  },
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: ChoiceChip(
-              label: const Text('Архивные'),
-              selected: _isArchivedFilter == true,
-              onSelected: (selected) {
-                setState(() {
-                  _isArchivedFilter = selected ? true : null;
-                });
-              },
-            ),
+        ),
+        const SizedBox(height: 8.0), // Space between filter rows
+
+        // Second row of filters (Trainer, Instructor, Manager)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min, // Crucial for horizontal scrolling
+            children: [
+              // Trainer Filter
+              SizedBox(
+                width: 180, // Fixed width for the dropdown
+                child: IntrinsicWidth( // Added IntrinsicWidth
+                  child: DropdownButtonFormField<int?>(
+                    decoration: const InputDecoration(
+                      labelText: 'Тренер',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    ),
+                    initialValue: _selectedTrainerId,
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Все тренеры'),
+                      ),
+                      ..._trainers.map((user) => DropdownMenuItem<int?>(
+                        value: user.id,
+                        child: Text(user.fullName),
+                      )),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedTrainerId = value;
+                      });
+                      ref.invalidate(trainingGroupsProvider(
+                        searchQuery: _searchQuery,
+                        groupTypeId: _selectedGroupTypeId,
+                        isActive: _isActiveFilter,
+                        isArchived: _isArchivedFilter,
+                        trainerId: _selectedTrainerId,
+                        instructorId: _selectedInstructorId,
+                        managerId: _selectedManagerId,
+                      ));
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16.0), // Spacer
+
+              // Instructor Filter
+              SizedBox(
+                width: 250, // Increased width for the dropdown
+                child: IntrinsicWidth( // Added IntrinsicWidth
+                  child: DropdownButtonFormField<int?>(
+                    decoration: const InputDecoration(
+                      labelText: 'Инструктор',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    ),
+                    initialValue: _selectedInstructorId,
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Все инструкторы'),
+                      ),
+                      ..._instructors.map((user) => DropdownMenuItem<int?>(
+                        value: user.id,
+                        child: Text(user.fullName),
+                      )),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedInstructorId = value;
+                      });
+                      ref.invalidate(trainingGroupsProvider(
+                        searchQuery: _searchQuery,
+                        groupTypeId: _selectedGroupTypeId,
+                        isActive: _isActiveFilter,
+                        isArchived: _isArchivedFilter,
+                        trainerId: _selectedTrainerId,
+                        instructorId: _selectedInstructorId,
+                        managerId: _selectedManagerId,
+                      ));
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16.0), // Spacer
+
+              // Manager Filter
+              SizedBox(
+                width: 220, // Keep increased width for the dropdown
+                child: IntrinsicWidth( // Added IntrinsicWidth
+                  child: DropdownButtonFormField<int?>(
+                    decoration: const InputDecoration(
+                      labelText: 'Менеджер',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    ),
+                    initialValue: _selectedManagerId,
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Все менеджеры'),
+                      ),
+                      ..._managers.map((user) => DropdownMenuItem<int?>(
+                        value: user.id,
+                        child: Text(user.fullName),
+                      )),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedManagerId = value;
+                      });
+                      ref.invalidate(trainingGroupsProvider(
+                        searchQuery: _searchQuery,
+                        groupTypeId: _selectedGroupTypeId,
+                        isActive: _isActiveFilter,
+                        isArchived: _isArchivedFilter,
+                        trainerId: _selectedTrainerId,
+                        instructorId: _selectedInstructorId,
+                        managerId: _selectedManagerId,
+                      ));
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: ChoiceChip(
-              label: const Text('Неархивные'),
-              selected: _isArchivedFilter == false,
-              onSelected: (selected) {
-                setState(() {
-                  _isArchivedFilter = selected ? false : null;
-                });
-              },
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildGroupList(AsyncValue<List<TrainingGroup>> groupsAsyncValue) {
+    print('--- buildGroupList called ---');
+    print('AsyncValue is loading: ${groupsAsyncValue.isLoading}');
+    print('AsyncValue has value: ${groupsAsyncValue.hasValue}');
+    if (groupsAsyncValue.hasValue) {
+      print('Groups length: ${groupsAsyncValue.value!.length}');
+    }
     return Expanded(
       child: groupsAsyncValue.when(
         data: (groups) {
+          print('--- GroupList data builder ---');
+          print('Filtered Groups length in UI: ${groups.length}');
           if (groups.isEmpty) {
             return const Center(child: Text('Нет групп, соответствующих фильтру.'));
           }
@@ -203,6 +443,9 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                     groupTypeId: _selectedGroupTypeId,
                     isActive: _isActiveFilter,
                     isArchived: _isArchivedFilter,
+                    trainerId: _selectedTrainerId,
+                    instructorId: _selectedInstructorId,
+                    managerId: _selectedManagerId,
                   ));
                 },
                 onDelete: () async {
@@ -230,6 +473,9 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       groupTypeId: _selectedGroupTypeId,
                       isActive: _isActiveFilter,
                       isArchived: _isArchivedFilter,
+                      trainerId: _selectedTrainerId,
+                      instructorId: _selectedInstructorId,
+                      managerId: _selectedManagerId,
                     ).notifier).deleteTrainingGroup(group.id!);
                   }
                 },
@@ -257,6 +503,9 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
           groupTypeId: _selectedGroupTypeId,
           isActive: _isActiveFilter,
           isArchived: _isArchivedFilter,
+          trainerId: _selectedTrainerId,
+          instructorId: _selectedInstructorId,
+          managerId: _selectedManagerId,
         ));
       },
       child: const Icon(Icons.add),
@@ -270,10 +519,17 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
       groupTypeId: _selectedGroupTypeId,
       isActive: _isActiveFilter,
       isArchived: _isArchivedFilter,
+      trainerId: _selectedTrainerId,
+      instructorId: _selectedInstructorId,
+      managerId: _selectedManagerId,
     ));
 
+    print('--- TrainingGroupsScreen build called ---');
+    print('Filter Params: searchQuery=$_searchQuery, groupTypeId=$_selectedGroupTypeId, isActive=$_isActiveFilter, isArchived=$_isArchivedFilter, trainerId=$_selectedTrainerId, instructorId=$_selectedInstructorId, managerId=$_selectedManagerId');
+    print('AsyncValue is loading: ${trainingGroupsAsyncValue.isLoading}');
+
     return Scaffold(
-      appBar: _buildAppBar(), // Re-added AppBar
+      appBar: _buildAppBar(),
       body: Column(
         children: [
           _buildSearchBar(),

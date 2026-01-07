@@ -12,10 +12,28 @@ class GroupRepository {
 
   // --- Training Group Methods ---
 
-  Future<List<TrainingGroup>> getAllTrainingGroups({bool? isActive, bool? isArchived}) async {
+  Future<List<TrainingGroup>> getAllTrainingGroups({
+    String? searchQuery,
+    int? groupTypeId,
+    bool? isActive,
+    bool? isArchived,
+    int? trainerId,
+    int? instructorId,
+    int? managerId,
+  }) async {
     final conn = await _db.connection;
     final List<String> whereClauses = [];
     final Map<String, dynamic> parameters = {};
+
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      whereClauses.add('name ILIKE @searchQuery');
+      parameters['searchQuery'] = '%$searchQuery%';
+    }
+    
+    if (groupTypeId != null) {
+      whereClauses.add('training_group_type_id = @groupTypeId');
+      parameters['groupTypeId'] = groupTypeId;
+    }
 
     if (isActive != null) {
       whereClauses.add('is_active = @isActive');
@@ -33,16 +51,31 @@ class GroupRepository {
       whereClauses.add('archived_at IS NULL');
     }
 
+    if (trainerId != null) {
+      whereClauses.add('primary_trainer_id = @trainerId');
+      parameters['trainerId'] = trainerId;
+    }
+
+    if (instructorId != null) {
+      whereClauses.add('primary_instructor_id = @instructorId');
+      parameters['instructorId'] = instructorId;
+    }
+
+    if (managerId != null) {
+      whereClauses.add('responsible_manager_id = @managerId');
+      parameters['managerId'] = managerId;
+    }
+
     final whereString = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
+    
+    final rawQuery = 'SELECT * FROM training_groups $whereString ORDER BY name ASC';
+    
     final results = await conn.execute(
-      Sql.named('SELECT * FROM training_groups $whereString'),
+      Sql.named(rawQuery),
       parameters: parameters,
     );
     return results.map((row) {
       final map = row.toColumnMap();
-      print('--- Raw DB Row Map ---');
-      print(map);
-      print('----------------------');
       return TrainingGroup.fromJson(map);
     }).toList();
   }

@@ -13,16 +13,22 @@ class TrainingGroupFilter extends Equatable {
   final int? groupTypeId;
   final bool? isActive;
   final bool? isArchived;
+  final int? trainerId;
+  final int? instructorId;
+  final int? managerId;
 
   const TrainingGroupFilter({
     this.searchQuery = '',
     this.groupTypeId,
     this.isActive,
     this.isArchived,
+    this.trainerId,
+    this.instructorId,
+    this.managerId,
   });
 
   @override
-  List<Object?> get props => [searchQuery, groupTypeId, isActive, isArchived];
+  List<Object?> get props => [searchQuery, groupTypeId, isActive, isArchived, trainerId, instructorId, managerId];
 }
 
 @Riverpod(keepAlive: true)
@@ -33,20 +39,22 @@ class TrainingGroups extends _$TrainingGroups {
     int? groupTypeId,
     bool? isActive,
     bool? isArchived,
+    int? trainerId,
+    int? instructorId,
+    int? managerId,
   }) async {
-    // Pass the filter parameters to the API service
-    final allGroups = await ApiService.getAllTrainingGroups(
+    // Pass ALL filter parameters to the API service
+    final filteredGroups = await ApiService.getAllTrainingGroups(
+      searchQuery: searchQuery,
+      groupTypeId: groupTypeId,
       isActive: isActive,
       isArchived: isArchived,
+      trainerId: trainerId,
+      instructorId: instructorId,
+      managerId: managerId,
     );
 
-    // Apply client-side filtering for searchQuery and groupTypeId
-    final filteredGroups = allGroups.where((group) {
-      final nameMatches = group.name.toLowerCase().contains(searchQuery.toLowerCase());
-      final typeMatches = groupTypeId == null || group.trainingGroupTypeId == groupTypeId;
-      return nameMatches && typeMatches;
-    }).toList();
-
+    // No more client-side filtering needed
     return filteredGroups;
   }
 
@@ -54,7 +62,15 @@ class TrainingGroups extends _$TrainingGroups {
     state = const AsyncValue.loading();
     try {
       await ApiService.createTrainingGroup(group);
-      ref.invalidate(trainingGroupsProvider);
+      ref.invalidate(trainingGroupsProvider(
+        searchQuery: '', // Invalidate with default or relevant filters
+        groupTypeId: null,
+        isActive: null,
+        isArchived: null,
+        trainerId: null,
+        instructorId: null,
+        managerId: null,
+      ));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -64,7 +80,15 @@ class TrainingGroups extends _$TrainingGroups {
     state = const AsyncValue.loading();
     try {
       await ApiService.updateTrainingGroup(group);
-      ref.invalidate(trainingGroupsProvider);
+      ref.invalidate(trainingGroupsProvider(
+        searchQuery: '', // Invalidate with default or relevant filters
+        groupTypeId: null,
+        isActive: null,
+        isArchived: null,
+        trainerId: null,
+        instructorId: null,
+        managerId: null,
+      ));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -74,7 +98,15 @@ class TrainingGroups extends _$TrainingGroups {
     state = const AsyncValue.loading();
     try {
       await ApiService.deleteTrainingGroup(id);
-      ref.invalidate(trainingGroupsProvider);
+      ref.invalidate(trainingGroupsProvider(
+        searchQuery: '', // Invalidate with default or relevant filters
+        groupTypeId: null,
+        isActive: null,
+        isArchived: null,
+        trainerId: null,
+        instructorId: null,
+        managerId: null,
+      ));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }

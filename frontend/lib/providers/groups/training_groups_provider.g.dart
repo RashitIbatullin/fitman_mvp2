@@ -25,7 +25,7 @@ final trainingGroupTypesProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TrainingGroupTypesRef = FutureProviderRef<List<TrainingGroupType>>;
-String _$trainingGroupsHash() => r'f862e8ebbb815714d2339b45a263477ba826421e';
+String _$trainingGroupsHash() => r'9876ebec6b448ed5d4066283e0e516f49fc1f654';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -54,12 +54,18 @@ abstract class _$TrainingGroups
   late final int? groupTypeId;
   late final bool? isActive;
   late final bool? isArchived;
+  late final int? trainerId;
+  late final int? instructorId;
+  late final int? managerId;
 
   FutureOr<List<TrainingGroup>> build({
     String searchQuery = '',
     int? groupTypeId,
     bool? isActive,
     bool? isArchived,
+    int? trainerId,
+    int? instructorId,
+    int? managerId,
   });
 }
 
@@ -78,12 +84,18 @@ class TrainingGroupsFamily extends Family<AsyncValue<List<TrainingGroup>>> {
     int? groupTypeId,
     bool? isActive,
     bool? isArchived,
+    int? trainerId,
+    int? instructorId,
+    int? managerId,
   }) {
     return TrainingGroupsProvider(
       searchQuery: searchQuery,
       groupTypeId: groupTypeId,
       isActive: isActive,
       isArchived: isArchived,
+      trainerId: trainerId,
+      instructorId: instructorId,
+      managerId: managerId,
     );
   }
 
@@ -96,6 +108,9 @@ class TrainingGroupsFamily extends Family<AsyncValue<List<TrainingGroup>>> {
       groupTypeId: provider.groupTypeId,
       isActive: provider.isActive,
       isArchived: provider.isArchived,
+      trainerId: provider.trainerId,
+      instructorId: provider.instructorId,
+      managerId: provider.managerId,
     );
   }
 
@@ -123,12 +138,18 @@ class TrainingGroupsProvider
     int? groupTypeId,
     bool? isActive,
     bool? isArchived,
+    int? trainerId,
+    int? instructorId,
+    int? managerId,
   }) : this._internal(
          () => TrainingGroups()
            ..searchQuery = searchQuery
            ..groupTypeId = groupTypeId
            ..isActive = isActive
-           ..isArchived = isArchived,
+           ..isArchived = isArchived
+           ..trainerId = trainerId
+           ..instructorId = instructorId
+           ..managerId = managerId,
          from: trainingGroupsProvider,
          name: r'trainingGroupsProvider',
          debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -141,6 +162,9 @@ class TrainingGroupsProvider
          groupTypeId: groupTypeId,
          isActive: isActive,
          isArchived: isArchived,
+         trainerId: trainerId,
+         instructorId: instructorId,
+         managerId: managerId,
        );
 
   TrainingGroupsProvider._internal(
@@ -154,12 +178,18 @@ class TrainingGroupsProvider
     required this.groupTypeId,
     required this.isActive,
     required this.isArchived,
+    required this.trainerId,
+    required this.instructorId,
+    required this.managerId,
   }) : super.internal();
 
   final String searchQuery;
   final int? groupTypeId;
   final bool? isActive;
   final bool? isArchived;
+  final int? trainerId;
+  final int? instructorId;
+  final int? managerId;
 
   @override
   FutureOr<List<TrainingGroup>> runNotifierBuild(
@@ -170,6 +200,9 @@ class TrainingGroupsProvider
       groupTypeId: groupTypeId,
       isActive: isActive,
       isArchived: isArchived,
+      trainerId: trainerId,
+      instructorId: instructorId,
+      managerId: managerId,
     );
   }
 
@@ -182,7 +215,10 @@ class TrainingGroupsProvider
           ..searchQuery = searchQuery
           ..groupTypeId = groupTypeId
           ..isActive = isActive
-          ..isArchived = isArchived,
+          ..isArchived = isArchived
+          ..trainerId = trainerId
+          ..instructorId = instructorId
+          ..managerId = managerId,
         from: from,
         name: null,
         dependencies: null,
@@ -192,6 +228,9 @@ class TrainingGroupsProvider
         groupTypeId: groupTypeId,
         isActive: isActive,
         isArchived: isArchived,
+        trainerId: trainerId,
+        instructorId: instructorId,
+        managerId: managerId,
       ),
     );
   }
@@ -208,7 +247,10 @@ class TrainingGroupsProvider
         other.searchQuery == searchQuery &&
         other.groupTypeId == groupTypeId &&
         other.isActive == isActive &&
-        other.isArchived == isArchived;
+        other.isArchived == isArchived &&
+        other.trainerId == trainerId &&
+        other.instructorId == instructorId &&
+        other.managerId == managerId;
   }
 
   @override
@@ -218,6 +260,9 @@ class TrainingGroupsProvider
     hash = _SystemHash.combine(hash, groupTypeId.hashCode);
     hash = _SystemHash.combine(hash, isActive.hashCode);
     hash = _SystemHash.combine(hash, isArchived.hashCode);
+    hash = _SystemHash.combine(hash, trainerId.hashCode);
+    hash = _SystemHash.combine(hash, instructorId.hashCode);
+    hash = _SystemHash.combine(hash, managerId.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -237,6 +282,15 @@ mixin TrainingGroupsRef on AsyncNotifierProviderRef<List<TrainingGroup>> {
 
   /// The parameter `isArchived` of this provider.
   bool? get isArchived;
+
+  /// The parameter `trainerId` of this provider.
+  int? get trainerId;
+
+  /// The parameter `instructorId` of this provider.
+  int? get instructorId;
+
+  /// The parameter `managerId` of this provider.
+  int? get managerId;
 }
 
 class _TrainingGroupsProviderElement
@@ -252,6 +306,12 @@ class _TrainingGroupsProviderElement
   bool? get isActive => (origin as TrainingGroupsProvider).isActive;
   @override
   bool? get isArchived => (origin as TrainingGroupsProvider).isArchived;
+  @override
+  int? get trainerId => (origin as TrainingGroupsProvider).trainerId;
+  @override
+  int? get instructorId => (origin as TrainingGroupsProvider).instructorId;
+  @override
+  int? get managerId => (origin as TrainingGroupsProvider).managerId;
 }
 
 // ignore_for_file: type=lint

@@ -188,7 +188,7 @@ class _AnalyticGroupsScreenState extends ConsumerState<AnalyticGroupsScreen> {
     ));
 
     return Scaffold(
-      appBar: _buildAppBar(), // Re-added AppBar
+      appBar: _buildAppBar(),
       body: Column(
         children: [
           _buildSearchBar(),
