@@ -18,8 +18,8 @@ class TrainingGroupsScreen extends ConsumerStatefulWidget {
 class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
   String _searchQuery = '';
   int? _selectedGroupTypeId;
-  bool? _isActiveFilter; // null for 'All', true for 'Active', false for 'Inactive'
-  bool? _isArchivedFilter; // null for 'All', true for 'Archived', false for 'Not Archived'
+  bool? _isActiveFilter = true; // null for 'All', true for 'Active', false for 'Inactive'
+  bool? _isArchivedFilter = false; // null for 'All', true for 'Archived', false for 'Not Archived'
   int? _selectedTrainerId;
   int? _selectedInstructorId;
   int? _selectedManagerId;
@@ -33,6 +33,7 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
   @override
   void initState() {
     super.initState();
+    print('DEBUG: initState - Initial _isActiveFilter: $_isActiveFilter, _isArchivedFilter: $_isArchivedFilter');
     Future.microtask(() async {
       ref.read(usersProvider.notifier).fetchUsers();
       ref.read(trainingGroupTypesProvider);
@@ -113,15 +114,6 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       setState(() {
                         _selectedGroupTypeId = null;
                       });
-                      ref.invalidate(trainingGroupsProvider(
-                        searchQuery: _searchQuery,
-                        groupTypeId: _selectedGroupTypeId,
-                        isActive: _isActiveFilter,
-                        isArchived: _isArchivedFilter,
-                        trainerId: _selectedTrainerId,
-                        instructorId: _selectedInstructorId,
-                        managerId: _selectedManagerId,
-                      ));
                     },
                   ),
                   ...types.map((type) => Padding(
@@ -133,15 +125,6 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                         setState(() {
                           _selectedGroupTypeId = selected ? type.id : null;
                         });
-                        ref.invalidate(trainingGroupsProvider(
-                          searchQuery: _searchQuery,
-                          groupTypeId: _selectedGroupTypeId,
-                          isActive: _isActiveFilter,
-                          isArchived: _isArchivedFilter,
-                          trainerId: _selectedTrainerId,
-                          instructorId: _selectedInstructorId,
-                          managerId: _selectedManagerId,
-                        ));
                       },
                     ),
                   )),
@@ -152,26 +135,17 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
               const SizedBox(width: 16.0), // Spacer
 
               // PopupMenuButton for Active/Inactive status
-              PopupMenuButton<bool?>(
+              PopupMenuButton<dynamic>( // Change generic type to dynamic
                 tooltip: 'Фильтр по активности',
                 initialValue: _isActiveFilter,
-                onSelected: (bool? value) {
+                onSelected: (dynamic value) { // Change type to dynamic
                   setState(() {
-                    _isActiveFilter = value;
+                    _isActiveFilter = (value == 'ALL_ACTIVE') ? null : value as bool?;
                   });
-                  ref.invalidate(trainingGroupsProvider(
-                    searchQuery: _searchQuery,
-                    groupTypeId: _selectedGroupTypeId,
-                    isActive: _isActiveFilter,
-                    isArchived: _isArchivedFilter,
-                    trainerId: _selectedTrainerId,
-                    instructorId: _selectedInstructorId,
-                    managerId: _selectedManagerId,
-                  ));
                 },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<bool?>>[
-                  const PopupMenuItem<bool?>(
-                    value: null,
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<dynamic>>[ // Change return type to dynamic
+                  const PopupMenuItem<dynamic>(
+                    value: 'ALL_ACTIVE', // Use placeholder string
                     child: Text('Все (Активность)'),
                   ),
                   const PopupMenuItem<bool?>(
@@ -184,6 +158,7 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                   ),
                 ],
                 child: Chip(
+                  key: ValueKey('active_filter_chip_$_isActiveFilter'), // Add Key
                   label: Text(
                     _isActiveFilter == null
                         ? 'Статус: Все'
@@ -195,26 +170,17 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
               const SizedBox(width: 8.0), // Spacer
 
               // PopupMenuButton for Archived status
-              PopupMenuButton<bool?>(
+              PopupMenuButton<dynamic>( // Change generic type to dynamic
                 tooltip: 'Фильтр по архивации',
                 initialValue: _isArchivedFilter,
-                onSelected: (bool? value) {
+                onSelected: (dynamic value) {
                   setState(() {
-                    _isArchivedFilter = value;
+                    _isArchivedFilter = (value == 'ALL_ARCHIVED') ? null : value as bool?;
                   });
-                  ref.invalidate(trainingGroupsProvider(
-                    searchQuery: _searchQuery,
-                    groupTypeId: _selectedGroupTypeId,
-                    isActive: _isActiveFilter,
-                    isArchived: _isArchivedFilter,
-                    trainerId: _selectedTrainerId,
-                    instructorId: _selectedInstructorId,
-                    managerId: _selectedManagerId,
-                  ));
                 },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<bool?>>[
-                  const PopupMenuItem<bool?>(
-                    value: null,
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<dynamic>>[ // Change return type to dynamic
+                  const PopupMenuItem<dynamic>(
+                    value: 'ALL_ARCHIVED', // Use placeholder string
                     child: Text('Все (Архив)'),
                   ),
                   const PopupMenuItem<bool?>(
@@ -227,6 +193,7 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                   ),
                 ],
                 child: Chip(
+                  key: ValueKey('archive_filter_chip_$_isArchivedFilter'), // Add Key
                   label: Text(
                     _isArchivedFilter == null
                         ? 'Архив: Все'
@@ -252,12 +219,13 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                 width: 180, // Fixed width for the dropdown
                 child: IntrinsicWidth( // Added IntrinsicWidth
                   child: DropdownButtonFormField<int?>(
+                    key: ValueKey('trainer_filter_dropdown_$_selectedTrainerId'), // Add Key
                     decoration: const InputDecoration(
                       labelText: 'Тренер',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     ),
-                    initialValue: _selectedTrainerId,
+                    value: _selectedTrainerId,
                     items: [
                       const DropdownMenuItem<int?>(
                         value: null,
@@ -272,15 +240,6 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       setState(() {
                         _selectedTrainerId = value;
                       });
-                      ref.invalidate(trainingGroupsProvider(
-                        searchQuery: _searchQuery,
-                        groupTypeId: _selectedGroupTypeId,
-                        isActive: _isActiveFilter,
-                        isArchived: _isArchivedFilter,
-                        trainerId: _selectedTrainerId,
-                        instructorId: _selectedInstructorId,
-                        managerId: _selectedManagerId,
-                      ));
                     },
                   ),
                 ),
@@ -292,12 +251,13 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                 width: 250, // Increased width for the dropdown
                 child: IntrinsicWidth( // Added IntrinsicWidth
                   child: DropdownButtonFormField<int?>(
+                    key: ValueKey('instructor_filter_dropdown_$_selectedInstructorId'), // Add Key
                     decoration: const InputDecoration(
                       labelText: 'Инструктор',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     ),
-                    initialValue: _selectedInstructorId,
+                    value: _selectedInstructorId,
                     items: [
                       const DropdownMenuItem<int?>(
                         value: null,
@@ -312,15 +272,6 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       setState(() {
                         _selectedInstructorId = value;
                       });
-                      ref.invalidate(trainingGroupsProvider(
-                        searchQuery: _searchQuery,
-                        groupTypeId: _selectedGroupTypeId,
-                        isActive: _isActiveFilter,
-                        isArchived: _isArchivedFilter,
-                        trainerId: _selectedTrainerId,
-                        instructorId: _selectedInstructorId,
-                        managerId: _selectedManagerId,
-                      ));
                     },
                   ),
                 ),
@@ -332,12 +283,13 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                 width: 220, // Keep increased width for the dropdown
                 child: IntrinsicWidth( // Added IntrinsicWidth
                   child: DropdownButtonFormField<int?>(
+                    key: ValueKey('manager_filter_dropdown_$_selectedManagerId'), // Add Key
                     decoration: const InputDecoration(
                       labelText: 'Менеджер',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     ),
-                    initialValue: _selectedManagerId,
+                    value: _selectedManagerId,
                     items: [
                       const DropdownMenuItem<int?>(
                         value: null,
@@ -352,15 +304,6 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       setState(() {
                         _selectedManagerId = value;
                       });
-                      ref.invalidate(trainingGroupsProvider(
-                        searchQuery: _searchQuery,
-                        groupTypeId: _selectedGroupTypeId,
-                        isActive: _isActiveFilter,
-                        isArchived: _isArchivedFilter,
-                        trainerId: _selectedTrainerId,
-                        instructorId: _selectedInstructorId,
-                        managerId: _selectedManagerId,
-                      ));
                     },
                   ),
                 ),
