@@ -16,10 +16,10 @@ import '../controllers/client_preference_controller.dart';
 import '../controllers/catalogs_controller.dart';
 import '../controllers/recommendations_controller.dart';
 import '../controllers/chat_controller.dart';
-import '../controllers/groups/training_groups_controller.dart'; // New import
-import '../controllers/groups/analytic_groups_controller.dart'; // New import
-import '../controllers/groups/group_schedule_controller.dart'; // New import
-import '../controllers/groups/training_group_types_controller.dart'; // New import
+import '../modules/groups/controllers/training_group_controller.dart';
+import '../modules/groups/controllers/analytic_group_controller.dart';
+import '../modules/groups/controllers/group_schedule_controller.dart';
+import '../modules/groups/controllers/training_group_types_controller.dart';
 import '../modules/infrastructure/controllers/room.controller.dart';
 import '../modules/infrastructure/controllers/equipment_item.controller.dart';
 import '../modules/infrastructure/controllers/equipment_type.controller.dart';

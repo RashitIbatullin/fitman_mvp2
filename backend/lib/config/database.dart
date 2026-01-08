@@ -5,7 +5,7 @@ import 'app_config.dart';
 import '../models/user_back.dart';
 import '../models/role.dart';
 
-import '../repositories/group_repository.dart'; // New import
+import '../modules/groups/repositories/group_repository.dart'; // New import
 import '../modules/infrastructure/repositories/room.repository.dart';
 import '../modules/infrastructure/repositories/equipment_item.repository.dart';
 import '../modules/infrastructure/repositories/equipment_type.repository.dart';

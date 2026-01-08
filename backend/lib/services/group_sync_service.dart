@@ -1,6 +1,6 @@
 import 'package:postgres/postgres.dart';
 import '../config/database.dart';
-import '../models/groups/group_condition.dart';
+import '../modules/groups/models/group_condition.model.dart';
 
 class GroupSyncService {
   final Database _db;

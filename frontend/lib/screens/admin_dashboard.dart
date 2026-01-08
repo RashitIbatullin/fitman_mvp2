@@ -1,5 +1,5 @@
-import 'package:fitman_app/screens/admin/groups/analytic_groups_screen.dart';
-import 'package:fitman_app/screens/admin/groups/training_groups_screen.dart';
+import '../modules/groups/screens/analytic/analytic_groups_screen.dart';
+import '../modules/groups/screens/training/training_groups_screen.dart';
 import 'package:fitman_app/screens/shared/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';

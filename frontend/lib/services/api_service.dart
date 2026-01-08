@@ -12,10 +12,10 @@ import '../models/chat/chat_models.dart'; // Import chat models
 import '../models/whtr_profiles.dart';
 import '../models/goal_training.dart';
 import '../models/level_training.dart';
-import '../models/groups/training_group.dart'; // New import
-import '../models/groups/analytic_group.dart'; // New import
-import '../models/groups/group_schedule_slot.dart'; // New import
-import '../models/groups/training_group_type.dart';
+import '../modules/groups/models/training_group.model.dart';
+import '../modules/groups/models/analytic_group.model.dart';
+import '../modules/groups/models/group_schedule.model.dart';
+import '../modules/groups/models/training_group_type.model.dart';
 import '../modules/infrastructure/models/room/room.model.dart';
 import '../modules/infrastructure/models/equipment/equipment_item.model.dart'; // New import
 import '../modules/infrastructure/models/equipment/equipment_type.model.dart'; // New import
@@ -1099,7 +1099,7 @@ class ApiService {
   }
 
   // Group Schedule Slots
-  static Future<List<GroupScheduleSlot>> getGroupScheduleSlots(int groupId) async {
+  static Future<List<GroupSchedule>> getGroupSchedules(int groupId) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/group_schedules/$groupId'),
@@ -1107,7 +1107,7 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
-        return data.map((json) => GroupScheduleSlot.fromJson(json)).toList();
+        return data.map((json) => GroupSchedule.fromJson(json)).toList();
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['error'] ?? 'Failed to load group schedule slots for group $groupId');
@@ -1118,7 +1118,7 @@ class ApiService {
     }
   }
 
-  static Future<GroupScheduleSlot> createGroupScheduleSlot(int groupId, GroupScheduleSlot slot) async {
+  static Future<GroupSchedule> createGroupSchedule(int groupId, GroupSchedule slot) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/group_schedules/$groupId'),
@@ -1127,7 +1127,7 @@ class ApiService {
       );
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        return GroupScheduleSlot.fromJson(data);
+        return GroupSchedule.fromJson(data);
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['error'] ?? 'Failed to create group schedule slot');
@@ -1138,7 +1138,7 @@ class ApiService {
     }
   }
 
-  static Future<GroupScheduleSlot> updateGroupScheduleSlot(GroupScheduleSlot slot) async {
+  static Future<GroupSchedule> updateGroupSchedule(GroupSchedule slot) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/api/group_schedules/${slot.id}'),
@@ -1147,7 +1147,7 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return GroupScheduleSlot.fromJson(data);
+        return GroupSchedule.fromJson(data);
       } else {
         final error = jsonDecode(response.body);
         throw Exception(error['error'] ?? 'Failed to update group schedule slot');
@@ -1158,7 +1158,7 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteGroupScheduleSlot(int id) async {
+  static Future<void> deleteGroupSchedule(int id) async {
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/api/group_schedules/$id'),
@@ -1228,6 +1228,82 @@ class ApiService {
   }
 
   // --- End Group API Methods ---
+
+  // Group Schedule Slots
+  static Future<List<GroupSchedule>> getGroupScheduleSlots(int groupId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/group_schedules/$groupId'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => GroupSchedule.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load group schedule slots for group $groupId');
+      }
+    } catch (e) {
+      print('Get group schedule slots error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<GroupSchedule> createGroupScheduleSlot(int groupId, GroupSchedule slot) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/group_schedules/$groupId'),
+        headers: _headers,
+        body: jsonEncode(slot.toJson()),
+      );
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return GroupSchedule.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create group schedule slot');
+      }
+    } catch (e) {
+      print('Create group schedule slot error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<GroupSchedule> updateGroupScheduleSlot(GroupSchedule slot) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/group_schedules/${slot.id}'),
+        headers: _headers,
+        body: jsonEncode(slot.toJson()),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return GroupSchedule.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to update group schedule slot');
+      }
+    } catch (e) {
+      print('Update group schedule slot error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> deleteGroupScheduleSlot(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/group_schedules/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode != 204) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to delete group schedule slot $id');
+      }
+    } catch (e) {
+      print('Delete group schedule slot error: $e');
+      rethrow;
+    }
+  }
 
   static Future<Map<String, dynamic>> getClientDashboardData() async {
     try {
