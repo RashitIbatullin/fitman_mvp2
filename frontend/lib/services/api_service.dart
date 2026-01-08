@@ -145,10 +145,6 @@ class ApiService {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      print('=== LOGIN RESPONSE ===');
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['token']?.toString() ?? '';

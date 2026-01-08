@@ -33,7 +33,6 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
   @override
   void initState() {
     super.initState();
-    print('DEBUG: initState - Initial _isActiveFilter: $_isActiveFilter, _isArchivedFilter: $_isArchivedFilter');
     Future.microtask(() async {
       ref.read(usersProvider.notifier).fetchUsers();
       ref.read(trainingGroupTypesProvider);
@@ -316,17 +315,9 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
   }
 
   Widget _buildGroupList(AsyncValue<List<TrainingGroup>> groupsAsyncValue) {
-    print('--- buildGroupList called ---');
-    print('AsyncValue is loading: ${groupsAsyncValue.isLoading}');
-    print('AsyncValue has value: ${groupsAsyncValue.hasValue}');
-    if (groupsAsyncValue.hasValue) {
-      print('Groups length: ${groupsAsyncValue.value!.length}');
-    }
     return Expanded(
       child: groupsAsyncValue.when(
         data: (groups) {
-          print('--- GroupList data builder ---');
-          print('Filtered Groups length in UI: ${groups.length}');
           if (groups.isEmpty) {
             return const Center(child: Text('Нет групп, соответствующих фильтру.'));
           }
@@ -428,10 +419,6 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
       instructorId: _selectedInstructorId,
       managerId: _selectedManagerId,
     ));
-
-    print('--- TrainingGroupsScreen build called ---');
-    print('Filter Params: searchQuery=$_searchQuery, groupTypeId=$_selectedGroupTypeId, isActive=$_isActiveFilter, isArchived=$_isArchivedFilter, trainerId=$_selectedTrainerId, instructorId=$_selectedInstructorId, managerId=$_selectedManagerId');
-    print('AsyncValue is loading: ${trainingGroupsAsyncValue.isLoading}');
 
     return Scaffold(
       appBar: _buildAppBar(),
