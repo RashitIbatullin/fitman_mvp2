@@ -310,20 +310,28 @@ class ApiService {
   }
 
   // Получение списка пользователей (для админа)
-  static Future<List<User>> getUsers({String? role}) async {
+  static Future<List<User>> getUsers({String? role, bool? isArchived}) async {
     try {
-      final url = role != null
-          ? '$baseUrl/api/users?role=$role'
-          : '$baseUrl/api/users';
-      final response = await http.get(Uri.parse(url), headers: _headers);
+      final queryParameters = <String, String>{};
+      if (role != null) {
+        queryParameters['role'] = role;
+      }
+      if (isArchived != null) {
+        queryParameters['isArchived'] = isArchived.toString();
+      }
+
+      final uri = Uri.parse('$baseUrl/api/users').replace(queryParameters: queryParameters.isNotEmpty ? queryParameters : null);
+
+      final response = await http.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final users = data['users'] as List;
         return users.map((userData) => User.fromJson(userData)).toList();
       } else {
+        final error = jsonDecode(response.body);
         throw Exception(
-          'Failed to load users with status ${response.statusCode}',
+          error['error'] ?? 'Failed to load users with status ${response.statusCode}',
         );
       }
     } catch (e) {

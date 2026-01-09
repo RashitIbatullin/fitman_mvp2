@@ -67,38 +67,75 @@ class GroupMemberList extends ConsumerWidget {
   }
 
   void _showAddMemberDialog(BuildContext context, WidgetRef ref, List<User> allUsers, List<int> currentMemberIds) {
-    final availableUsers = allUsers.where((user) => !currentMemberIds.contains(user.id)).toList();
+    // 1. Filter for clients and exclude current members
+    final availableClients = allUsers.where((user) {
+      return user.roles.any((role) => role.name == 'client') && !currentMemberIds.contains(user.id);
+    }).toList();
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Добавить участника'),
-          content: availableUsers.isEmpty
-              ? const Text('Нет доступных пользователей для добавления.')
-              : SizedBox(
-                  width: double.maxFinite,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: availableUsers.length,
-                    itemBuilder: (context, index) {
-                      final user = availableUsers[index];
-                      return ListTile(
-                        title: Text(user.fullName),
-                        onTap: () {
-                          ref.read(groupMembersProvider(groupId).notifier).addMember(groupId, user.id);
-                          Navigator.of(context).pop();
-                        },
-                      );
-                    },
-                  ),
+        String searchQuery = '';
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            // 2. Filter clients based on the search query
+            final filteredClients = availableClients.where((user) {
+              final query = searchQuery.toLowerCase();
+              return user.fullName.toLowerCase().contains(query) ||
+                     (user.phone?.contains(query) ?? false);
+            }).toList();
+
+            return AlertDialog(
+              title: const Text('Добавить клиента'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 3. Add search field
+                    TextField(
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Поиск по ФИО или телефону',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // 4. Display the filtered list
+                    Expanded(
+                      child: filteredClients.isEmpty
+                          ? const Text('Клиенты не найдены.')
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: filteredClients.length,
+                              itemBuilder: (context, index) {
+                                final user = filteredClients[index];
+                                return ListTile(
+                                  title: Text(user.fullName),
+                                  subtitle: Text(user.phone ?? 'Нет телефона'),
+                                  onTap: () {
+                                    ref.read(groupMembersProvider(groupId).notifier).addMember(groupId, user.id);
+                                    Navigator.of(context).pop();
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
                 ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Отмена'),
-            ),
-          ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Отмена'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

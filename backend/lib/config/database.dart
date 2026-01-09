@@ -146,10 +146,21 @@ class Database {
     }
   }
 
-  // Получить всех пользователей
-  Future<List<User>> getAllUsers() async {
+  Future<List<User>> getAllUsers({bool? isArchived}) async {
     try {
       final conn = await connection;
+
+      final whereClauses = <String>[];
+      if (isArchived != null) {
+        if (isArchived) {
+          whereClauses.add('u.archived_at IS NOT NULL');
+        } else {
+          whereClauses.add('u.archived_at IS NULL');
+        }
+      }
+
+      final whereString = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
+
       final results = await conn.execute('''
         SELECT 
           u.id, u.email, u.password_hash, u.first_name, u.last_name, u.middle_name, 
@@ -158,6 +169,7 @@ class Database {
           cp.track_calories, cp.coeff_activity
         FROM users u
         LEFT JOIN client_profiles cp ON u.id = cp.user_id
+        $whereString
         ORDER BY u.last_name, u.first_name
       ''');
 
@@ -421,7 +433,6 @@ class Database {
     });
   }
 
-  // Обновить пользователя
   Future<User?> updateUser(
       int id, {
         String? email,
@@ -432,6 +443,7 @@ class Database {
         String? gender,
         DateTime? dateOfBirth,
         int? updatedBy,
+        bool? isActive,
       }) async {
     try {
       final conn = await connection;
@@ -460,13 +472,19 @@ class Database {
         parameters['phone'] = phone;
       }
       if (gender != null) {
-        // В базе gender хранится как SMALLINT, 0 для мужского, 1 для женского
         setParts.add('gender = @gender');
         parameters['gender'] = gender == 'мужской' ? 0 : 1;
       }
       if (dateOfBirth != null) {
         setParts.add('date_of_birth = @dateOfBirth');
         parameters['dateOfBirth'] = dateOfBirth;
+      }
+      if (isActive != null) {
+        if (isActive) {
+          setParts.add('archived_at = NULL');
+        } else {
+          setParts.add('archived_at = NOW()');
+        }
       }
 
       if (setParts.isEmpty) {

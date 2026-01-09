@@ -43,6 +43,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
   bool _isLoading = false;
   String? _error;
+  late bool _isActive;
 
   @override
   void initState() {
@@ -61,6 +62,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     _hourNotification = user.hourNotification;
     _coeffActivity = user.clientProfile?.coeffActivity ?? 1.2;
     _photoUrl = user.photoUrl;
+    _isActive = user.isActive;
 
     _updateAvatarUrlForCacheBusting();
   }
@@ -219,6 +221,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
             ? DateTime.parse(_dateOfBirthController.text.trim())
             : null,
         clientProfile: clientProfileData,
+        isActive: _isActive,
       );
 
       final updatedUser = await ApiService.updateUser(request);
@@ -268,6 +271,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
               ],
               _buildBasicInfoSection(),
               const SizedBox(height: 20),
+              _buildStatusSection(),
+              const SizedBox(height: 20),
               if (widget.user.roles.any((r) => r.name == 'client'))
                 _buildClientSpecificSection(),
               if (!widget.user.roles.any((r) => r.name == 'admin'))
@@ -276,6 +281,33 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
               _buildActionButtons(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Статус',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Пользователь активен'),
+              value: _isActive,
+              onChanged: (value) {
+                setState(() {
+                  _isActive = value;
+                });
+              },
+            ),
+          ],
         ),
       ),
     );

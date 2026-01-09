@@ -159,7 +159,10 @@ class UsersController {
   // The following are the existing methods from the original file to be preserved.
   static Future<Response> getUsers(Request request) async {
     try {
-      final users = await _db.getAllUsers();
+      final queryParams = request.url.queryParameters;
+      final bool? isArchived = queryParams['isArchived'] != null ? bool.parse(queryParams['isArchived']!) : null;
+
+      final users = await _db.getAllUsers(isArchived: isArchived);
       final usersJson = users.map((user) => user.toSafeJson()).toList();
       return Response.ok(jsonEncode({'users': usersJson}));
     } catch (e) {
@@ -227,6 +230,7 @@ class UsersController {
         gender: data['gender'] as String?,
         dateOfBirth: dateOfBirth,
         updatedBy: updaterId,
+        isActive: data['isActive'] as bool?,
       );
 
       // --- START OF NEW LOGIC ---

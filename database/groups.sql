@@ -48,7 +48,6 @@ CREATE TABLE training_groups (
   
   -- Лимиты
   max_participants INT NOT NULL DEFAULT 15,
-  current_participants INT DEFAULT 0,
   
   -- Жизненный цикл
   start_date TIMESTAMPTZ NOT NULL,
@@ -78,7 +77,7 @@ COMMENT ON COLUMN training_groups.program_id IS 'Ссылка на програ�
 COMMENT ON COLUMN training_groups.goal_id IS 'Ссылка на цель тренировок группы';
 COMMENT ON COLUMN training_groups.level_id IS 'Ссылка на уровень подготовки группы';
 COMMENT ON COLUMN training_groups.max_participants IS 'Максимальное количество участников в группе';
-COMMENT ON COLUMN training_groups.current_participants IS 'Текущее количество участников в группе';
+
 COMMENT ON COLUMN training_groups.start_date IS 'Дата и время начала действия группы';
 COMMENT ON COLUMN training_groups.end_date IS 'Дата и время окончания действия группы (если применимо)';
 COMMENT ON COLUMN training_groups.is_active IS 'Признак активности группы';

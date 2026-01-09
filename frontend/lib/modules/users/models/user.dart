@@ -19,6 +19,7 @@ class User {
   final ClientProfile? clientProfile;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? archivedAt;
 
   User({
     required this.id,
@@ -37,6 +38,7 @@ class User {
     this.clientProfile,
     required this.createdAt,
     required this.updatedAt,
+    this.archivedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -62,8 +64,11 @@ class User {
           : null,
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
+      archivedAt: json['archivedAt'] != null ? DateTime.parse(json['archivedAt'] as String) : null,
     );
   }
+
+  bool get isActive => archivedAt == null;
 
   int? get age {
     if (dateOfBirth == null) return null;
@@ -179,6 +184,7 @@ class CreateUserRequest {
   final int hourNotification;
   // This can be provided when creating a client
   final Map<String, dynamic>? clientProfile;
+  final bool? isActive;
 
   CreateUserRequest({
     required this.email,
@@ -193,6 +199,7 @@ class CreateUserRequest {
     this.sendNotification = true,
     this.hourNotification = 1,
     this.clientProfile,
+    this.isActive,
   });
 
   Map<String, dynamic> toJson() {
@@ -210,6 +217,7 @@ class CreateUserRequest {
     if (gender != null) data['gender'] = gender;
     if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth!.toIso8601String();
     if (clientProfile != null) data['client_profile'] = clientProfile;
+    if (isActive != null) data['isActive'] = isActive;
     
     return data;
   }
@@ -224,8 +232,8 @@ class UpdateUserRequest {
   final String? phone;
   final String? gender;
   final DateTime? dateOfBirth;
-  // Allows for partial updates of a client's profile
   final Map<String, dynamic>? clientProfile;
+  final bool? isActive;
 
   UpdateUserRequest({
     required this.id,
@@ -237,6 +245,7 @@ class UpdateUserRequest {
     this.gender,
     this.dateOfBirth,
     this.clientProfile,
+    this.isActive,
   });
 
   Map<String, dynamic> toJson() {
@@ -251,6 +260,7 @@ class UpdateUserRequest {
     if (gender != null) data['gender'] = gender;
     if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth!.toIso8601String();
     if (clientProfile != null) data['client_profile'] = clientProfile;
+    if (isActive != null) data['isActive'] = isActive;
     
     return data;
   }

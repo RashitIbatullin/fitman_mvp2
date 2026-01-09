@@ -466,7 +466,7 @@ class TrainingGroup {
   DateTime startDate;          // Дата начала работы группы
   DateTime? endDate;           // Дата окончания (если предусмотрена)
   int maxParticipants;         // Максимальное количество участников
-  int currentParticipants;     // Текущее количество участников
+  int currentParticipants;     // Текущее количество участников (вычисляемое поле)
 
   // ПОМЕЩЕНИЕ И ОБОРУДОВАНИЕ
   String? primaryRoomId;     // Основной зал для занятий
@@ -608,7 +608,7 @@ CREATE TABLE training_groups (
   
   -- Лимиты
   max_participants INT NOT NULL DEFAULT 15,
-  current_participants INT DEFAULT 0,
+  current_participants INT NOT NULL DEFAULT 0,
   
   -- Жизненный цикл
   start_date DATE NOT NULL,

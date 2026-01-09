@@ -18,10 +18,22 @@ import 'edit_user_screen.dart';
 import 'manage_user_roles_screen.dart';
 import '../../roles/widgets/role_dialog_manager.dart';
 import '../../../widgets/reset_password_dialog.dart';
+import '../../../widgets/filter_popup_menu.dart'; // Add this import
 
-// 1. Create a FutureProvider to fetch users.
+
+// 1. Providers for filters
+final userRoleFilterProvider = StateProvider<String?>((ref) => 'all');
+final userIsArchivedFilterProvider = StateProvider<bool?>((ref) => false);
+
+// 2. Provider to fetch users based on filters
 final usersProvider = FutureProvider<List<User>>((ref) async {
-  return ApiService.getUsers();
+  final role = ref.watch(userRoleFilterProvider);
+  final isArchived = ref.watch(userIsArchivedFilterProvider);
+  // The API supports role and isArchived, which is what we need.
+  return ApiService.getUsers(
+    role: (role == 'all' || role == null) ? null : role,
+    isArchived: isArchived,
+  );
 });
 
 final newlyCreatedUserProvider = StateProvider<User?>((ref) => null);
@@ -43,18 +55,20 @@ class UsersListScreen extends ConsumerStatefulWidget {
 }
 
 class _UsersListScreenState extends ConsumerState<UsersListScreen> {
-  String _selectedFilter = 'all';
   User? _selectedUser;
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialFilter != null) {
-      _selectedFilter = widget.initialFilter!;
-    }
+    // Set initial filter from widget if provided
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialFilter != null) {
+        ref.read(userRoleFilterProvider.notifier).state = widget.initialFilter;
+      }
+    });
     _searchController.addListener(() {
-      // Trigger a rebuild to apply search filter
+      // We only need to call setState to trigger a rebuild for the search
       setState(() {});
     });
   }
@@ -66,26 +80,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   }
 
   List<User> _filterUsers(List<User> allUsers) {
-    List<User> users;
-    switch (_selectedFilter) {
-      case 'admin':
-        users = allUsers.where((user) => user.roles.any((role) => role.name == 'admin')).toList();
-        break;
-      case 'manager':
-        users = allUsers.where((user) => user.roles.any((role) => role.name == 'manager')).toList();
-        break;
-      case 'trainer':
-        users = allUsers.where((user) => user.roles.any((role) => role.name == 'trainer')).toList();
-        break;
-      case 'instructor':
-        users = allUsers.where((user) => user.roles.any((role) => role.name == 'instructor')).toList();
-        break;
-      case 'client':
-        users = allUsers.where((user) => user.roles.any((role) => role.name == 'client')).toList();
-        break;
-      default:
-        users = allUsers;
-    }
+    List<User> users = allUsers; // The provider already filtered by role/status
 
     final searchQuery = _searchController.text.toLowerCase();
     if (searchQuery.isNotEmpty) {
@@ -238,15 +233,6 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
               height: widget.showToolbar ? null : 0.0,
               child: _UsersToolbar(
                 searchController: _searchController,
-                selectedFilter: _selectedFilter,
-                onFilterChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedFilter = value;
-                      _selectedUser = null;
-                    });
-                  }
-                },
                 onCreate: () => _showCreateUserDialog(context),
                 onEdit: _selectedUser == null
                     ? null
@@ -257,9 +243,12 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                             builder: (context) => EditUserScreen(user: _selectedUser!),
                           ),
                         );
-                        // No need to handle result, invalidation will be done in EditUserScreen
+                        ref.invalidate(usersProvider);
                       },
-                onArchive: _selectedUser == null ? null : () => print('Archive user: ${_selectedUser!.fullName}'),
+                onArchive: _selectedUser == null ? null : () {
+                  // TODO: Implement archive logic
+                  print('Archive user: ${_selectedUser!.fullName}');
+                },
                 onResetPassword: _selectedUser == null ? null : () => _showResetPasswordDialog(context),
               ),
             ),
@@ -401,10 +390,8 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   }
 }
 
-class _UsersToolbar extends StatelessWidget {
+class _UsersToolbar extends ConsumerWidget {
   final TextEditingController searchController;
-  final String selectedFilter;
-  final ValueChanged<String?> onFilterChanged;
   final VoidCallback onCreate;
   final VoidCallback? onEdit;
   final VoidCallback? onArchive;
@@ -412,8 +399,6 @@ class _UsersToolbar extends StatelessWidget {
 
   const _UsersToolbar({
     required this.searchController,
-    required this.selectedFilter,
-    required this.onFilterChanged,
     required this.onCreate,
     this.onEdit,
     this.onArchive,
@@ -421,7 +406,13 @@ class _UsersToolbar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roleFilter = ref.watch(userRoleFilterProvider);
+    final isArchivedFilter = ref.watch(userIsArchivedFilterProvider);
+
+    // Translate the isArchived bool? to an isActive bool? for the UI
+    final bool? isActiveFilter = isArchivedFilter == null ? null : !isArchivedFilter;
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -456,20 +447,57 @@ class _UsersToolbar extends StatelessWidget {
           const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'all', label: Text('Все')),
-              ButtonSegment(value: 'admin', label: Text('Админ-ры')),
-              ButtonSegment(value: 'manager', label: Text('Менеджеры')),
-              ButtonSegment(value: 'trainer', label: Text('Тренеры')),
-              ButtonSegment(value: 'instructor', label: Text('Инстр-ры')),
-              ButtonSegment(value: 'client', label: Text('Клиенты')),
-            ],
-            selected: {selectedFilter},
-            onSelectionChanged: (newSelection) =>
-                onFilterChanged(newSelection.first),
+            child: Row(
+              children: [
+                FilterPopupMenuButton<String>(
+                  tooltip: 'Фильтр по роли',
+                  initialValue: roleFilter,
+                  onSelected: (value) {
+                    ref.read(userRoleFilterProvider.notifier).state = value;
+                    // It's better to handle deselection in the main widget
+                  },
+                  allOptionText: 'Все роли',
+                  options: const [
+                    FilterOption(label: 'Админ-ры', value: 'admin'),
+                    FilterOption(label: 'Менеджеры', value: 'manager'),
+                    FilterOption(label: 'Тренеры', value: 'trainer'),
+                    FilterOption(label: 'Инстр-ры', value: 'instructor'),
+                    FilterOption(label: 'Клиенты', value: 'client'),
+                  ],
+                  avatar: const Icon(Icons.person_search_outlined),
+                ),
+                const SizedBox(width: 8),
+                FilterPopupMenuButton<bool>(
+                  tooltip: 'Фильтр по активности',
+                  initialValue: isActiveFilter,
+                  onSelected: (value) {
+                    ref.read(userIsArchivedFilterProvider.notifier).state =
+                        value == null ? null : !value;
+                  },
+                  allOptionText: 'Статус: Все',
+                  options: const [
+                    FilterOption(label: 'Активные', value: true),
+                    FilterOption(label: 'Неактивные', value: false),
+                  ],
+                  avatar: const Icon(Icons.filter_alt_outlined),
+                ),
+                 const SizedBox(width: 8),
+                FilterPopupMenuButton<bool>(
+                  tooltip: 'Фильтр по архивации',
+                  initialValue: isArchivedFilter,
+                  onSelected: (value) {
+                    ref.read(userIsArchivedFilterProvider.notifier).state = value;
+                  },
+                  allOptionText: 'Архив: Все',
+                  options: const [
+                    FilterOption(label: 'В архиве', value: true),
+                    FilterOption(label: 'Не в архиве', value: false),
+                  ],
+                  avatar: const Icon(Icons.archive_outlined),
+                ),
+              ],
+            ),
           ),
-        ),
         ],
       ),
     );

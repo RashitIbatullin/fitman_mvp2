@@ -7,6 +7,7 @@ import '../../widgets/training/training_group_card.dart';
 import '../../models/training_group.model.dart'; // Import for TrainingGroup
 import 'package:fitman_app/services/api_service.dart'; // Import ApiService
 import 'package:fitman_app/modules/users/models/user.dart'; // Import User
+import 'package:fitman_app/widgets/filter_popup_menu.dart';
 
 class TrainingGroupsScreen extends ConsumerStatefulWidget {
   const TrainingGroupsScreen({super.key});
@@ -133,73 +134,37 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
               ),
               const SizedBox(width: 16.0), // Spacer
 
-              // PopupMenuButton for Active/Inactive status
-              PopupMenuButton<dynamic>( // Change generic type to dynamic
+              FilterPopupMenuButton<bool?>(
                 tooltip: 'Фильтр по активности',
                 initialValue: _isActiveFilter,
-                onSelected: (dynamic value) { // Change type to dynamic
+                onSelected: (value) {
                   setState(() {
-                    _isActiveFilter = (value == 'ALL_ACTIVE') ? null : value as bool?;
+                    _isActiveFilter = value;
                   });
                 },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<dynamic>>[ // Change return type to dynamic
-                  const PopupMenuItem<dynamic>(
-                    value: 'ALL_ACTIVE', // Use placeholder string
-                    child: Text('Все (Активность)'),
-                  ),
-                  const PopupMenuItem<bool?>(
-                    value: true,
-                    child: Text('Активные'),
-                  ),
-                  const PopupMenuItem<bool?>(
-                    value: false,
-                    child: Text('Неактивные'),
-                  ),
+                allOptionText: 'Статус: Все',
+                options: [
+                  FilterOption(label: 'Активные', value: true),
+                  FilterOption(label: 'Неактивные', value: false),
                 ],
-                child: Chip(
-                  key: ValueKey('active_filter_chip_$_isActiveFilter'), // Add Key
-                  label: Text(
-                    _isActiveFilter == null
-                        ? 'Статус: Все'
-                        : (_isActiveFilter! ? 'Статус: Активные' : 'Статус: Неактивные'),
-                  ),
-                  avatar: const Icon(Icons.filter_alt),
-                ),
+                avatar: const Icon(Icons.filter_alt),
               ),
               const SizedBox(width: 8.0), // Spacer
 
-              // PopupMenuButton for Archived status
-              PopupMenuButton<dynamic>( // Change generic type to dynamic
+              FilterPopupMenuButton<bool?>(
                 tooltip: 'Фильтр по архивации',
                 initialValue: _isArchivedFilter,
-                onSelected: (dynamic value) {
+                onSelected: (value) {
                   setState(() {
-                    _isArchivedFilter = (value == 'ALL_ARCHIVED') ? null : value as bool?;
+                    _isArchivedFilter = value;
                   });
                 },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<dynamic>>[ // Change return type to dynamic
-                  const PopupMenuItem<dynamic>(
-                    value: 'ALL_ARCHIVED', // Use placeholder string
-                    child: Text('Все (Архив)'),
-                  ),
-                  const PopupMenuItem<bool?>(
-                    value: true,
-                    child: Text('Архивные'),
-                  ),
-                  const PopupMenuItem<bool?>(
-                    value: false,
-                    child: Text('Неархивные'),
-                  ),
+                allOptionText: 'Архив: Все',
+                options: [
+                  FilterOption(label: 'Архивные', value: true),
+                  FilterOption(label: 'Неархивные', value: false),
                 ],
-                child: Chip(
-                  key: ValueKey('archive_filter_chip_$_isArchivedFilter'), // Add Key
-                  label: Text(
-                    _isArchivedFilter == null
-                        ? 'Архив: Все'
-                        : (_isArchivedFilter! ? 'Архив: Архивные' : 'Архив: Неархивные'),
-                  ),
-                  avatar: const Icon(Icons.archive),
-                ),
+                avatar: const Icon(Icons.archive),
               ),
             ],
           ),
@@ -349,8 +314,8 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Подтвердите удаление'),
-                      content: Text('Вы уверены, что хотите удалить группу "${group.name}"?'),
+                      title: const Text('Подтвердите архивацию'),
+                      content: Text('Вы уверены, что хотите архивировать группу "${group.name}"?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
@@ -358,7 +323,7 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Удалить'),
+                          child: const Text('Архивировать'),
                         ),
                       ],
                     ),

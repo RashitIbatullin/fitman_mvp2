@@ -68,7 +68,14 @@ class GroupRepository {
 
     final whereString = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
     
-    final rawQuery = 'SELECT * FROM training_groups $whereString ORDER BY name ASC';
+    final rawQuery = '''
+      SELECT tg.*, COUNT(tgm.id)::int AS current_participants
+      FROM training_groups tg
+      LEFT JOIN training_group_members tgm ON tg.id = tgm.training_group_id
+      $whereString
+      GROUP BY tg.id
+      ORDER BY tg.name ASC
+    ''';
     
     final results = await conn.execute(
       Sql.named(rawQuery),
@@ -83,7 +90,13 @@ class GroupRepository {
   Future<TrainingGroup?> getTrainingGroupById(int id) async {
     final conn = await _db.connection;
     final results = await conn.execute(
-      Sql.named('SELECT * FROM training_groups WHERE id = @id AND archived_at IS NULL'),
+      Sql.named('''
+        SELECT tg.*, COUNT(tgm.id)::int AS current_participants
+        FROM training_groups tg
+        LEFT JOIN training_group_members tgm ON tg.id = tgm.training_group_id
+        WHERE tg.id = @id AND tg.archived_at IS NULL
+        GROUP BY tg.id
+      '''),
       parameters: {'id': id},
     );
     if (results.isEmpty) return null;
@@ -97,13 +110,13 @@ class GroupRepository {
         INSERT INTO training_groups (
           name, description, training_group_type_id, primary_trainer_id, primary_instructor_id,
           responsible_manager_id, program_id, goal_id, level_id,
-          max_participants, current_participants, start_date, end_date,
+          max_participants, start_date, end_date,
           is_active, chat_id, created_by, updated_by
         )
         VALUES (
           @name, @description, @training_group_type_id, @primary_trainer_id, @primary_instructor_id,
           @responsible_manager_id, @program_id, @goal_id, @level_id,
-          @max_participants, @current_participants, @start_date, @end_date,
+          @max_participants, @start_date, @end_date,
           @is_active, @chat_id, @created_by, @updated_by
         )
         RETURNING *
@@ -119,7 +132,7 @@ class GroupRepository {
         'goal_id': group.goalId,
         'level_id': group.levelId,
         'max_participants': group.maxParticipants,
-        'current_participants': group.currentParticipants,
+
         'start_date': group.startDate.toIso8601String(),
         'end_date': group.endDate?.toIso8601String(),
         'is_active': group.isActive,
@@ -147,7 +160,6 @@ class GroupRepository {
           goal_id = @goal_id,
           level_id = @level_id,
           max_participants = @max_participants,
-          current_participants = @current_participants,
           start_date = @start_date,
           end_date = @end_date,
           is_active = @is_active,
@@ -169,7 +181,6 @@ class GroupRepository {
         'goal_id': group.goalId,
         'level_id': group.levelId,
         'max_participants': group.maxParticipants,
-        'current_participants': group.currentParticipants,
         'start_date': group.startDate.toIso8601String(),
         'end_date': group.endDate?.toIso8601String(),
         'is_active': group.isActive,

@@ -25,7 +25,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
   int? _selectedPrimaryInstructorId;
   int? _selectedResponsibleManagerId;
   late TextEditingController _maxParticipantsController;
-  late TextEditingController _currentParticipantsController;
+
   late DateTime _startDate;
   DateTime? _endDate;
   bool _isActive = true;
@@ -44,7 +44,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
     _nameController = TextEditingController();
     _descriptionController = TextEditingController();
     _maxParticipantsController = TextEditingController();
-    _currentParticipantsController = TextEditingController();
+
     _startDate = DateTime.now();
     _initialize();
   }
@@ -59,7 +59,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
     } else {
       // Set defaults for a new group
       _maxParticipantsController.text = '15';
-      _currentParticipantsController.text = '0';
+
       _selectedGroupTypeId = 3; // Default to 'Group' type
     }
     setState(() => _isLoading = false);
@@ -93,7 +93,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
       _selectedPrimaryInstructorId = group.primaryInstructorId;
       _selectedResponsibleManagerId = group.responsibleManagerId;
       _maxParticipantsController.text = group.maxParticipants.toString();
-      _currentParticipantsController.text = (group.currentParticipants ?? 0).toString();
+
       _startDate = group.startDate;
       _endDate = group.endDate;
       _isActive = group.isActive ?? true;
@@ -113,7 +113,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
     _nameController.dispose();
     _descriptionController.dispose();
     _maxParticipantsController.dispose();
-    _currentParticipantsController.dispose();
+
     super.dispose();
   }
 
@@ -130,7 +130,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
         primaryInstructorId: _selectedPrimaryInstructorId,
         responsibleManagerId: _selectedResponsibleManagerId,
         maxParticipants: int.parse(_maxParticipantsController.text),
-        currentParticipants: int.parse(_currentParticipantsController.text),
+
         startDate: _startDate,
         endDate: _endDate,
         isActive: _isActive,
@@ -290,17 +290,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _currentParticipantsController,
-                decoration: const InputDecoration(labelText: 'Тек. участников'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || int.tryParse(value) == null) {
-                    return 'Пожалуйста, введите число';
-                  }
-                  return null;
-                },
-              ),
+              // Current participants are now calculated automatically
               ListTile(
                 title: Text('Дата начала: ${DateFormat('dd.MM.yyyy').format(_startDate)}'),
                 trailing: const Icon(Icons.calendar_today),

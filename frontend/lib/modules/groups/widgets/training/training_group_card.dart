@@ -93,7 +93,7 @@ class TrainingGroupCard extends ConsumerWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(Icons.archive, color: Colors.blueGrey),
                     onPressed: onDelete,
                   ),
                 ],

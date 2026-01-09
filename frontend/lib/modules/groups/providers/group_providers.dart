@@ -210,6 +210,7 @@ class GroupMembers extends _$GroupMembers {
     state = const AsyncValue.loading();
     try {
       await ApiService.addTrainingGroupMember(groupId, userId);
+      ref.invalidate(trainingGroupsProvider); // Invalidate the main group list
       ref.invalidateSelf();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -220,6 +221,7 @@ class GroupMembers extends _$GroupMembers {
     state = const AsyncValue.loading();
     try {
       await ApiService.removeTrainingGroupMember(groupId, userId);
+      ref.invalidate(trainingGroupsProvider); // Invalidate the main group list
       ref.invalidateSelf();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
