@@ -2,7 +2,7 @@ import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/user_front.dart';
+import '../../modules/users/models/user.dart';
 import '../../providers/catalogs_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {

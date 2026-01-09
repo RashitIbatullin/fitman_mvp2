@@ -5,10 +5,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/user_front.dart';
-import '../../providers/auth_provider.dart';
-import '../../services/api_service.dart';
-import '../client/full_screen_photo_editor.dart';
+import '../models/user.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../services/api_service.dart';
+import '../../../screens/client/full_screen_photo_editor.dart';
 import 'users_list_screen.dart';
 
 class EditUserScreen extends ConsumerStatefulWidget {

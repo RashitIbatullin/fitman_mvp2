@@ -12,7 +12,7 @@ TrainingGroup _$TrainingGroupFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       description: json['description'] as String?,
       trainingGroupTypeId: (json['training_group_type_id'] as num).toInt(),
-      primaryTrainerId: (json['primary_trainer_id'] as num).toInt(),
+      primaryTrainerId: (json['primary_trainer_id'] as num?)?.toInt(),
       primaryInstructorId: (json['primary_instructor_id'] as num?)?.toInt(),
       responsibleManagerId: (json['responsible_manager_id'] as num?)?.toInt(),
       clientIds:

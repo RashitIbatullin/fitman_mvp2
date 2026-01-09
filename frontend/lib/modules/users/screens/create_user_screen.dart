@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/user_front.dart';
-import '../../services/api_service.dart';
+import '../models/user.dart';
+import '../../../services/api_service.dart';
 
 class CreateUserScreen extends ConsumerStatefulWidget {
   final String userRole; // This can be a suggestion

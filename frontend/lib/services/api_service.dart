@@ -3,9 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/role.dart';
+import '../modules/roles/models/role.dart';
 import '../models/schedule_item.dart';
-import '../models/user_front.dart';
+import '../modules/users/models/user.dart';
 import '../models/work_schedule.dart';
 import '../models/client_schedule_preference.dart'; // Import ClientSchedulePreference
 import '../models/chat/chat_models.dart'; // Import chat models

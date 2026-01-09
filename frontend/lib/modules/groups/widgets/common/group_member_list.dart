@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/group_providers.dart';
-import '../../../../models/user_front.dart';
-import '../../../../providers/users_provider.dart';
+import '../../../../modules/users/models/user.dart';
+import '../../../../modules/users/providers/users_provider.dart';
 
 class GroupMemberList extends ConsumerWidget {
   final int groupId;

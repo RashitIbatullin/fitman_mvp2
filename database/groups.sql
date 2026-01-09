@@ -37,7 +37,7 @@ CREATE TABLE training_groups (
   training_group_type_id SMALLINT NOT NULL DEFAULT 3 REFERENCES training_group_types(id),
   
   -- Персонал
-  primary_trainer_id BIGINT NOT NULL REFERENCES users(id),
+  primary_trainer_id BIGINT REFERENCES users(id),
   primary_instructor_id BIGINT REFERENCES users(id),
   responsible_manager_id BIGINT REFERENCES users(id),
   

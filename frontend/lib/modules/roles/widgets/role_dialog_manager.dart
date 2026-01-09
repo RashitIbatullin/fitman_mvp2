@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/user_front.dart';
-import '../providers/auth_provider.dart';
+import '../../users/models/user.dart';
+import '../../../providers/auth_provider.dart';
 import 'role_selection_dialog.dart';
 import '../models/role.dart';
 

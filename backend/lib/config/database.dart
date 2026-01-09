@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:postgres/postgres.dart';
 import '../models/client_profile_back.dart';
 import 'app_config.dart';
-import '../models/user_back.dart';
-import '../models/role.dart';
+import '../modules/users/models/user.dart';
+import '../modules/roles/models/role.dart';
 
 import '../modules/groups/repositories/group_repository.dart'; // New import
 import '../modules/infrastructure/repositories/room.repository.dart';

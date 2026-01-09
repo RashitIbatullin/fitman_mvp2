@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
-import 'admin/users_list_screen.dart';
+import '../modules/users/screens/users_list_screen.dart';
 import 'admin/catalogs_screen.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {

@@ -35,7 +35,7 @@ class TrainingGroup extends Equatable {
   
   // ПЕРСОНАЛ (обязательные для тренировочного процесса)
   @JsonKey(name: 'primary_trainer_id')
-  final int primaryTrainerId;     // Основной тренер группы (обязательно)
+  final int? primaryTrainerId;     // Основной тренер группы (обязательно)
   @JsonKey(name: 'primary_instructor_id')
   final int? primaryInstructorId; // Основной инструктор группы
   @JsonKey(name: 'responsible_manager_id')
@@ -92,7 +92,7 @@ class TrainingGroup extends Equatable {
     required this.name,
     this.description,
     required this.trainingGroupTypeId,
-    required this.primaryTrainerId,
+    this.primaryTrainerId,
     this.primaryInstructorId,
     this.responsibleManagerId,
     this.clientIds = const [],

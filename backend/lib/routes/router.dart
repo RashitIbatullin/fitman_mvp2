@@ -1,7 +1,7 @@
 import 'package:shelf_router/shelf_router.dart';
 import 'package:shelf/shelf.dart';
 import '../controllers/auth_controller.dart';
-import '../controllers/users_controller.dart';
+import '../modules/users/controllers/users_controller.dart';
 import '../controllers/training_controller.dart';
 import '../controllers/schedule_controller.dart';
 import '../controllers/manager_controller.dart';

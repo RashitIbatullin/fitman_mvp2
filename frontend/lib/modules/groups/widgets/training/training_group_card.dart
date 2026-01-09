@@ -1,7 +1,7 @@
 import '../../models/training_group_type.model.dart';
-import '../../../../models/user_front.dart';
+import '../../../../modules/users/models/user.dart';
 import '../../providers/group_providers.dart';
-import '../../../../providers/users_provider.dart';
+import '../../../../modules/users/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import '../../models/training_group.model.dart';
 import 'package:intl/intl.dart';

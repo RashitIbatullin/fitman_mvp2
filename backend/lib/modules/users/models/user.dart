@@ -1,5 +1,5 @@
-import 'role.dart';
-import 'client_profile_back.dart';
+import '../../roles/models/role.dart';
+import '../../../models/client_profile_back.dart';
 
 class User {
   final int id;

@@ -2,22 +2,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/user_front.dart';
-import '../../models/role.dart';
-import '../../services/api_service.dart';
+import '../models/user.dart';
+import '../../roles/models/role.dart';
+import '../../../services/api_service.dart';
 import 'create_user_screen.dart';
 import 'assign_clients_screen.dart';
 import 'assign_instructors_screen.dart';
 import 'assign_trainers_screen.dart';
-import '../client_dashboard.dart';
-import '../instructor_dashboard.dart';
-import '../manager_dashboard.dart';
-import '../trainer_dashboard.dart';
-import '../unknown_role_screen.dart';
+import '../../../screens/client_dashboard.dart';
+import '../../../screens/instructor_dashboard.dart';
+import '../../../screens/manager_dashboard.dart';
+import '../../../screens/trainer_dashboard.dart';
+import '../../roles/screens/unknown_role_screen.dart';
 import 'edit_user_screen.dart';
 import 'manage_user_roles_screen.dart';
-import '../../widgets/role_dialog_manager.dart';
-import '../../widgets/reset_password_dialog.dart';
+import '../../roles/widgets/role_dialog_manager.dart';
+import '../../../widgets/reset_password_dialog.dart';
 
 // 1. Create a FutureProvider to fetch users.
 final usersProvider = FutureProvider<List<User>>((ref) async {

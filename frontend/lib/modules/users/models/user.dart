@@ -1,4 +1,4 @@
-import 'role.dart';
+import '../../roles/models/role.dart';
 import 'client_profile.dart';
 
 // --- Main User Model ---

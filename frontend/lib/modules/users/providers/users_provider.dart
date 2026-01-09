@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/user_front.dart';
-import '../../services/api_service.dart';
+import '../models/user.dart';
+import '../../../services/api_service.dart';
 
 class UsersState {
   const UsersState({

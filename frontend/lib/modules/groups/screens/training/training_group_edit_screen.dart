@@ -4,7 +4,7 @@ import '../../providers/group_providers.dart';
 import '../../models/training_group.model.dart';
 import '../../widgets/common/group_member_list.dart'; // For later use
 import 'package:fitman_app/services/api_service.dart'; // For fetching users for dropdowns
-import 'package:fitman_app/models/user_front.dart'; // For user dropdown
+import 'package:fitman_app/modules/users/models/user.dart'; // For user dropdown
 import 'package:intl/intl.dart'; // New import
 
 class TrainingGroupEditScreen extends ConsumerStatefulWidget {
@@ -126,7 +126,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
         name: _nameController.text,
         description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
         trainingGroupTypeId: _selectedGroupTypeId!,
-        primaryTrainerId: _selectedPrimaryTrainerId!,
+        primaryTrainerId: _selectedPrimaryTrainerId,
         primaryInstructorId: _selectedPrimaryInstructorId,
         responsibleManagerId: _selectedResponsibleManagerId,
         maxParticipants: int.parse(_maxParticipantsController.text),
@@ -184,7 +184,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Название группы'),
+                decoration: const InputDecoration(labelText: 'Название группы *'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Пожалуйста, введите название';
@@ -222,25 +222,25 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
                 loading: () => const SizedBox.shrink(),
                 error: (err, stack) => Center(child: Text('Ошибка: $err')),
               ),
-              DropdownButtonFormField<int>(
-                initialValue: _selectedPrimaryTrainerId,
+              DropdownButtonFormField<int?>(
+                value: _selectedPrimaryTrainerId,
                 decoration: const InputDecoration(labelText: 'Основной тренер'),
-                items: _trainers.map((user) {
-                  return DropdownMenuItem(
-                    value: user.id,
-                    child: Text(user.fullName),
-                  );
-                }).toList(),
+                items: [
+                  const DropdownMenuItem<int?>(
+                    value: null,
+                    child: Text('Не назначен'),
+                  ),
+                  ..._trainers.map((user) {
+                    return DropdownMenuItem<int?>(
+                      value: user.id,
+                      child: Text(user.fullName),
+                    );
+                  }),
+                ],
                 onChanged: (value) {
                   setState(() {
                     _selectedPrimaryTrainerId = value;
                   });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Пожалуйста, выберите основного тренера';
-                  }
-                  return null;
                 },
               ),
               DropdownButtonFormField<int>(

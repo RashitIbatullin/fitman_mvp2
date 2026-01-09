@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/user_front.dart';
-import '../../models/role.dart';
-import '../../services/api_service.dart';
+import '../models/user.dart';
+import '../../roles/models/role.dart';
+import '../../../services/api_service.dart';
 
 class ManageUserRolesScreen extends ConsumerStatefulWidget {
   final User user;

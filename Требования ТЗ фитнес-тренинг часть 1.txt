@@ -371,6 +371,49 @@ o Клиент (role_client) видит только свою учетную з�
 Экран должен отображаться после нажатия на кнопку "Профиль" в меню дашборда.
 
 
+2.7 Архитектура и расположение кода
+После рефакторинга подсистема управления пользователями и ролями была выделена в отдельные модули для улучшения структуры и переиспользования кода.
+
+2.7.1 Бэкенд
+
+backend/lib/modules/
+├── users/
+│   ├── controllers/
+│   │   └── users_controller.dart
+│   └── models/
+│       └── user.dart
+└── roles/
+    └── models/
+        └── role.dart
+
+2.7.2 Фронтенд
+
+frontend/lib/modules/
+├── users/
+│   ├── models/
+│   │   ├── user.dart
+│   │   └── client_profile.dart
+│   ├── providers/
+│   │   └── users_provider.dart
+│   └── screens/
+│       ├── create_user_screen.dart
+│       ├── edit_user_screen.dart
+│       ├── manage_user_roles_screen.dart
+│       ├── users_list_screen.dart
+│       ├── assign_clients_screen.dart
+│       ├── assign_instructors_screen.dart
+│       └── assign_trainers_screen.dart
+└── roles/
+    ├── models/
+    │   └── role.dart
+    ├── screens/
+    │   └── unknown_role_screen.dart
+    └── widgets/
+        ├── role_dialog_manager.dart
+        └── role_selection_dialog.dart
+
+
+
 
 3 Подсистема управления группами
 3.1 Общие положения
@@ -554,7 +597,7 @@ CREATE TABLE training_groups (
   description TEXT,
   
   -- Персонал
-  primary_trainer_id BIGINT NOT NULL REFERENCES users(id),
+  primary_trainer_id BIGINT REFERENCES users(id),
   primary_instructor_id BIGINT REFERENCES users(id),
   responsible_manager_id BIGINT REFERENCES users(id),
   
@@ -1776,5 +1819,4 @@ o client_exercises - Индивидуальные упражнения в рам
 
 
 1
-
 

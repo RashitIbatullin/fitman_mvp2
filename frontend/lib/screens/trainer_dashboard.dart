@@ -1,4 +1,4 @@
-import 'package:fitman_app/models/user_front.dart';
+import 'package:fitman_app/modules/users/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';

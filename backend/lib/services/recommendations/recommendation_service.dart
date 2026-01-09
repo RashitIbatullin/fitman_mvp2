@@ -1,5 +1,5 @@
 import '../../config/database.dart';
-import '../../models/user_back.dart';
+import '../../modules/users/models/user.dart';
 import 'somatotype_helper.dart';
 
 // Helper data classes for clarity

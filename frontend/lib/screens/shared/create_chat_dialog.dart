@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
-import '../../models/user_front.dart';
+import '../../modules/users/models/user.dart';
 
 class CreateChatDialog extends ConsumerStatefulWidget {
   const CreateChatDialog({super.key});

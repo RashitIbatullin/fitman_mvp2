@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/user_front.dart';
-import '../../services/api_service.dart';
+import '../models/user.dart';
+import '../../../services/api_service.dart';
 
 // Провайдер для получения всех тренеров
 final allTrainersProvider = FutureProvider<List<User>>((ref) async {

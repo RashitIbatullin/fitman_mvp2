@@ -1,4 +1,4 @@
-import 'package:fitman_app/providers/users_provider.dart';
+import 'package:fitman_app/modules/users/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/group_providers.dart';
@@ -6,7 +6,7 @@ import './training_group_edit_screen.dart';
 import '../../widgets/training/training_group_card.dart';
 import '../../models/training_group.model.dart'; // Import for TrainingGroup
 import 'package:fitman_app/services/api_service.dart'; // Import ApiService
-import 'package:fitman_app/models/user_front.dart'; // Import User
+import 'package:fitman_app/modules/users/models/user.dart'; // Import User
 
 class TrainingGroupsScreen extends ConsumerStatefulWidget {
   const TrainingGroupsScreen({super.key});
