@@ -1,4 +1,5 @@
 import 'package:fitman_app/modules/users/models/user.dart';
+import 'package:fitman_app/modules/users/screens/users_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -16,13 +17,24 @@ class InstructorDashboard extends ConsumerStatefulWidget {
 
 class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
   int _selectedIndex = 0;
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   final List<String> _titles = const [
     'Главное',
     'Профиль',
-    'Клиенты',
-    'Мой тренер',
-    'Мой менеджер',
+    'Пользователи',
     'Расписание',
     'Табель',
   ];
@@ -44,9 +56,11 @@ class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
     final List<Widget> views = [
       const Center(child: Text('Главное')),
       ProfileScreen(user: user),
-      const Center(child: Text('Клиенты - в разработке')),
-      const Center(child: Text('Мой тренер - в разработке')),
-      const Center(child: Text('Мой менеджер - в разработке')),
+      UsersListScreen(
+        scrollController: _scrollController,
+        showToolbar: false,
+        initialFilter: 'client',
+      ),
       const Center(child: Text('Расписание - в разработке')),
       const Center(child: Text('Табель - в разработке')),
     ];
@@ -96,12 +110,7 @@ class _InstructorDashboardState extends ConsumerState<InstructorDashboard> {
             icon: Icon(Icons.account_circle),
             label: 'Профиль',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Клиенты'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Тренер'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.manage_accounts),
-            label: 'Менеджер',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Пользователи'),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Расписание',

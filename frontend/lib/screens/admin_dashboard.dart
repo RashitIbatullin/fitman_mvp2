@@ -38,6 +38,14 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   void _scrollListener() {
     if (_selectedIndex != 1) return; // Only for Users tab
 
+    // Show bars if we are at the top of the page
+    if (_scrollController.position.pixels <= _scrollController.position.minScrollExtent) {
+      if (!_showBars) {
+        setState(() => _showBars = true);
+      }
+      return;
+    }
+
     final userScrollDirection = _scrollController.position.userScrollDirection;
 
     if (userScrollDirection == ScrollDirection.reverse) {

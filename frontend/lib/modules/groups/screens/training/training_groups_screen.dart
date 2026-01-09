@@ -352,6 +352,7 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
 
   FloatingActionButton _buildFloatingActionButton() {
     return FloatingActionButton(
+      heroTag: 'training_groups_fab',
       onPressed: () async {
         await Navigator.of(context).push(
           MaterialPageRoute(

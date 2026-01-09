@@ -35,6 +35,7 @@ class ChatListScreen extends ConsumerWidget {
                   },
                 ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'chat_list_fab',
         onPressed: () async {
           final newChatId = await showDialog<int>(
             context: context,

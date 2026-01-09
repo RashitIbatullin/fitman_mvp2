@@ -164,7 +164,7 @@ class Database {
       final results = await conn.execute('''
         SELECT 
           u.id, u.email, u.password_hash, u.first_name, u.last_name, u.middle_name, 
-          u.phone, u.gender, u.date_of_birth, u.photo_url, u.created_at, u.updated_at,
+          u.phone, u.gender, u.date_of_birth, u.photo_url, u.created_at, u.updated_at, u.archived_at,
           cp.user_id as cp_user_id, cp.goal_training_id, cp.level_training_id, 
           cp.track_calories, cp.coeff_activity
         FROM users u
@@ -206,7 +206,7 @@ class Database {
         final conn = await connection;
   
         final sql = '''
-          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
+          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at, archived_at
           FROM users
           WHERE email = @email
           LIMIT 1
@@ -252,7 +252,7 @@ class Database {
         final conn = await connection;
   
         final sql = '''
-          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
+          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at, archived_at
           FROM users
           WHERE phone = @phone
           LIMIT 1
@@ -298,7 +298,7 @@ class Database {
         final conn = await connection;
   
         final sql = '''
-          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at
+          SELECT id, email, password_hash, first_name, last_name, middle_name, phone, gender, date_of_birth, photo_url, created_at, updated_at, archived_at
           FROM users
           WHERE id = @id
           LIMIT 1
@@ -633,7 +633,7 @@ class Database {
       final results = await conn.execute(
         Sql.named('''
           SELECT 
-            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at
+            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at, u.archived_at
           FROM users u
           LEFT JOIN user_roles ur ON u.id = ur.user_id
           LEFT JOIN roles r ON ur.role_id = r.id
@@ -700,7 +700,7 @@ class Database {
       final results = await conn.execute(
         Sql.named('''
           SELECT 
-            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at
+            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at, u.archived_at
           FROM users u
           INNER JOIN user_roles ur ON u.id = ur.user_id
           INNER JOIN roles r ON ur.role_id = r.id
@@ -724,7 +724,7 @@ class Database {
       final results = await conn.execute(
         Sql.named('''
           SELECT 
-            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at
+            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at, u.archived_at
           FROM users u
           INNER JOIN user_roles ur ON u.id = ur.user_id
           INNER JOIN roles r ON ur.role_id = r.id
@@ -834,7 +834,7 @@ class Database {
       final results = await conn.execute(
         Sql.named('''
           SELECT 
-            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at
+            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at, u.archived_at
           FROM users u
           LEFT JOIN user_roles ur ON u.id = ur.user_id
           LEFT JOIN roles r ON ur.role_id = r.id
@@ -858,7 +858,7 @@ class Database {
       final results = await conn.execute(
         Sql.named('''
           SELECT DISTINCT ON (t.id)
-            t.id, t.email, t.password_hash, t.first_name, t.last_name, r.name as role, t.phone, t.created_at, t.updated_at
+            t.id, t.email, t.password_hash, t.first_name, t.last_name, r.name as role, t.phone, t.created_at, t.updated_at, t.archived_at
           FROM users t 
           LEFT JOIN user_roles ur ON t.id = ur.user_id
           LEFT JOIN roles r ON ur.role_id = r.id
@@ -881,7 +881,7 @@ class Database {
       final results = await conn.execute(
         Sql.named('''
           SELECT
-            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at
+            u.id, u.email, u.password_hash, u.first_name, u.last_name, r.name as role, u.phone, u.created_at, u.updated_at, u.archived_at
           FROM users u 
           LEFT JOIN user_roles ur ON u.id = ur.user_id
           LEFT JOIN roles r ON ur.role_id = r.id

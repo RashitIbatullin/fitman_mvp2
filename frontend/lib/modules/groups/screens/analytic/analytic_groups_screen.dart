@@ -164,6 +164,7 @@ class _AnalyticGroupsScreenState extends ConsumerState<AnalyticGroupsScreen> {
 
   FloatingActionButton _buildFloatingActionButton() {
     return FloatingActionButton(
+      heroTag: 'analytic_groups_fab',
       onPressed: () async {
         await Navigator.of(context).push(
           MaterialPageRoute(

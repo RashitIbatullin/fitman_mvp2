@@ -48,6 +48,7 @@ class CalorieTrackingScreen extends ConsumerWidget {
           bottom: 16.0,
           right: 16.0,
           child: FloatingActionButton(
+            heroTag: 'calorie_tracking_fab',
             onPressed: () {
               // TODO: Add new calorie entry
             },

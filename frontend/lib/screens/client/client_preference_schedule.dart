@@ -217,6 +217,7 @@ class _ClientPreferenceScheduleState
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'client_preference_schedule_fab',
         onPressed: () async {
           // Make onPressed async
           if (_formKey.currentState!.validate()) {

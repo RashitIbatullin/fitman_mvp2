@@ -269,7 +269,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                   final isSelected = _selectedUser?.id == user.id;
 
                   return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     color: isSelected ? Theme.of(context).primaryColor.withAlpha(25) : null,
                     child: ListTile(
                       dense: true,
@@ -280,10 +280,10 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                             : null,
                         child: user.photoUrl == null ? Text(user.firstName.isNotEmpty ? user.firstName[0] : '?') : null,
                       ),
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      title: Row(
                         children: [
-                          Text(user.fullName),
+                          Text(user.fullName, style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(width: 8),
                           if (user.roles.isNotEmpty)
                             Wrap(
                               spacing: 4.0,
@@ -292,29 +292,50 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                                       label: Text(_getRoleDisplayName(role), style: const TextStyle(fontSize: 10,),),
                                       backgroundColor: _getRoleColor(role.name,),
                                       labelStyle: const TextStyle(color: Colors.white,),
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      padding: EdgeInsets.zero,
                                     ),
                                   )
                                   .toList(),
                             ),
                         ],
                       ),
-                      subtitle: Wrap(
-                          spacing: 8.0, // horizontal space between chips
-                          runSpacing: 4.0, // vertical space between lines
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Wrap(
+                          spacing: 8.0, // Increased spacing for better readability
+                          runSpacing: 4.0,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Text(user.email),
+                            Icon(Icons.email_outlined, size: 14, color: Theme.of(context).colorScheme.secondary),
+                            Text(user.email, style: Theme.of(context).textTheme.bodySmall),
                             const Text('•'),
-                            Text(user.phone ?? 'Нет телефона'),
-                            if (user.roles.any((role) => role.name == 'client',)) ...[
+                            Icon(Icons.phone_outlined, size: 14, color: Theme.of(context).colorScheme.secondary),
+                            Text(user.phone ?? 'Нет телефона', style: Theme.of(context).textTheme.bodySmall),
+                            // Add client-specific info here
+                            if (user.roles.any((role) => role.name == 'client')) ...[
                               const Text('•'),
-                              Text('Пол: ${user.gender ?? 'Н/Д'}'),
+                              Icon(Icons.person_outline, size: 14, color: Theme.of(context).colorScheme.secondary),
+                              Text(user.gender ?? 'Пол Н/Д', style: Theme.of(context).textTheme.bodySmall),
                               const Text('•'),
-                              Text('ДР: ${user.dateOfBirth != null ? '${user.dateOfBirth!.day}.${user.dateOfBirth!.month}.${user.dateOfBirth!.year}' : 'Н/Д'}',),
-                              const Text('•'),
-                              Text('Возраст: ${user.age?.toString() ?? 'Н/Д'}',),
+                              Icon(Icons.numbers, size: 14, color: Theme.of(context).colorScheme.secondary),
+                              Text('Возраст: ${user.age?.toString() ?? 'Н/Д'}', style: Theme.of(context).textTheme.bodySmall),
                             ],
+                            const Text('•'), // Separator before status
+                            Icon(
+                              user.isActive ? Icons.check_circle_outline : Icons.archive_outlined,
+                              size: 14,
+                              color: user.isActive ? Colors.green : Colors.blueGrey,
+                            ),
+                            Text(
+                              user.isActive ? 'Активен' : 'В архиве',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: user.isActive ? Colors.green : Colors.blueGrey,
+                              )
+                            ),
                           ],
                         ),
+                      ),
                       trailing: user.roles.any((r) => r.name == 'manager') || (currentUserIsAdmin && !user.roles.any((r) => r.name == 'client'))
                           ? PopupMenuButton<String>(
                               onSelected: (value) async {

@@ -16,6 +16,7 @@ class User {
   final DateTime createdAt;
   final DateTime updatedAt;
   final ClientProfile? clientProfile;
+  final DateTime? archivedAt;
 
   int? get age {
     if (dateOfBirth == null) return null;
@@ -43,6 +44,7 @@ class User {
     required this.createdAt,
     required this.updatedAt,
     this.clientProfile,
+    this.archivedAt,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
@@ -66,6 +68,7 @@ class User {
       updatedAt: map['updated_at'] is DateTime
           ? map['updated_at']
           : DateTime.parse(map['updated_at'].toString()),
+      archivedAt: map['archived_at'] as DateTime?,
       // clientProfile is populated separately after creation
     );
   }
@@ -85,6 +88,7 @@ class User {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'client_profile': clientProfile?.toJson(),
+      'archivedAt': archivedAt?.toIso8601String(),
     };
   }
 
@@ -102,6 +106,7 @@ class User {
     DateTime? dateOfBirth,
     List<Role>? roles,
     ClientProfile? clientProfile,
+    DateTime? archivedAt,
   }) {
     return User(
       id: id,
@@ -118,6 +123,7 @@ class User {
       createdAt: createdAt,
       updatedAt: DateTime.now(),
       clientProfile: clientProfile ?? this.clientProfile,
+      archivedAt: archivedAt ?? this.archivedAt,
     );
   }
 }

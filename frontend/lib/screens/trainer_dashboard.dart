@@ -1,4 +1,5 @@
 import 'package:fitman_app/modules/users/models/user.dart';
+import 'package:fitman_app/modules/users/screens/users_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -15,6 +16,19 @@ class TrainerDashboard extends ConsumerStatefulWidget {
 
 class _TrainerDashboardState extends ConsumerState<TrainerDashboard> {
   int _selectedIndex = 0;
+  late ScrollController _scrollController;
+
+   @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   final List<String> _titles = const [
     'Главное',
@@ -40,7 +54,11 @@ class _TrainerDashboardState extends ConsumerState<TrainerDashboard> {
     final List<Widget> views = [
       const Center(child: Text('Главное')),
       ProfileScreen(user: user),
-      const Center(child: Text('Клиенты - в разработке')),
+      UsersListScreen(
+        scrollController: _scrollController,
+        showToolbar: false,
+        initialFilter: 'client',
+      ),
       const Center(child: Text('Расписание - в разработке')),
     ];
 
