@@ -223,7 +223,7 @@ class _TrainingGroupEditScreenState extends ConsumerState<TrainingGroupEditScree
                 error: (err, stack) => Center(child: Text('Ошибка: $err')),
               ),
               DropdownButtonFormField<int?>(
-                value: _selectedPrimaryTrainerId,
+                initialValue: _selectedPrimaryTrainerId,
                 decoration: const InputDecoration(labelText: 'Основной тренер'),
                 items: [
                   const DropdownMenuItem<int?>(

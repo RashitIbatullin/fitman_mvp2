@@ -310,7 +310,7 @@ class ApiService {
   }
 
   // Получение списка пользователей (для админа)
-  static Future<List<User>> getUsers({String? role, bool? isArchived}) async {
+  static Future<List<User>> getUsers({String? role, bool? isArchived, int? offset, int? limit}) async {
     try {
       final queryParameters = <String, String>{};
       if (role != null) {
@@ -318,6 +318,12 @@ class ApiService {
       }
       if (isArchived != null) {
         queryParameters['isArchived'] = isArchived.toString();
+      }
+      if (offset != null) {
+        queryParameters['offset'] = offset.toString();
+      }
+      if (limit != null) {
+        queryParameters['limit'] = limit.toString();
       }
 
       final uri = Uri.parse('$baseUrl/api/users').replace(queryParameters: queryParameters.isNotEmpty ? queryParameters : null);
@@ -427,6 +433,28 @@ class ApiService {
       }
     } catch (e) {
       print('Update user roles error: $e');
+      rethrow;
+    }
+  }
+
+  // Архивация пользователя
+  static Future<void> archiveUser(int userId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/users/$userId'), // Use the existing update user endpoint
+        headers: _headers,
+        body: jsonEncode({'isActive': false}), // Set isActive to false for archival
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ??
+              'Failed to archive user with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Archive user error: $e');
       rethrow;
     }
   }

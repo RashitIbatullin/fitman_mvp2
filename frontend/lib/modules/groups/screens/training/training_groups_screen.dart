@@ -189,7 +189,7 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     ),
-                    value: _selectedTrainerId,
+                    initialValue: _selectedTrainerId,
                     items: [
                       const DropdownMenuItem<int?>(
                         value: null,
@@ -221,7 +221,7 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     ),
-                    value: _selectedInstructorId,
+                    initialValue: _selectedInstructorId,
                     items: [
                       const DropdownMenuItem<int?>(
                         value: null,
@@ -253,7 +253,7 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     ),
-                    value: _selectedManagerId,
+                    initialValue: _selectedManagerId,
                     items: [
                       const DropdownMenuItem<int?>(
                         value: null,

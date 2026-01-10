@@ -25,15 +25,96 @@ import '../../../widgets/filter_popup_menu.dart'; // Add this import
 final userRoleFilterProvider = StateProvider<String?>((ref) => 'all');
 final userIsArchivedFilterProvider = StateProvider<bool?>((ref) => false);
 
-// 2. Provider to fetch users based on filters
-final usersProvider = FutureProvider<List<User>>((ref) async {
-  final role = ref.watch(userRoleFilterProvider);
-  final isArchived = ref.watch(userIsArchivedFilterProvider);
-  // The API supports role and isArchived, which is what we need.
-  return ApiService.getUsers(
-    role: (role == 'all' || role == null) ? null : role,
-    isArchived: isArchived,
-  );
+// Constants for pagination
+const int _usersLimit = 20; // Number of users to fetch per page
+
+// 2. Provider to fetch users based on filters and manage pagination
+class UsersNotifier extends AsyncNotifier<List<User>> {
+  int _offset = 0;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+
+  @override
+  Future<List<User>> build() async {
+    _offset = 0; // Reset offset on build
+    _hasMore = true;
+    return _fetchUsers();
+  }
+
+  Future<List<User>> _fetchUsers() async {
+    if (!_hasMore) return []; // No more data to fetch
+
+    _isLoadingMore = true;
+    // Notify listeners about loading state
+    if (state.hasValue) {
+      state = AsyncData(state.value!);
+    } else {
+      state = const AsyncLoading();
+    }
+
+    try {
+      final role = ref.watch(userRoleFilterProvider);
+      final isArchived = ref.watch(userIsArchivedFilterProvider);
+
+      final newUsers = await ApiService.getUsers(
+        role: (role == 'all' || role == null) ? null : role,
+        isArchived: isArchived,
+        offset: _offset,
+        limit: _usersLimit,
+      );
+
+      _isLoadingMore = false;
+
+      if (newUsers.length < _usersLimit) {
+        _hasMore = false; // No more data if fewer than limit are returned
+      }
+
+      if (_offset == 0) {
+        // Initial load or refresh
+        return newUsers;
+      } else {
+        // Load more, append to existing list
+        return [...?state.value, ...newUsers];
+      }
+    } catch (e) {
+      _isLoadingMore = false;
+      // If there was an error and we have previous data, keep it
+      if (state.hasValue && _offset > 0) {
+        return state.value!;
+      }
+      throw Exception('Failed to fetch users: $e'); // Re-throw to handle error in UI
+    }
+  }
+
+  Future<void> loadMoreUsers() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    _offset += _usersLimit;
+    state = AsyncData(await _fetchUsers());
+  }
+
+  Future<void> refreshUsers() async {
+    _offset = 0;
+    _hasMore = true;
+    state = await AsyncValue.guard(() => _fetchUsers());
+  }
+
+  // Override to handle filter changes
+  void updateFilters(String? newRole, bool? newIsArchived) {
+    if (ref.read(userRoleFilterProvider) != newRole ||
+        ref.read(userIsArchivedFilterProvider) != newIsArchived) {
+      ref.read(userRoleFilterProvider.notifier).state = newRole;
+      ref.read(userIsArchivedFilterProvider.notifier).state = newIsArchived;
+      refreshUsers();
+    }
+  }
+
+  bool get isLoadingMore => _isLoadingMore;
+  bool get hasMore => _hasMore;
+}
+
+final usersProvider = AsyncNotifierProvider<UsersNotifier, List<User>>(() {
+  return UsersNotifier();
 });
 
 final newlyCreatedUserProvider = StateProvider<User?>((ref) => null);
@@ -71,12 +152,24 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       // We only need to call setState to trigger a rebuild for the search
       setState(() {});
     });
+
+    // Add scroll listener for pagination
+    widget.scrollController.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _scrollListener() {
+    if (widget.scrollController.position.pixels >=
+            widget.scrollController.position.maxScrollExtent * 0.8 && // 80% scrolled
+        !ref.read(usersProvider.notifier).isLoadingMore &&
+        ref.read(usersProvider.notifier).hasMore) {
+      ref.read(usersProvider.notifier).loadMoreUsers();
+    }
   }
 
   List<User> _filterUsers(List<User> allUsers) {
@@ -120,8 +213,8 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
         page = const UnknownRoleScreen();
     }
     await Navigator.push(context, MaterialPageRoute(builder: (context) => page));
-    // Invalidate provider on return to refresh data
-    ref.invalidate(usersProvider);
+    // Refresh data on return
+    ref.read(usersProvider.notifier).refreshUsers();
   }
 
   String _getRoleDisplayName(Role role) {
@@ -146,7 +239,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     );
 
     if (newUser != null && newUser is User) {
-      ref.invalidate(usersProvider); // Invalidate and refetch
+      ref.read(usersProvider.notifier).refreshUsers(); // Refresh and refetch
       ref.read(newlyCreatedUserProvider.notifier).state = newUser;
     }
   }
@@ -166,6 +259,48 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
         ],
       ),
     );
+  }
+
+  void _showArchiveUserDialog(BuildContext context) async {
+    final userToArchive = _selectedUser; // Create a local non-nullable variable
+    if (userToArchive == null) return; // Check it here
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Подтвердите архивацию'),
+        content: Text('Вы уверены, что хотите архивировать пользователя "${userToArchive.fullName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Архивировать'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ApiService.archiveUser(userToArchive.id);
+        // Refresh the user list after successful archival
+        ref.read(usersProvider.notifier).refreshUsers();
+        // Deselect the user
+        setState(() {
+          _selectedUser = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Пользователь "${userToArchive.fullName}" успешно архивирован.')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка архивации пользователя: $e')),
+        );
+      }
+    }
   }
 
   void _showResetPasswordDialog(BuildContext context) {
@@ -219,7 +354,6 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       }
     });
 
-    final usersAsyncValue = ref.watch(usersProvider);
     final currentUserIsAdmin = true; // TODO: Replace with actual auth check
 
     return Column(
@@ -245,26 +379,35 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                         );
                         ref.invalidate(usersProvider);
                       },
-                onArchive: _selectedUser == null ? null : () {
-                  // TODO: Implement archive logic
-                  print('Archive user: ${_selectedUser!.fullName}');
-                },
+                onArchive: _selectedUser == null ? null : () => _showArchiveUserDialog(context),
                 onResetPassword: _selectedUser == null ? null : () => _showResetPasswordDialog(context),
               ),
             ),
           ),
         ),
         Expanded(
-          child: usersAsyncValue.when(
+          child: ref.watch(usersProvider).when(
             data: (allUsers) {
               final filteredUsers = _filterUsers(allUsers);
-              if (filteredUsers.isEmpty) {
+              final usersNotifier = ref.read(usersProvider.notifier);
+              final isLoadingMore = usersNotifier.isLoadingMore;
+              final hasMore = usersNotifier.hasMore;
+
+              if (filteredUsers.isEmpty && !isLoadingMore && !hasMore) {
                 return const Center(child: Text('Пользователи не найдены'));
               }
               return ListView.builder(
-                controller: widget.scrollController, // Attach controller here
-                itemCount: filteredUsers.length,
+                controller: widget.scrollController,
+                itemCount: filteredUsers.length + (isLoadingMore && hasMore ? 1 : 0), // Add 1 for loading indicator only if currently loading more and hasMore
                 itemBuilder: (context, index) {
+                  if (index == filteredUsers.length) {
+                    // This is the loading indicator at the end
+                    return const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
                   final user = filteredUsers[index];
                   final isSelected = _selectedUser?.id == user.id;
 
@@ -351,7 +494,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                                     break;
                                   case 'manage_roles':
                                     await Navigator.push(context, MaterialPageRoute(builder: (context) => ManageUserRolesScreen(user: user),),);
-                                    ref.invalidate(usersProvider);
+                                    usersNotifier.refreshUsers(); // Refresh after role change
                                     break;
                                 }
                               },
@@ -402,7 +545,68 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                 },
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () {
+              // If we have some data already, display it with a loading indicator at the end
+              if (ref.read(usersProvider).value != null && ref.read(usersProvider).value!.isNotEmpty) {
+                final loadedUsers = ref.read(usersProvider).value!;
+                final filteredUsers = _filterUsers(loadedUsers);
+                final usersNotifier = ref.read(usersProvider.notifier);
+                final isLoadingMore = usersNotifier.isLoadingMore;
+                final hasMore = usersNotifier.hasMore; // Ensure hasMore is correctly read
+
+                return ListView.builder(
+                  controller: widget.scrollController,
+                  itemCount: filteredUsers.length + (isLoadingMore && hasMore ? 1 : 0), // Add 1 for loading indicator only if currently loading more and hasMore
+                  itemBuilder: (context, index) {
+                    if (index == filteredUsers.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final user = filteredUsers[index];
+                    final isSelected = _selectedUser?.id == user.id;
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      color: isSelected ? Theme.of(context).primaryColor.withAlpha(25) : null,
+                      child: ListTile(
+                        dense: true,
+                        leading: CircleAvatar(
+                          radius: 20,
+                          backgroundImage: user.photoUrl != null
+                              ? NetworkImage(Uri.parse(ApiService.baseUrl).replace(path: user.photoUrl!).toString())
+                              : null,
+                          child: user.photoUrl == null ? Text(user.firstName.isNotEmpty ? user.firstName[0] : '?') : null,
+                        ),
+                        title: Text(user.fullName, style: Theme.of(context).textTheme.titleMedium),
+                        subtitle: Text(user.email),
+                        onTap: () async {
+                          final context_ = context;
+                          if (user.roles.length > 1) {
+                            final selectedRole = await RoleDialogManager.show(context_, user.roles,);
+                            if (selectedRole != null) {
+                              await _navigateToDashboard(context_, user, selectedRole.name,);
+                            }
+                          } else if (user.roles.isNotEmpty) {
+                            await _navigateToDashboard(context_, user, user.roles.first.name,);
+                          } else {
+                            await _navigateToDashboard(context_, user, '');
+                          }
+                        },
+                        onLongPress: () {
+                          setState(() {
+                            _selectedUser = isSelected ? null : user;
+                          });
+                        },
+                      ),
+                    );
+                  },
+                );
+              }
+              // Otherwise, show a full-screen loading indicator for the initial load
+              return const Center(child: CircularProgressIndicator());
+            },
             error: (error, stack) => Center(child: Text('Ошибка: $error')),
           ),
         ),
@@ -479,10 +683,10 @@ class _UsersToolbar extends ConsumerWidget {
                   },
                   allOptionText: 'Все роли',
                   options: const [
-                    FilterOption(label: 'Админ-ры', value: 'admin'),
+                    FilterOption(label: 'Администраторы', value: 'admin'),
                     FilterOption(label: 'Менеджеры', value: 'manager'),
                     FilterOption(label: 'Тренеры', value: 'trainer'),
-                    FilterOption(label: 'Инстр-ры', value: 'instructor'),
+                    FilterOption(label: 'Инструкторы', value: 'instructor'),
                     FilterOption(label: 'Клиенты', value: 'client'),
                   ],
                   avatar: const Icon(Icons.person_search_outlined),
