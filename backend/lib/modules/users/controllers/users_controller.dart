@@ -161,8 +161,9 @@ class UsersController {
     try {
       final queryParams = request.url.queryParameters;
       final bool? isArchived = queryParams['isArchived'] != null ? bool.parse(queryParams['isArchived']!) : null;
+      final String? role = queryParams['role']; // Get role from query parameters
 
-      final users = await _db.getAllUsers(isArchived: isArchived);
+      final users = await _db.getAllUsers(isArchived: isArchived, role: role); // Pass role to getAllUsers
       final usersJson = users.map((user) => user.toSafeJson()).toList();
       return Response.ok(jsonEncode({'users': usersJson}));
     } catch (e) {

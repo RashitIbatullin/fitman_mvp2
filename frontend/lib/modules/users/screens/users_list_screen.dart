@@ -6,16 +6,12 @@ import '../models/user.dart';
 import '../../roles/models/role.dart';
 import '../../../services/api_service.dart';
 import 'create_user_screen.dart';
-import 'assign_clients_screen.dart';
-import 'assign_instructors_screen.dart';
-import 'assign_trainers_screen.dart';
 import '../../../screens/client_dashboard.dart';
 import '../../../screens/instructor_dashboard.dart';
 import '../../../screens/manager_dashboard.dart';
 import '../../../screens/trainer_dashboard.dart';
 import '../../roles/screens/unknown_role_screen.dart';
 import 'edit_user_screen.dart';
-import 'manage_user_roles_screen.dart';
 import '../../roles/widgets/role_dialog_manager.dart';
 import '../../../widgets/reset_password_dialog.dart';
 import '../../../widgets/filter_popup_menu.dart'; // Add this import
@@ -397,8 +393,6 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       }
     });
 
-    final currentUserIsAdmin = true; // TODO: Replace with actual auth check
-
     return Column(
       children: [
         AnimatedSize(
@@ -646,49 +640,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                           ],
                         ),
                       ),
-                      trailing: user.roles.any((r) => r.name == 'manager') || (currentUserIsAdmin && !user.roles.any((r) => r.name == 'client'))
-                          ? PopupMenuButton<String>(
-                              onSelected: (value) async {
-                                switch (value) {
-                                  case 'assign_clients':
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) => AssignClientsScreen(manager: user),),);
-                                    break;
-                                  case 'assign_instructors':
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) => AssignInstructorsScreen(manager: user,),),);
-                                    break;
-                                  case 'assign_trainers':
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) => AssignTrainersScreen(manager: user,),),);
-                                    break;
-                                  case 'manage_roles':
-                                    await Navigator.push(context, MaterialPageRoute(builder: (context) => ManageUserRolesScreen(user: user),),);
-                                    usersNotifier.refreshUsers(); // Refresh after role change
-                                    break;
-                                }
-                              },
-                              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                                if (user.roles.any((role) => role.name == 'manager',))
-                                  const PopupMenuItem<String>(
-                                    value: 'assign_clients',
-                                    child: ListTile(leading: Icon(Icons.group_add), title: Text('Назначить клиентов')),
-                                  ),
-                                if (user.roles.any((role) => role.name == 'manager',))
-                                  const PopupMenuItem<String>(
-                                    value: 'assign_instructors',
-                                    child: ListTile(leading: Icon(Icons.sports_kabaddi), title: Text('Назна-чить инструкторов')),
-                                  ),
-                                if (user.roles.any((role) => role.name == 'manager',))
-                                  const PopupMenuItem<String>(
-                                    value: 'assign_trainers',
-                                    child: ListTile(leading: Icon(Icons.fitness_center), title: Text('Назначить тренеров')),
-                                  ),
-                                if (currentUserIsAdmin && !user.roles.any((role) => role.name == 'client',))
-                                  const PopupMenuItem<String>(
-                                    value: 'manage_roles',
-                                    child: ListTile(leading: Icon(Icons.manage_accounts), title: Text('Управление ролями')),
-                                  ),
-                              ],
-                            )
-                          : null,
+                      trailing: null,
                       onTap: () async {
                         final context_ = context;
                         if (user.roles.length > 1) {

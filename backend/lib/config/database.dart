@@ -146,11 +146,13 @@ class Database {
     }
   }
 
-  Future<List<User>> getAllUsers({bool? isArchived}) async {
+  Future<List<User>> getAllUsers({bool? isArchived, String? role}) async {
     try {
       final conn = await connection;
 
       final whereClauses = <String>[];
+      final parameters = <String, dynamic>{}; // Parameters for named SQL
+
       if (isArchived != null) {
         if (isArchived) {
           whereClauses.add('u.archived_at IS NOT NULL');
@@ -158,10 +160,17 @@ class Database {
           whereClauses.add('u.archived_at IS NULL');
         }
       }
+      
+      String joinRoles = '';
+      if (role != null && role != 'all') { // Check for 'all' as well
+        joinRoles = 'INNER JOIN user_roles ur ON u.id = ur.user_id INNER JOIN roles r ON ur.role_id = r.id';
+        whereClauses.add('r.name = @roleName');
+        parameters['roleName'] = role;
+      }
 
       final whereString = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
 
-      final results = await conn.execute('''
+      final query = '''
         SELECT 
           u.id, u.email, u.password_hash, u.first_name, u.last_name, u.middle_name, 
           u.phone, u.gender, u.date_of_birth, u.photo_url, u.created_at, u.updated_at, u.archived_at,
@@ -169,10 +178,16 @@ class Database {
           cp.track_calories, cp.coeff_activity
         FROM users u
         LEFT JOIN client_profiles cp ON u.id = cp.user_id
+        $joinRoles
         $whereString
         ORDER BY u.last_name, u.first_name
-      ''');
+      ''';
 
+      final results = await conn.execute(
+        Sql.named(query),
+        parameters: parameters,
+      );
+      
       final users = <User>[];
       for (final row in results) {
         final userMap = row.toColumnMap();

@@ -10,6 +10,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../services/api_service.dart';
 import '../../../screens/client/full_screen_photo_editor.dart';
 import 'users_list_screen.dart';
+import 'manage_user_roles_screen.dart'; // New import
 
 class EditUserScreen extends ConsumerStatefulWidget {
   final User user;
@@ -275,9 +276,12 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
               const SizedBox(height: 20),
               if (widget.user.roles.any((r) => r.name == 'client'))
                 _buildClientSpecificSection(),
-              if (!widget.user.roles.any((r) => r.name == 'admin'))
+              if (!widget.user.roles.any((r) => r.name == 'admin')) ...[ // Added ...[ ] to correctly wrap multiple widgets
                 _buildNotificationSection(),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
+                _buildRolesSection(), // Call the new roles section
+                const SizedBox(height: 20),
+              ],
               _buildActionButtons(),
             ],
           ),
@@ -632,6 +636,51 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildRolesSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Управление ролями',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ManageUserRolesScreen(user: widget.user),
+                    ),
+                  );
+                  // Refresh the user data or just the roles after returning
+                  // For simplicity, we can just invalidate the usersProvider
+                  // and potentially refresh the current user's roles if needed.
+                  // However, for the EditUserScreen itself, a full refresh of the user
+                  // might be more robust if other properties could be affected by role changes.
+                  // For now, let's just refresh the overall users list in case roles affect filters.
+                  ref.invalidate(usersProvider);
+                },
+                icon: const Icon(Icons.manage_accounts),
+                label: const Text('Изменить роли пользователя'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
