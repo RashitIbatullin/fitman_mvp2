@@ -303,12 +303,55 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     }
   }
 
+  void _showDeArchiveUserDialog(BuildContext context) async {
+    final userToDeArchive = _selectedUser;
+    if (userToDeArchive == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Подтвердите деархивацию'),
+        content: Text('Вы уверены, что хотите деархивировать пользователя "${userToDeArchive.fullName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Деархивировать'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // Use ApiService.updateUser to set isActive to true
+        await ApiService.updateUser(UpdateUserRequest(id: userToDeArchive.id, isActive: true));
+        // Refresh the user list after successful de-archival
+        ref.read(usersProvider.notifier).refreshUsers();
+        // Deselect the user
+        setState(() {
+          _selectedUser = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Пользователь "${userToDeArchive.fullName}" успешно деархивирован.')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка деархивации пользователя: $e')),
+        );
+      }
+    }
+  }
+
   void _showResetPasswordDialog(BuildContext context) {
     if (_selectedUser == null) return;
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return ResetPasswordDialog(userLogin: _selectedUser!.email);
+        return ResetPasswordDialog(userLogin: _selectedUser!.email, userName: _selectedUser!.fullName);
       },
     );
   }
@@ -363,24 +406,148 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 200),
             opacity: widget.showToolbar ? 1.0 : 0.0,
-            child: SizedBox( // Use SizedBox to control height when hidden
+            child: SizedBox(
               height: widget.showToolbar ? null : 0.0,
-              child: _UsersToolbar(
-                searchController: _searchController,
-                onCreate: () => _showCreateUserDialog(context),
-                onEdit: _selectedUser == null
-                    ? null
-                    : () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditUserScreen(user: _selectedUser!),
+              child: Padding( // Added Padding to replicate _UsersToolbar's padding
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, // Explicitly align children to start
+                  children: [
+                    Row(
+                      children: [
+                        FilterPopupMenuButton<String>(
+                          tooltip: 'Действия',
+                          initialValue: null,
+                          onSelected: (value) async {
+                            switch (value) {
+                              case 'create':
+                                _showCreateUserDialog(context);
+                                break;
+                              case 'edit':
+                                if (_selectedUser != null) {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditUserScreen(user: _selectedUser!),
+                                    ),
+                                  );
+                                  ref.read(usersProvider.notifier).refreshUsers();
+                                }
+                                break;
+                              case 'reset_password':
+                                _showResetPasswordDialog(context);
+                                break;
+                              case 'archive':
+                                _showArchiveUserDialog(context);
+                                break;
+                              case 'deactivate': // Renamed from 'deArchive' for consistency with isActive
+                                _showDeArchiveUserDialog(context);
+                                break;
+                            }
+                          },
+                          allOptionText: 'Действия', // Default text for the button
+                          showAllOption: false, // Hide the "Действия" option in the dropdown
+                          options: [
+                            const FilterOption(label: 'Создать пользователя', value: 'create'),
+                            FilterOption(
+                              label: 'Изменить пользователя',
+                              value: 'edit',
+                              enabled: _selectedUser != null && _selectedUser!.isActive,
+                            ),
+                            FilterOption(
+                              label: 'Сбросить пароль',
+                              value: 'reset_password',
+                              enabled: _selectedUser != null && _selectedUser!.isActive,
+                            ),
+                            FilterOption(
+                              label: 'Архивировать пользователя',
+                              value: 'archive',
+                              enabled: _selectedUser != null && _selectedUser!.isActive,
+                            ),
+                            FilterOption(
+                              label: 'Деархивировать пользователя',
+                              value: 'deactivate',
+                              enabled: _selectedUser != null && !_selectedUser!.isActive,
+                            ),
+                          ],
+                          avatar: const Icon(Icons.more_vert),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 250,
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Поиск по ФИО/телефону/почте',
+                              prefixIcon: const Icon(Icons.search),
+                              border: const OutlineInputBorder(),
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () => _searchController.clear(),
+                              ),
+                            ),
                           ),
-                        );
-                        ref.invalidate(usersProvider);
-                      },
-                onArchive: _selectedUser == null ? null : () => _showArchiveUserDialog(context),
-                onResetPassword: _selectedUser == null ? null : () => _showResetPasswordDialog(context),
+                        ),
+                        const Spacer(), // Moved Spacer to the end
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          // FilterPopupMenuButton for role filter
+                          FilterPopupMenuButton<String>(
+                            tooltip: 'Фильтр по роли',
+                            initialValue: ref.watch(userRoleFilterProvider),
+                            onSelected: (value) {
+                              ref.read(userRoleFilterProvider.notifier).state = value;
+                            },
+                            allOptionText: 'Все роли',
+                            options: const [
+                              FilterOption(label: 'Администраторы', value: 'admin'),
+                              FilterOption(label: 'Менеджеры', value: 'manager'),
+                              FilterOption(label: 'Тренеры', value: 'trainer'),
+                              FilterOption(label: 'Инструкторы', value: 'instructor'),
+                              FilterOption(label: 'Клиенты', value: 'client'),
+                            ],
+                            avatar: const Icon(Icons.person_search_outlined),
+                          ),
+                          const SizedBox(width: 8),
+                          // FilterPopupMenuButton for active filter
+                          FilterPopupMenuButton<bool>(
+                            tooltip: 'Фильтр по активности',
+                            initialValue: ref.watch(userIsArchivedFilterProvider) == null ? null : !ref.watch(userIsArchivedFilterProvider)!,
+                            onSelected: (value) {
+                              ref.read(userIsArchivedFilterProvider.notifier).state = value == null ? null : !value;
+                            },
+                            allOptionText: 'Статус: Все',
+                            options: const [
+                              FilterOption(label: 'Активные', value: true),
+                              FilterOption(label: 'Неактивные', value: false),
+                            ],
+                            avatar: const Icon(Icons.filter_alt_outlined),
+                          ),
+                          const SizedBox(width: 8),
+                          // FilterPopupMenuButton for archived filter
+                          FilterPopupMenuButton<bool>(
+                            tooltip: 'Фильтр по архивации',
+                            initialValue: ref.watch(userIsArchivedFilterProvider),
+                            onSelected: (value) {
+                              ref.read(userIsArchivedFilterProvider.notifier).state = value;
+                            },
+                            allOptionText: 'Архив: Все',
+                            options: const [
+                              FilterOption(label: 'В архиве', value: true),
+                              FilterOption(label: 'Не в архиве', value: false),
+                            ],
+                            avatar: const Icon(Icons.archive_outlined),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -611,120 +778,6 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _UsersToolbar extends ConsumerWidget {
-  final TextEditingController searchController;
-  final VoidCallback onCreate;
-  final VoidCallback? onEdit;
-  final VoidCallback? onArchive;
-  final VoidCallback? onResetPassword;
-
-  const _UsersToolbar({
-    required this.searchController,
-    required this.onCreate,
-    this.onEdit,
-    this.onArchive,
-    this.onResetPassword,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final roleFilter = ref.watch(userRoleFilterProvider);
-    final isArchivedFilter = ref.watch(userIsArchivedFilterProvider);
-
-    // Translate the isArchived bool? to an isActive bool? for the UI
-    final bool? isActiveFilter = isArchivedFilter == null ? null : !isArchivedFilter;
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              ElevatedButton.icon(onPressed: onCreate, icon: const Icon(Icons.add), label: const Text('Создать'),),
-              const SizedBox(width: 8),
-              ElevatedButton.icon(onPressed: onEdit, icon: const Icon(Icons.edit), label: const Text('Изменить'),),
-              const SizedBox(width: 8),
-              ElevatedButton.icon(onPressed: onArchive, icon: const Icon(Icons.archive), label: const Text('Архивировать'),),
-              const SizedBox(width: 8),
-              ElevatedButton.icon(onPressed: onResetPassword, icon: const Icon(Icons.password), label: const Text('Сброс пароля'),),
-              const Spacer(),
-              SizedBox(
-                width: 250,
-                child: TextField(
-                  controller: searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Поиск по ФИО/телефону/почте',
-                    prefixIcon: const Icon(Icons.search),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => searchController.clear(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                FilterPopupMenuButton<String>(
-                  tooltip: 'Фильтр по роли',
-                  initialValue: roleFilter,
-                  onSelected: (value) {
-                    ref.read(userRoleFilterProvider.notifier).state = value;
-                    // It's better to handle deselection in the main widget
-                  },
-                  allOptionText: 'Все роли',
-                  options: const [
-                    FilterOption(label: 'Администраторы', value: 'admin'),
-                    FilterOption(label: 'Менеджеры', value: 'manager'),
-                    FilterOption(label: 'Тренеры', value: 'trainer'),
-                    FilterOption(label: 'Инструкторы', value: 'instructor'),
-                    FilterOption(label: 'Клиенты', value: 'client'),
-                  ],
-                  avatar: const Icon(Icons.person_search_outlined),
-                ),
-                const SizedBox(width: 8),
-                FilterPopupMenuButton<bool>(
-                  tooltip: 'Фильтр по активности',
-                  initialValue: isActiveFilter,
-                  onSelected: (value) {
-                    ref.read(userIsArchivedFilterProvider.notifier).state =
-                        value == null ? null : !value;
-                  },
-                  allOptionText: 'Статус: Все',
-                  options: const [
-                    FilterOption(label: 'Активные', value: true),
-                    FilterOption(label: 'Неактивные', value: false),
-                  ],
-                  avatar: const Icon(Icons.filter_alt_outlined),
-                ),
-                 const SizedBox(width: 8),
-                FilterPopupMenuButton<bool>(
-                  tooltip: 'Фильтр по архивации',
-                  initialValue: isArchivedFilter,
-                  onSelected: (value) {
-                    ref.read(userIsArchivedFilterProvider.notifier).state = value;
-                  },
-                  allOptionText: 'Архив: Все',
-                  options: const [
-                    FilterOption(label: 'В архиве', value: true),
-                    FilterOption(label: 'Не в архиве', value: false),
-                  ],
-                  avatar: const Icon(Icons.archive_outlined),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

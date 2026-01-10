@@ -5,8 +5,9 @@ import '../services/api_service.dart';
 
 class ResetPasswordDialog extends StatefulWidget {
   final String userLogin;
+  final String userName; // New property
 
-  const ResetPasswordDialog({super.key, required this.userLogin});
+  const ResetPasswordDialog({super.key, required this.userLogin, required this.userName});
 
   @override
   State<ResetPasswordDialog> createState() => _ResetPasswordDialogState();
@@ -87,7 +88,7 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Сброс пароля'),
+      title: Text('Сброс пароля для ${widget.userName}'), // Use userName in title
       content: SingleChildScrollView(
         child: ListBody(
           children: <Widget>[

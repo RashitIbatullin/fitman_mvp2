@@ -5,8 +5,9 @@ import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 class FilterOption<T> {
   final String label;
   final T value;
+  final bool enabled; // New property
 
-  const FilterOption({required this.label, required this.value});
+  const FilterOption({required this.label, required this.value, this.enabled = true});
 }
 
 // Placeholder for the "All" option to distinguish it from a null value
@@ -19,6 +20,7 @@ class FilterPopupMenuButton<T> extends StatelessWidget {
   final String allOptionText;
   final String tooltip;
   final Widget? avatar;
+  final bool showAllOption; // New property
 
   const FilterPopupMenuButton({
     super.key,
@@ -28,6 +30,7 @@ class FilterPopupMenuButton<T> extends StatelessWidget {
     this.allOptionText = 'Все',
     this.tooltip = 'Фильтр',
     this.avatar,
+    this.showAllOption = true, // Default to true
   });
 
   @override
@@ -46,18 +49,19 @@ class FilterPopupMenuButton<T> extends StatelessWidget {
           onSelected(value as T?); // Cast to T? to handle both nullable and non-nullable T
         }
       },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<dynamic>>[
-        // "All" option
-        PopupMenuItem<dynamic>(
-          value: _kAllValuePlaceholder,
-          child: Text(allOptionText),
-        ),
-        // Other options
-        ...options.map((option) => PopupMenuItem<dynamic>(
-              value: option.value,
-              child: Text(option.label),
-            )),
-      ],
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<dynamic>>[
+              // "All" option (conditionally built)
+              if (showAllOption)
+                PopupMenuItem<dynamic>(
+                  value: _kAllValuePlaceholder,
+                  child: Text(allOptionText),
+                ),
+              // Other options
+              ...options.map((option) => PopupMenuItem<dynamic>(
+                    value: option.value,
+                    enabled: option.enabled, // Use the new enabled property
+                    child: Text(option.label),
+                  )),      ],
       child: Chip(
         key: ValueKey('filter_chip_${initialValue ?? _kAllValuePlaceholder}'),
         label: Text(currentLabel),
