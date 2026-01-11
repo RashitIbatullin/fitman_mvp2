@@ -516,7 +516,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                               ref.read(userIsArchivedFilterProvider.notifier).state = value;
                               ref.read(usersProvider.notifier).refreshUsers();
                             },
-                            allOptionText: 'Архив: Все', // This needs to be changed
+                            allOptionText: 'Статус: Все', // This needs to be changed
                             options: const [
                               FilterOption(label: 'В архиве', value: true),
                               FilterOption(label: 'Не в архиве', value: false),

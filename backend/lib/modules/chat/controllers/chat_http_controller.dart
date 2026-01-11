@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:postgres/postgres.dart';
-import '../config/database.dart';
+import '../../../config/database.dart'; // Adjusted relative path
 
-class ChatController {
+class ChatHttpController { // Renamed class
   // Получить все чаты для текущего пользователя
   static Future<Response> getChats(Request request) async {
     try {
@@ -163,5 +163,58 @@ class ChatController {
     }
   }
 
-  // Другие методы будут добавлены здесь
+  // Создать групповой чат
+  static Future<Response> createGroupChat(Request request) async {
+    try {
+      final user = request.context['user'] as Map<String, dynamic>?;
+      final creatorId = user?['userId'] as int?;
+      if (creatorId == null) {
+        return Response.forbidden('Authentication required.');
+      }
+
+      final body = await request.readAsString();
+      final data = jsonDecode(body);
+      final userIds = List<int>.from(data['userIds'] as List<dynamic>);
+      final name = data['name'] as String?;
+
+      if (userIds.length < 2) {
+        return Response.badRequest(body: jsonEncode({'error': 'Group chat must have at least two participants.'}));
+      }
+      
+      if (!userIds.contains(creatorId)) {
+        userIds.add(creatorId);
+      }
+      final uniqueUserIds = userIds.toSet().toList();
+
+      final db = Database();
+      final connection = await db.connection;
+
+      final newChatId = await connection.runTx<int>((ctx) async {
+        final chatResult = await ctx.execute(
+          Sql.named('''
+            INSERT INTO chats (name, type, created_by, created_at, updated_at)
+            VALUES (@name, 1, @creatorId, NOW(), NOW()) RETURNING id
+          '''),
+          parameters: {'name': name, 'creatorId': creatorId},
+        );
+        final chatId = chatResult.first.toColumnMap()['id'];
+
+        for (final participantId in uniqueUserIds) {
+          await ctx.execute(
+            Sql.named('''
+              INSERT INTO chat_participants (chat_id, user_id)
+              VALUES (@chatId, @userId)
+            '''),
+            parameters: {'chatId': chatId, 'userId': participantId},
+          );
+        }
+        return chatId;
+      });
+
+      return Response.ok(jsonEncode({'chat_id': newChatId}));
+
+    } catch (e) {
+      return Response.internalServerError(body: jsonEncode({'error': 'Error creating group chat: $e'}));
+    }
+  }
 }

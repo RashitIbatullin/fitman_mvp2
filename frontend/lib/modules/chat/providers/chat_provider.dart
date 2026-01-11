@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import '../models/chat/chat_models.dart';
-import '../services/api_service.dart';
-import '../providers/auth_provider.dart';
+import '../models/chat_models.dart'; // Corrected path within the module
+import '../../../services/api_service.dart'; // Adjusted relative path
+import '../../../providers/auth_provider.dart'; // Adjusted relative path
 
 @immutable
 class ChatState {
@@ -32,13 +32,14 @@ class ChatState {
   ChatState copyWith({
     List<Chat>? chats,
     Map<int, List<Message>>? messages,
-    Map<int, MessagePaginationMetadata>? messagesMetadata,
+    Map<int, MessagePaginationMetadata>? messagesMetadata, // Fixed type
     int? activeChatId,
     bool? isLoading,
     bool? isFetchingMore,
     String? error,
     WebSocketChannel? webSocketChannel,
     bool clearActiveChatId = false,
+    bool clearWebSocketChannel = false, // Added for explicit clearing
   }) {
     return ChatState(
       chats: chats ?? this.chats,
@@ -48,7 +49,7 @@ class ChatState {
       isLoading: isLoading ?? this.isLoading,
       isFetchingMore: isFetchingMore ?? this.isFetchingMore,
       error: error ?? this.error,
-      webSocketChannel: webSocketChannel ?? this.webSocketChannel,
+      webSocketChannel: clearWebSocketChannel ? null : webSocketChannel ?? this.webSocketChannel,
     );
   }
 }
@@ -90,9 +91,9 @@ class ChatNotifier extends Notifier<ChatState> {
   Future<void> connect() async {
     if (state.webSocketChannel != null && state.webSocketChannel!.closeCode == null) return;
 
-    final token = ApiService.currentToken;
+    final token = ApiService.currentToken; // Changed to ApiService.currentToken
     if (token == null) {
-      state = state.copyWith(error: 'Not authenticated');
+      state = state.copyWith(error: 'Not authenticated', isLoading: false); // Added isLoading
       return;
     }
     
@@ -100,8 +101,8 @@ class ChatNotifier extends Notifier<ChatState> {
     
     try {
       final channel = WebSocketChannel.connect(wsUrl);
-      state = state.copyWith(webSocketChannel: channel);
-
+      state = state.copyWith(webSocketChannel: channel, isLoading: false, error: null); // Added isLoading, error
+      
       channel.stream.listen(
         (data) {
           final decodedData = jsonDecode(data);
@@ -119,17 +120,17 @@ class ChatNotifier extends Notifier<ChatState> {
               print('Received unknown message type: $decodedData');
           }
         },
-        onError: (error) => state = state.copyWith(error: error.toString(), webSocketChannel: null),
-        onDone: () => state = state.copyWith(webSocketChannel: null),
+        onError: (error) => state = state.copyWith(error: error.toString(), clearWebSocketChannel: true, isLoading: false), // clearWebSocketChannel
+        onDone: () => state = state.copyWith(clearWebSocketChannel: true, isLoading: false), // clearWebSocketChannel
       );
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: e.toString(), isLoading: false); // Added isLoading
     }
   }
 
   void disconnect() {
     state.webSocketChannel?.sink.close();
-    state = state.copyWith(webSocketChannel: null);
+    state = state.copyWith(clearWebSocketChannel: true); // Using clearWebSocketChannel
   }
 
   Future<void> fetchChats() async {
@@ -164,7 +165,7 @@ class ChatNotifier extends Notifier<ChatState> {
         hasMore: messages.length == newMetadata[chatId]!.limit,
       );
 
-      state = state.copyWith(messages: currentMessages, messagesMetadata: newMetadata, isLoading: false);
+      state = state.copyWith(messages: currentMessages, messagesMetadata: newMetadata, isLoading: false, error: null);
     } catch (e) {
       state = state.copyWith(error: e.toString(), isLoading: false);
     }
@@ -202,6 +203,7 @@ class ChatNotifier extends Notifier<ChatState> {
         messages: currentMessages,
         messagesMetadata: newMetadata,
         isFetchingMore: false,
+        error: null,
       );
     } catch (e) {
       state = state.copyWith(error: e.toString(), isFetchingMore: false);
@@ -232,7 +234,7 @@ class ChatNotifier extends Notifier<ChatState> {
         attachmentUrl = uploadResult['attachment_url'] as String?;
         attachmentType = uploadResult['attachment_type'] as String?;
       } catch (e) {
-        state = state.copyWith(error: e.toString());
+        state = state.copyWith(error: e.toString(), isLoading: false);
         return;
       }
     }

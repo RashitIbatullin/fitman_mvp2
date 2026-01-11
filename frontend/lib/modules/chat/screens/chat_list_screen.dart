@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/chat_provider.dart';
-import '../screens/shared/create_chat_dialog.dart';
-import '../screens/shared/chat_screen.dart';
+import '../providers/chat_provider.dart'; // Corrected path within the module
+import '../widgets/create_chat_dialog.dart'; // Corrected path within the module
+import 'chat_screen.dart'; // Corrected path within the module
 
 class ChatListScreen extends ConsumerWidget {
   const ChatListScreen({super.key});

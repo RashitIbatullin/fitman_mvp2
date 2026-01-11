@@ -15,7 +15,9 @@ import '../controllers/catalogs/work_schedule_controller.dart';
 import '../controllers/client_preference_controller.dart';
 import '../controllers/catalogs_controller.dart';
 import '../controllers/recommendations_controller.dart';
-import '../controllers/chat_controller.dart';
+// Removed old chat_controller.dart
+import '../modules/chat/controllers/chat_http_controller.dart'; // New HTTP chat controller
+// import '../modules/chat/controllers/chat_ws_controller.dart'; // WebSocket chat controller is not used directly in router.
 import '../modules/groups/controllers/training_group_controller.dart';
 import '../modules/groups/controllers/analytic_group_controller.dart';
 import '../modules/groups/controllers/group_schedule_controller.dart';
@@ -202,9 +204,10 @@ final Router router = Router()
   ..delete('/api/work-schedules', (Request request) => _adminHandler(WorkScheduleController.deleteWorkSchedule)(request))
 
 // Chat routes
-  ..get('/api/chats', (Request request) => _protectedHandler(ChatController.getChats)(request))
-  ..get('/api/chats/<id>/messages', (Request request, String id) => _protectedHandler((Request req) => ChatController.getMessages(req, id))(request))
-  ..post('/api/chats/private', (Request request) => _protectedHandler(ChatController.createOrGetPrivateChat)(request))
+  ..get('/api/chats', (Request request) => _protectedHandler(ChatHttpController.getChats)(request))
+  ..get('/api/chats/<id>/messages', (Request request, String id) => _protectedHandler((Request req) => ChatHttpController.getMessages(req, id))(request))
+  ..post('/api/chats/private', (Request request) => _protectedHandler(ChatHttpController.createOrGetPrivateChat)(request))
+  ..post('/api/chat', (Request request) => _protectedHandler((Request req) => ChatHttpController.createGroupChat(req))(request)) // New route for group chat
 
 // Training Groups routes (Admin access)
   ..mount('/api/training_groups', _adminHandler(_trainingGroupsController.router.call))

@@ -15,7 +15,7 @@ import 'client/anthropometry_screen.dart';
 import 'client/sessions_screen.dart';
 import 'client/calorie_tracking_screen.dart';
 import 'client/progress_screen.dart';
-import 'chat_list_screen.dart'; // Import the new ChatListScreen
+import '../modules/chat/screens/chat_list_screen.dart'; // Corrected import path
 
 final clientDashboardIndexProvider = StateProvider<int>((ref) => 0);
 
@@ -252,8 +252,12 @@ class ClientDashboard extends ConsumerWidget {
           size: 40,
         ),
         title: Text(data.title),
-        subtitle: Text(
-          '${DateFormat('d MMM y, HH:mm', 'ru').format(data.time)}\nДо начала: $formattedDuration',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(DateFormat('d MMM y, HH:mm', 'ru').format(data.time)),
+            Text('До начала: $formattedDuration'),
+          ],
         ),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {},

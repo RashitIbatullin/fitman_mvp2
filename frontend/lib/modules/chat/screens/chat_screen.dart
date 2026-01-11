@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../providers/chat_provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/chat/message_bubble.dart';
+import '../providers/chat_provider.dart'; // Adjusted relative path
+import '../../../providers/auth_provider.dart'; // Adjusted relative path
+import '../widgets/message_bubble.dart'; // Corrected path within the module
+// Removed: import '../models/chat_models.dart'; // Import the Message model
 
 class ChatScreen extends ConsumerStatefulWidget {
   final int chatId;
@@ -21,7 +22,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController(); // Add ScrollController
 
   @override
   void initState() {
@@ -48,13 +49,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _sendReadStatusUpdates() {
     final chatState = ref.read(chatProvider);
     final currentUser = ref.read(authProvider).value?.user;
-    final messages = chatState.messages[widget.chatId] ?? [];
+    if (chatState.activeChatId == null) return;
+    final messages = chatState.messages[chatState.activeChatId!] ?? [];
 
     for (final message in messages) {
       if (message.senderId != currentUser?.id) {
-        // Assume messages fetched are 'delivered' or 'read'.
-        // We only send 'read' if it's not our own message and it hasn't been read yet.
-        // For simplicity, we just send read status for all messages not from current user.
         ref.read(chatProvider.notifier).sendReadStatus(message.chatId, message.id);
       }
     }
@@ -150,7 +149,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     reverse: true,
-                    controller: _scrollController,
+                    controller: _scrollController, // Assign scroll controller
                     itemCount: messages.length + (chatState.isFetchingMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == messages.length && chatState.isFetchingMore) {
@@ -161,7 +160,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       final userName = isMe 
                           ? 'You' 
                           : '${message.firstName ?? ''} ${message.lastName ?? ''}'.trim();
-                      return MessageBubble(
+                      return MessageBubble( // Use MessageBubble
                         message: message,
                         isMe: isMe,
                         userName: userName,

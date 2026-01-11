@@ -8,7 +8,7 @@ import '../models/schedule_item.dart';
 import '../modules/users/models/user.dart';
 import '../models/work_schedule.dart';
 import '../models/client_schedule_preference.dart'; // Import ClientSchedulePreference
-import '../models/chat/chat_models.dart'; // Import chat models
+import '../modules/chat/models/chat_models.dart'; // Corrected import path
 import '../models/whtr_profiles.dart';
 import '../models/goal_training.dart';
 import '../models/level_training.dart';
@@ -711,11 +711,12 @@ class ApiService {
       } else {
         final errorData = jsonDecode(response.body);
         throw Exception(
-          errorData['error'] ?? 'Failed to load assigned trainer IDs',
+          errorData['error'] ??
+              'Failed to load assigned trainer IDs with status ${response.statusCode}',
         );
       }
     } catch (e) {
-      print('Get assigned trainer IDs error: $e');
+      print('Get assigned trainers error: $e');
       rethrow;
     }
   }
@@ -1857,7 +1858,7 @@ class ApiService {
         );
       }
     } catch (e) {
-      print('Reset user password error: $e');
+      print('Reset password error: $e');
       rethrow;
     }
   }
@@ -1902,7 +1903,7 @@ class ApiService {
     }
   }
 
-  // Обновить профиль клиента
+  // Обновить профиль клиента (цель, уровень)
   static Future<User> updateClientProfile(
       Map<String, dynamic> clientProfileData) async {
     try {
@@ -2002,12 +2003,10 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['chat_id'];
+        return data['chat_id'] as int;
       } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(
-          errorData['error'] ?? 'Failed to create group chat',
-        );
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create group chat');
       }
     } catch (e) {
       print('Create group chat error: $e');

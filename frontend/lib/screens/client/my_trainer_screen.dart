@@ -3,9 +3,10 @@ import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../providers/chat_provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/chat/message_bubble.dart'; // Import MessageBubble
+import '../../../modules/chat/providers/chat_provider.dart'; // Adjusted relative path
+import '../../../providers/auth_provider.dart';
+import '../../../modules/chat/widgets/message_bubble.dart'; // Adjusted relative path
+// Removed: import '../../../modules/chat/screens/chat_screen.dart'; // Import ChatScreen
 
 final trainerProvider = FutureProvider<User>((ref) async {
   return ApiService.getTrainerForClient();
@@ -49,12 +50,6 @@ class _MyTrainerScreenState extends ConsumerState<MyTrainerScreen> {
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-      ref.read(chatProvider.notifier).fetchMoreMessages();
-    }
-  }
-
   void _sendReadStatusUpdates() {
     final chatState = ref.read(chatProvider);
     final currentUser = ref.read(authProvider).value?.user;
@@ -67,7 +62,13 @@ class _MyTrainerScreenState extends ConsumerState<MyTrainerScreen> {
       }
     }
   }
-  
+
+  void _onScroll() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      ref.read(chatProvider.notifier).fetchMoreMessages().then((_) => _sendReadStatusUpdates());
+    }
+  }
+
   void _sendMessage({
     List<int>? fileBytes,
     String? fileName,
@@ -251,4 +252,3 @@ class _MyTrainerScreenState extends ConsumerState<MyTrainerScreen> {
     );
   }
 }
-

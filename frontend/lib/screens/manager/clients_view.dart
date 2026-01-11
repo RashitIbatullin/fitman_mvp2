@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_provider.dart';
-import '../../providers/chat_provider.dart';
-import '../shared/chat_screen.dart';
+import '../../../modules/chat/providers/chat_provider.dart'; // Adjusted relative path
+import '../../../modules/chat/screens/chat_screen.dart'; // Adjusted relative path
 
 // Провайдер для получения клиентов для конкретного менеджера
 final assignedClientsProvider = FutureProvider.family<List<User>, int>((

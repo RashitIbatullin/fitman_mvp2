@@ -3,9 +3,10 @@ import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart'; // Import for ScrollDirection
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart'; // Import file_picker
-import '../../providers/chat_provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/chat/message_bubble.dart'; // Import MessageBubble
+import '../../../modules/chat/providers/chat_provider.dart'; // Adjusted relative path
+import '../../../providers/auth_provider.dart';
+import '../../../modules/chat/widgets/message_bubble.dart'; // Adjusted relative path
+// Removed: import '../../../modules/chat/screens/chat_screen.dart'; // Import ChatScreen
 
 final managerProvider = FutureProvider<User>((ref) async {
   return ApiService.getManagerForClient();

@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:postgres/postgres.dart';
 
-import '../../config/database.dart';
-import '../../services/redis_service.dart';
+import '../../../config/database.dart'; // Adjusted relative path
+import '../../../services/redis_service.dart'; // Adjusted relative path
 
-class ChatController {
-  ChatController(this._db, this._redis);
+class ChatWsController { // Renamed class
+  ChatWsController(this._db, this._redis);
 
   final Database _db;
   final RedisService _redis;
@@ -52,13 +52,13 @@ class ChatController {
     final int newChatId = await dbConnection.runTx((ctx) async {
        final chatType = uniqueUserIds.length == 2 ? 0 : 1; // 0 for P2P, 1 for Group
        final chatResult = await ctx.execute(
-        Sql.named('''
-          INSERT INTO chats (name, type, created_by)
-          VALUES (@name, @type, @creatorId)
-          RETURNING id
-        '''),
-        parameters: {'name': name, 'type': chatType, 'creatorId': creatorId},
-      );
+          Sql.named('''
+            INSERT INTO chats (name, type, created_by)
+            VALUES (@name, @type, @creatorId)
+            RETURNING id
+          '''),
+          parameters: {'name': name, 'type': chatType, 'creatorId': creatorId},
+       );
       final chatId = chatResult.first[0] as int;
 
       for (final userId in uniqueUserIds) {

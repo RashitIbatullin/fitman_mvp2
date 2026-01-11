@@ -3,8 +3,8 @@ import 'package:fitman_app/screens/client_dashboard.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/chat_provider.dart';
-import '../shared/chat_screen.dart';
+import '../../../modules/chat/providers/chat_provider.dart'; // Adjusted relative path
+import '../../../modules/chat/screens/chat_screen.dart'; // Adjusted relative path
 
 // Провайдер для получения всех клиентов, назначенных инструктору
 final assignedClientsProvider = FutureProvider.family<List<User>, int>((
