@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:postgres/postgres.dart';
-import '../models/client_profile_back.dart';
+import '../models/client_profile.dart';
 import 'app_config.dart';
 import '../modules/users/models/user.dart';
 import '../modules/roles/models/role.dart';

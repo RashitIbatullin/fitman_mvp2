@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shelf/shelf.dart';
-import '../config/database.dart';
+import '../../../config/database.dart'; // Adjusted relative path
 
 class InstructorController {
   static Future<Response> getAssignedClients(Request request) async {

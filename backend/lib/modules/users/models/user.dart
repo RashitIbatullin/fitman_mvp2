@@ -1,5 +1,5 @@
 import '../../roles/models/role.dart';
-import '../../../models/client_profile_back.dart';
+import '../../../models/client_profile.dart'; // Adjusted import path
 
 class User {
   final int id;

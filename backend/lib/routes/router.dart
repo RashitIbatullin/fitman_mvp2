@@ -4,8 +4,8 @@ import '../controllers/auth_controller.dart';
 import '../modules/users/controllers/users_controller.dart';
 import '../controllers/training_controller.dart';
 import '../controllers/schedule_controller.dart';
-import '../controllers/manager_controller.dart';
-import '../controllers/instructor_controller.dart';
+// Removed old manager_controller.dart
+// Removed old instructor_controller.dart
 import '../middleware/auth_middleware.dart';
 import '../controllers/dashboard_controller.dart';
 import '../controllers/anthropometry_controller.dart';
@@ -26,6 +26,9 @@ import '../modules/infrastructure/controllers/room.controller.dart';
 import '../modules/infrastructure/controllers/equipment_item.controller.dart';
 import '../modules/infrastructure/controllers/equipment_type.controller.dart';
 import '../config/database.dart'; // Add this import
+import '../modules/roles/controllers/manager_controller.dart'; // New manager controller
+import '../modules/roles/controllers/instructor_controller.dart'; // New instructor controller
+
 
 final Database _db = Database(); // Instantiate Database once
 
