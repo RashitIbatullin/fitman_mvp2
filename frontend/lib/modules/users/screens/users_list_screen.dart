@@ -250,6 +250,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
           TextButton(onPressed: () { Navigator.pop(context); _navigateToCreateUser(context, 'client'); }, child: const Text('Клиент')),
           TextButton(onPressed: () { Navigator.pop(context); _navigateToCreateUser(context, 'instructor'); }, child: const Text('Инструктор')),
           TextButton(onPressed: () { Navigator.pop(context); _navigateToCreateUser(context, 'trainer'); }, child: const Text('Тренер')),
+          TextButton(onPressed: () { Navigator.pop(context); _navigateToCreateUser(context, 'manager'); }, child: const Text('Менеджер')),
           TextButton(onPressed: () { Navigator.pop(context); _navigateToCreateUser(context, 'admin'); }, child: const Text('Администратор')),
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
         ],
@@ -323,8 +324,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
     if (confirmed == true) {
       try {
-        // Use ApiService.updateUser to set isActive to true
-        await ApiService.updateUser(UpdateUserRequest(id: userToDeArchive.id, isActive: true));
+        await ApiService.updateUser(UpdateUserRequest(id: userToDeArchive.id, archivedAt: null));
         // Refresh the user list after successful de-archival
         ref.read(usersProvider.notifier).refreshUsers();
         // Deselect the user
@@ -446,22 +446,22 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                             FilterOption(
                               label: 'Изменить пользователя',
                               value: 'edit',
-                              enabled: _selectedUser != null && _selectedUser!.isActive,
+                              enabled: _selectedUser != null && _selectedUser!.archivedAt == null,
                             ),
                             FilterOption(
                               label: 'Сбросить пароль',
                               value: 'reset_password',
-                              enabled: _selectedUser != null && _selectedUser!.isActive,
+                              enabled: _selectedUser != null && _selectedUser!.archivedAt == null,
                             ),
                             FilterOption(
                               label: 'Архивировать пользователя',
                               value: 'archive',
-                              enabled: _selectedUser != null && _selectedUser!.isActive,
+                              enabled: _selectedUser != null && _selectedUser!.archivedAt == null,
                             ),
                             FilterOption(
                               label: 'Деархивировать пользователя',
                               value: 'deactivate',
-                              enabled: _selectedUser != null && !_selectedUser!.isActive,
+                              enabled: _selectedUser != null && _selectedUser!.archivedAt != null,
                             ),
                           ],
                           avatar: const Icon(Icons.more_vert),
@@ -508,29 +508,15 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                             avatar: const Icon(Icons.person_search_outlined),
                           ),
                           const SizedBox(width: 8),
-                          // FilterPopupMenuButton for active filter
-                          FilterPopupMenuButton<bool>(
-                            tooltip: 'Фильтр по активности',
-                            initialValue: ref.watch(userIsArchivedFilterProvider) == null ? null : !ref.watch(userIsArchivedFilterProvider)!,
-                            onSelected: (value) {
-                              ref.read(userIsArchivedFilterProvider.notifier).state = value == null ? null : !value;
-                            },
-                            allOptionText: 'Статус: Все',
-                            options: const [
-                              FilterOption(label: 'Активные', value: true),
-                              FilterOption(label: 'Неактивные', value: false),
-                            ],
-                            avatar: const Icon(Icons.filter_alt_outlined),
-                          ),
-                          const SizedBox(width: 8),
                           // FilterPopupMenuButton for archived filter
                           FilterPopupMenuButton<bool>(
                             tooltip: 'Фильтр по архивации',
                             initialValue: ref.watch(userIsArchivedFilterProvider),
                             onSelected: (value) {
                               ref.read(userIsArchivedFilterProvider.notifier).state = value;
+                              ref.read(usersProvider.notifier).refreshUsers();
                             },
-                            allOptionText: 'Архив: Все',
+                            allOptionText: 'Архив: Все', // This needs to be changed
                             options: const [
                               FilterOption(label: 'В архиве', value: true),
                               FilterOption(label: 'Не в архиве', value: false),
@@ -574,7 +560,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    color: isSelected ? Theme.of(context).primaryColor.withAlpha(25) : null,
+                    color: isSelected ? Theme.of(context).primaryColor.withAlpha(25) : (user.archivedAt != null ? Colors.grey[200] : null),
                     child: ListTile(
                       dense: true,
                       leading: CircleAvatar(
@@ -625,18 +611,20 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                               Icon(Icons.numbers, size: 14, color: Theme.of(context).colorScheme.secondary),
                               Text('Возраст: ${user.age?.toString() ?? 'Н/Д'}', style: Theme.of(context).textTheme.bodySmall),
                             ],
-                            const Text('•'), // Separator before status
-                            Icon(
-                              user.isActive ? Icons.check_circle_outline : Icons.archive_outlined,
-                              size: 14,
-                              color: user.isActive ? Colors.green : Colors.blueGrey,
-                            ),
-                            Text(
-                              user.isActive ? 'Активен' : 'В архиве',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: user.isActive ? Colors.green : Colors.blueGrey,
-                              )
-                            ),
+                            if(user.archivedAt != null) ...[
+                              const Text('•'), // Separator before status
+                              Icon(
+                                Icons.archive_outlined,
+                                size: 14,
+                                color: Colors.blueGrey,
+                              ),
+                              Text(
+                                'В архиве',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.blueGrey,
+                                )
+                              ),
+                            ]
                           ],
                         ),
                       ),

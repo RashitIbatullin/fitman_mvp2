@@ -160,7 +160,9 @@ class UsersController {
   static Future<Response> getUsers(Request request) async {
     try {
       final queryParams = request.url.queryParameters;
+      print('Query params: $queryParams'); // Add this line
       final bool? isArchived = queryParams['isArchived'] != null ? bool.parse(queryParams['isArchived']!) : null;
+      print('isArchived: $isArchived'); // Add this line
       final String? role = queryParams['role']; // Get role from query parameters
 
       final users = await _db.getAllUsers(isArchived: isArchived, role: role); // Pass role to getAllUsers
@@ -220,6 +222,9 @@ class UsersController {
 
       final dateOfBirthString = data['dateOfBirth'] as String?;
       final dateOfBirth = dateOfBirthString != null ? DateTime.parse(dateOfBirthString) : null;
+      
+      final archivedAtString = data['archivedAt'] as String?;
+      final archivedAt = archivedAtString != null ? DateTime.parse(archivedAtString) : null;
 
       await _db.updateUser(
         userId,
@@ -231,7 +236,7 @@ class UsersController {
         gender: data['gender'] as String?,
         dateOfBirth: dateOfBirth,
         updatedBy: updaterId,
-        isActive: data['isActive'] as bool?,
+        archivedAt: archivedAt,
       );
 
       // --- START OF NEW LOGIC ---

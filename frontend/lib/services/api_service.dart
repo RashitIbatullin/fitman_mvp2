@@ -310,7 +310,7 @@ class ApiService {
   }
 
   // Получение списка пользователей (для админа)
-  static Future<List<User>> getUsers({String? role, bool? isArchived, int? offset, int? limit}) async {
+  static Future<List<User>> getUsers({String? role, int? offset, int? limit, bool? isArchived}) async {
     try {
       final queryParameters = <String, String>{};
       if (role != null) {
@@ -443,7 +443,7 @@ class ApiService {
       final response = await http.put(
         Uri.parse('$baseUrl/api/users/$userId'), // Use the existing update user endpoint
         headers: _headers,
-        body: jsonEncode({'isActive': false}), // Set isActive to false for archival
+        body: jsonEncode({'archivedAt': DateTime.now().toIso8601String()}), // Set archivedAt for archival
       );
 
       if (response.statusCode != 200) {
@@ -2000,13 +2000,14 @@ class ApiService {
           if (name != null) 'name': name,
         }),
       );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
+      if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['chat_id'] as int;
+        return data['chat_id'];
       } else {
-        final error = jsonDecode(response.body);
-        throw Exception(error['error'] ?? 'Failed to create group chat');
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ?? 'Failed to create group chat',
+        );
       }
     } catch (e) {
       print('Create group chat error: $e');

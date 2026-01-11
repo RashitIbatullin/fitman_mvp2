@@ -33,7 +33,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
 
   bool _isLoading = false;
   String? _error;
-  bool _isActive = true;
 
   @override
   void initState() {
@@ -121,7 +120,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
         sendNotification: _sendNotification,
         hourNotification: _hourNotification,
         clientProfile: clientProfileData,
-        isActive: _isActive,
       );
 
       final newUser = await ApiService.createUser(request);
@@ -160,8 +158,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
             children: [
               _buildBasicInfoSection(),
               const SizedBox(height: 20),
-              _buildStatusSection(),
-              const SizedBox(height: 20),
               if (_selectedRoleNames.contains('client'))
                 _buildClientSpecificSection(),
               if (widget.userRole != 'admin')
@@ -170,33 +166,6 @@ class _CreateUserScreenState extends ConsumerState<CreateUserScreen> {
               _buildActionButtons(),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Статус',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SwitchListTile(
-              title: const Text('Пользователь активен'),
-              value: _isActive,
-              onChanged: (value) {
-                setState(() {
-                  _isActive = value;
-                });
-              },
-            ),
-          ],
         ),
       ),
     );

@@ -458,7 +458,7 @@ class Database {
         String? gender,
         DateTime? dateOfBirth,
         int? updatedBy,
-        bool? isActive,
+        DateTime? archivedAt,
       }) async {
     try {
       final conn = await connection;
@@ -494,13 +494,10 @@ class Database {
         setParts.add('date_of_birth = @dateOfBirth');
         parameters['dateOfBirth'] = dateOfBirth;
       }
-      if (isActive != null) {
-        if (isActive) {
-          setParts.add('archived_at = NULL');
-        } else {
-          setParts.add('archived_at = NOW()');
-        }
-      }
+      
+      setParts.add('archived_at = @archivedAt');
+      parameters['archivedAt'] = archivedAt;
+
 
       if (setParts.isEmpty) {
         return getUserById(id);
@@ -873,7 +870,7 @@ class Database {
       final results = await conn.execute(
         Sql.named('''
           SELECT DISTINCT ON (t.id)
-            t.id, t.email, t.password_hash, t.first_name, t.last_name, r.name as role, t.phone, t.created_at, t.updated_at, t.archived_at
+            t.id, t.email, t.password_hash, t.first_name, t.last_name, r.name as role, t.phone, t.created_at, u.updated_at, t.archived_at
           FROM users t 
           LEFT JOIN user_roles ur ON t.id = ur.user_id
           LEFT JOIN roles r ON ur.role_id = r.id

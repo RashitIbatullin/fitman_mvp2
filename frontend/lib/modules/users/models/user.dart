@@ -68,8 +68,6 @@ class User {
     );
   }
 
-  bool get isActive => archivedAt == null;
-
   int? get age {
     if (dateOfBirth == null) return null;
     final now = DateTime.now();
@@ -184,7 +182,6 @@ class CreateUserRequest {
   final int hourNotification;
   // This can be provided when creating a client
   final Map<String, dynamic>? clientProfile;
-  final bool? isActive;
 
   CreateUserRequest({
     required this.email,
@@ -199,7 +196,6 @@ class CreateUserRequest {
     this.sendNotification = true,
     this.hourNotification = 1,
     this.clientProfile,
-    this.isActive,
   });
 
   Map<String, dynamic> toJson() {
@@ -217,7 +213,6 @@ class CreateUserRequest {
     if (gender != null) data['gender'] = gender;
     if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth!.toIso8601String();
     if (clientProfile != null) data['client_profile'] = clientProfile;
-    if (isActive != null) data['isActive'] = isActive;
     
     return data;
   }
@@ -233,7 +228,7 @@ class UpdateUserRequest {
   final String? gender;
   final DateTime? dateOfBirth;
   final Map<String, dynamic>? clientProfile;
-  final bool? isActive;
+  final DateTime? archivedAt;
 
   UpdateUserRequest({
     required this.id,
@@ -245,7 +240,7 @@ class UpdateUserRequest {
     this.gender,
     this.dateOfBirth,
     this.clientProfile,
-    this.isActive,
+    this.archivedAt,
   });
 
   Map<String, dynamic> toJson() {
@@ -260,7 +255,9 @@ class UpdateUserRequest {
     if (gender != null) data['gender'] = gender;
     if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth!.toIso8601String();
     if (clientProfile != null) data['client_profile'] = clientProfile;
-    if (isActive != null) data['isActive'] = isActive;
+    if (archivedAt != null) {
+      data['archivedAt'] = archivedAt!.toIso8601String();
+    }
     
     return data;
   }
