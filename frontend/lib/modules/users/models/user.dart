@@ -20,6 +20,7 @@ class User {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? archivedAt;
+  final String? archivedReason; // Added archivedReason field
 
   User({
     required this.id,
@@ -39,6 +40,7 @@ class User {
     required this.createdAt,
     required this.updatedAt,
     this.archivedAt,
+    this.archivedReason, // Added to constructor
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -65,6 +67,7 @@ class User {
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
       archivedAt: json['archivedAt'] != null ? DateTime.parse(json['archivedAt'] as String) : null,
+      archivedReason: json['archivedReason'] as String?, // Added to fromJson
     );
   }
 
@@ -87,7 +90,7 @@ class User {
   }
 
   String get shortName {
-    final middleInitial = middleName != null && middleName!.isNotEmpty
+    final String middleInitial = middleName != null && middleName!.isNotEmpty
         ? ' ${middleName![0]}.'
         : '';
     return '$lastName ${firstName[0]}.$middleInitial';
@@ -110,6 +113,8 @@ class User {
     ClientProfile? clientProfile,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? archivedAt,
+    String? archivedReason, // Added to copyWith
   }) {
     return User(
       id: id ?? this.id,
@@ -128,6 +133,8 @@ class User {
       clientProfile: clientProfile ?? this.clientProfile,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      archivedAt: archivedAt ?? this.archivedAt,
+      archivedReason: archivedReason ?? this.archivedReason, // Added to copyWith return
     );
   }
 
@@ -148,6 +155,8 @@ class User {
       'client_profile': clientProfile?.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'archivedAt': archivedAt?.toIso8601String(),
+      'archivedReason': archivedReason, // Added to toJson
     };
   }
 }
@@ -229,6 +238,7 @@ class UpdateUserRequest {
   final DateTime? dateOfBirth;
   final Map<String, dynamic>? clientProfile;
   final DateTime? archivedAt;
+  final String? archivedReason; // Added archivedReason to UpdateUserRequest
 
   UpdateUserRequest({
     required this.id,
@@ -241,6 +251,7 @@ class UpdateUserRequest {
     this.dateOfBirth,
     this.clientProfile,
     this.archivedAt,
+    this.archivedReason, // Added to constructor
   });
 
   Map<String, dynamic> toJson() {
@@ -257,6 +268,9 @@ class UpdateUserRequest {
     if (clientProfile != null) data['client_profile'] = clientProfile;
     if (archivedAt != null) {
       data['archivedAt'] = archivedAt!.toIso8601String();
+    }
+    if (archivedReason != null) { // Added archivedReason to toJson
+      data['archivedReason'] = archivedReason;
     }
     
     return data;

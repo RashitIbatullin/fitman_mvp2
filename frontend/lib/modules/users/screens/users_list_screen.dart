@@ -134,6 +134,8 @@ class UsersListScreen extends ConsumerStatefulWidget {
 class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   User? _selectedUser;
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _archiveReasonController = TextEditingController(); // Added for archive reason
+  final _formKey = GlobalKey<FormState>(); // Added FormState key
 
   @override
   void initState() {
@@ -156,6 +158,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _archiveReasonController.dispose(); // Dispose controller
     super.dispose();
   }
 
@@ -262,18 +265,48 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     final userToArchive = _selectedUser; // Create a local non-nullable variable
     if (userToArchive == null) return; // Check it here
 
+    // Reset the text field before showing the dialog
+    _archiveReasonController.text = userToArchive.archivedReason ?? '';
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Подтвердите архивацию'),
-        content: Text('Вы уверены, что хотите архивировать пользователя "${userToArchive.fullName}"?'),
+        content: Form( // Wrap with Form for validation
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Вы уверены, что хотите архивировать пользователя "${userToArchive.fullName}"?'),
+              TextFormField( // Use TextFormField for validation
+                controller: _archiveReasonController,
+                decoration: const InputDecoration(
+                  hintText: 'Причина архивации (не менее 5 символов)*',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Причина архивации обязательна';
+                  }
+                  if (value.length < 5) {
+                    return 'Причина должна содержать не менее 5 символов';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Отмена'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () {
+              if (_formKey.currentState!.validate()) { // Validate on press
+                Navigator.of(context).pop(true);
+              }
+            },
             child: const Text('Архивировать'),
           ),
         ],
@@ -282,7 +315,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
 
     if (confirmed == true) {
       try {
-        await ApiService.archiveUser(userToArchive.id);
+        await ApiService.archiveUser(userToArchive.id, reason: _archiveReasonController.text.trim());
         // Refresh the user list after successful archival
         ref.read(usersProvider.notifier).refreshUsers();
         // Deselect the user
@@ -619,7 +652,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                                 color: Colors.blueGrey,
                               ),
                               Text(
-                                'В архиве',
+                                'В архиве ${user.archivedReason != null && user.archivedReason!.isNotEmpty ? '(${user.archivedReason})' : ''}', // Display reason
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Colors.blueGrey,
                                 )

@@ -17,6 +17,7 @@ class User {
   final DateTime updatedAt;
   final ClientProfile? clientProfile;
   final DateTime? archivedAt;
+  final String? archivedReason; // Added archivedReason field
 
   int? get age {
     if (dateOfBirth == null) return null;
@@ -45,6 +46,7 @@ class User {
     required this.updatedAt,
     this.clientProfile,
     this.archivedAt,
+    this.archivedReason, // Added to constructor
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
@@ -69,6 +71,7 @@ class User {
           ? map['updated_at']
           : DateTime.parse(map['updated_at'].toString()),
       archivedAt: map['archived_at'] as DateTime?,
+      archivedReason: map['archived_reason']?.toString(), // Added to fromMap
       // clientProfile is populated separately after creation
     );
   }
@@ -89,6 +92,7 @@ class User {
       'updatedAt': updatedAt.toIso8601String(),
       'client_profile': clientProfile?.toJson(),
       'archivedAt': archivedAt?.toIso8601String(),
+      'archivedReason': archivedReason, // Added to toSafeJson
     };
   }
 
@@ -107,6 +111,7 @@ class User {
     List<Role>? roles,
     ClientProfile? clientProfile,
     DateTime? archivedAt,
+    String? archivedReason, // Added to copyWith
   }) {
     return User(
       id: id,
@@ -124,6 +129,7 @@ class User {
       updatedAt: DateTime.now(),
       clientProfile: clientProfile ?? this.clientProfile,
       archivedAt: archivedAt ?? this.archivedAt,
+      archivedReason: archivedReason ?? this.archivedReason, // Added to copyWith return
     );
   }
 }

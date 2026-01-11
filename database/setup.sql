@@ -79,7 +79,8 @@ CREATE TABLE users (
     created_by BIGINT,
     updated_by BIGINT,
     archived_at TIMESTAMPTZ,
-    archived_by BIGINT
+    archived_by BIGINT,
+    archived_reason VARCHAR(255) -- Reverted
 );
 
 -- Добавление FK для created_by и updated_by после создания таблицы users

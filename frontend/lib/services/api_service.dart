@@ -438,12 +438,17 @@ class ApiService {
   }
 
   // Архивация пользователя
-  static Future<void> archiveUser(int userId) async {
+  static Future<void> archiveUser(int userId, {String? reason}) async { // Added reason parameter
     try {
+      final requestBody = <String, dynamic>{'archivedAt': DateTime.now().toIso8601String()};
+      if (reason != null && reason.isNotEmpty) {
+        requestBody['archivedReason'] = reason;
+      }
+
       final response = await http.put(
         Uri.parse('$baseUrl/api/users/$userId'), // Use the existing update user endpoint
         headers: _headers,
-        body: jsonEncode({'archivedAt': DateTime.now().toIso8601String()}), // Set archivedAt for archival
+        body: jsonEncode(requestBody), // Set archivedAt and optionally archivedReason for archival
       );
 
       if (response.statusCode != 200) {

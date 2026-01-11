@@ -459,6 +459,7 @@ class Database {
         DateTime? dateOfBirth,
         int? updatedBy,
         DateTime? archivedAt,
+        String? archivedReason, // Added archivedReason parameter
       }) async {
     try {
       final conn = await connection;
@@ -497,6 +498,11 @@ class Database {
       
       setParts.add('archived_at = @archivedAt');
       parameters['archivedAt'] = archivedAt;
+
+      if (archivedReason != null) { // Conditionally add archivedReason
+        setParts.add('archived_reason = @archivedReason');
+        parameters['archivedReason'] = archivedReason;
+      }
 
 
       if (setParts.isEmpty) {
@@ -876,6 +882,8 @@ class Database {
           LEFT JOIN roles r ON ur.role_id = r.id
           INNER JOIN lessons l ON t.id = l.trainer_id 
           WHERE l.instructor_id = @instructorId
+          GROUP BY u.id -- Group by user ID to avoid duplicates if a trainer has multiple lessons
+          ORDER BY u.last_name, u.first_name
         '''),
         parameters: {'instructorId': instructorId},
       );

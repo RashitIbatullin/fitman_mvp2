@@ -154,15 +154,13 @@ class UsersController {
     }
   }
 
-  // ... (other methods can be added here, keeping the rest of the class structure)
+  // ... (other methods remain the same)
 
   // The following are the existing methods from the original file to be preserved.
   static Future<Response> getUsers(Request request) async {
     try {
       final queryParams = request.url.queryParameters;
-      print('Query params: $queryParams'); // Add this line
       final bool? isArchived = queryParams['isArchived'] != null ? bool.parse(queryParams['isArchived']!) : null;
-      print('isArchived: $isArchived'); // Add this line
       final String? role = queryParams['role']; // Get role from query parameters
 
       final users = await _db.getAllUsers(isArchived: isArchived, role: role); // Pass role to getAllUsers
@@ -225,6 +223,13 @@ class UsersController {
       
       final archivedAtString = data['archivedAt'] as String?;
       final archivedAt = archivedAtString != null ? DateTime.parse(archivedAtString) : null;
+      final archivedReason = data['archivedReason'] as String?; // Added archivedReason
+
+      // Validation for archivedReason if archivedAt is not null
+      if (archivedAt != null && (archivedReason == null || archivedReason.length < 5)) {
+        return Response(400, body: jsonEncode({'error': 'Archived reason is required and must be at least 5 characters long when archiving a user.'}));
+      }
+
 
       await _db.updateUser(
         userId,
@@ -237,6 +242,7 @@ class UsersController {
         dateOfBirth: dateOfBirth,
         updatedBy: updaterId,
         archivedAt: archivedAt,
+        archivedReason: archivedReason, // Passed archivedReason
       );
 
       // --- START OF NEW LOGIC ---
