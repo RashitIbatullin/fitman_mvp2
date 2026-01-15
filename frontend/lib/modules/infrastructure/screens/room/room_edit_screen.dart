@@ -27,8 +27,6 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
 
   String? _selectedBuildingId;
   late RoomType _selectedRoomType;
-  late bool _hasMirrors;
-  late bool _hasSoundSystem;
   late bool _isUnderMaintenance;
 
   @override
@@ -44,8 +42,6 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
 
     _selectedBuildingId = widget.room.buildingId;
     _selectedRoomType = widget.room.type;
-    _hasMirrors = widget.room.hasMirrors;
-    _hasSoundSystem = widget.room.hasSoundSystem;
     _isUnderMaintenance = widget.room.isUnderMaintenance;
   }
 
@@ -124,7 +120,13 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                 items: RoomType.values.map((type) {
                   return DropdownMenuItem(
                     value: type,
-                    child: Text(type.displayName),
+                    child: Row(
+                      children: [
+                        Icon(type.icon, size: 24),
+                        const SizedBox(width: 10),
+                        Text(type.displayName),
+                      ],
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -168,24 +170,6 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                 },
               ),
               CheckboxListTile(
-                title: const Text('Есть зеркала'),
-                value: _hasMirrors,
-                onChanged: (value) {
-                  setState(() {
-                    _hasMirrors = value!;
-                  });
-                },
-              ),
-              CheckboxListTile(
-                title: const Text('Есть аудиосистема'),
-                value: _hasSoundSystem,
-                onChanged: (value) {
-                  setState(() {
-                    _hasSoundSystem = value!;
-                  });
-                },
-              ),
-              CheckboxListTile(
                 title: const Text('На ремонте'),
                 value: _isUnderMaintenance,
                 onChanged: (value) {
@@ -223,8 +207,6 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
         buildingId: _selectedBuildingId,
         maxCapacity: int.tryParse(_maxCapacityController.text) ?? 0,
         area: double.tryParse(_areaController.text),
-        hasMirrors: _hasMirrors,
-        hasSoundSystem: _hasSoundSystem,
         isUnderMaintenance: _isUnderMaintenance,
         maintenanceNote: _maintenanceNoteController.text,
       );

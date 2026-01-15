@@ -14,8 +14,6 @@ class Room {
     this.buildingName,
     required this.maxCapacity,
     this.area,
-    this.hasMirrors = false,
-    this.hasSoundSystem = false,
     this.openTime,
     this.closeTime,
     this.workingDays,
@@ -44,8 +42,6 @@ class Room {
   final String? buildingName;
   final int maxCapacity;
   final double? area;
-  final bool hasMirrors;
-  final bool hasSoundSystem;
   final Time? openTime;
   final Time? closeTime;
   final List<int>? workingDays;
@@ -117,8 +113,6 @@ class Room {
       buildingName: map['building_name'] as String?,
       maxCapacity: map['max_capacity'] as int,
       area: parsedArea,
-      hasMirrors: map['has_mirrors'] as bool,
-      hasSoundSystem: map['has_sound_system'] as bool,
       openTime: parsedOpenTime,
       closeTime: parsedCloseTime,
       workingDays: parsedWorkingDays,
@@ -184,8 +178,6 @@ class Room {
       buildingName: json['buildingName'] as String?,
       maxCapacity: json['maxCapacity'] as int,
       area: parsedArea,
-      hasMirrors: json['hasMirrors'] as bool? ?? false,
-      hasSoundSystem: json['hasSoundSystem'] as bool? ?? false,
       openTime: parseTimeFromString(json['openTime'] as String?),
       closeTime: parseTimeFromString(json['closeTime'] as String?),
       workingDays:
@@ -227,8 +219,6 @@ class Room {
       'buildingName': buildingName,
       'max_capacity': maxCapacity, // Use snake_case for DB
       'area': area,
-      'has_mirrors': hasMirrors,
-      'has_sound_system': hasSoundSystem,
       'open_time': openTime?.toString(), // Convert Time to string
       'close_time': closeTime?.toString(), // Convert Time to string
       'working_days': workingDays,

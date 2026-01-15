@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'room_type.enum.dart';
@@ -34,8 +36,6 @@ class Room with _$Room {
     String? buildingName,
     @JsonKey(name: 'max_capacity') @Default(30) int maxCapacity,
     double? area,
-    @JsonKey(name: 'has_mirrors') @Default(false) bool hasMirrors,
-    @JsonKey(name: 'has_sound_system') @Default(false) bool hasSoundSystem,
     @TimeOfDayConverter() @JsonKey(name: 'open_time') TimeOfDay? openTime,
     @TimeOfDayConverter() @JsonKey(name: 'close_time') TimeOfDay? closeTime,
     @JsonKey(name: 'working_days') @Default([]) List<int> workingDays,

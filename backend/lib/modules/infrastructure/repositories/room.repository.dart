@@ -20,8 +20,8 @@ class RoomRepositoryImpl implements RoomRepository {
     final conn = await _db.connection;
     final result = await conn.execute(
       Sql.named(
-          'INSERT INTO rooms (name, description, room_number, type, floor, building_id, max_capacity, area, has_mirrors, has_sound_system, open_time, close_time, working_days, is_active, is_under_maintenance, maintenance_note, maintenance_until) '
-          'VALUES (@name, @description, @room_number, @type, @floor, @building_id, @max_capacity, @area, @has_mirrors, @has_sound_system, @open_time, @close_time, @working_days, @is_active, @is_under_maintenance, @maintenance_note, @maintenance_until) RETURNING *'),
+          'INSERT INTO rooms (name, description, room_number, type, floor, building_id, max_capacity, area, open_time, close_time, working_days, is_active, is_under_maintenance, maintenance_note, maintenance_until) '
+          'VALUES (@name, @description, @room_number, @type, @floor, @building_id, @max_capacity, @area, @open_time, @close_time, @working_days, @is_active, @is_under_maintenance, @maintenance_note, @maintenance_until) RETURNING *'),
       parameters: {
         'name': room.name,
         'description': room.description,
@@ -31,8 +31,6 @@ class RoomRepositoryImpl implements RoomRepository {
         'building_id': room.buildingId != null ? int.parse(room.buildingId!) : null,
         'max_capacity': room.maxCapacity,
         'area': room.area,
-        'has_mirrors': room.hasMirrors,
-        'has_sound_system': room.hasSoundSystem,
         'open_time': room.openTime,
         'close_time': room.closeTime,
         'working_days': room.workingDays,
@@ -104,7 +102,7 @@ class RoomRepositoryImpl implements RoomRepository {
     final conn = await _db.connection;
     final result = await conn.execute(
       Sql.named(
-          'UPDATE rooms SET name = @name, description = @description, room_number = @room_number, type = @type, floor = @floor, building_id = @building_id, max_capacity = @max_capacity, area = @area, has_mirrors = @has_mirrors, has_sound_system = @has_sound_system, open_time = @open_time, close_time = @close_time, working_days = @working_days, is_active = @is_active, is_under_maintenance = @is_under_maintenance, maintenance_note = @maintenance_note, maintenance_until = @maintenance_until, archived_at = @archived_at, updated_at = NOW() WHERE id = @id RETURNING *'),
+          'UPDATE rooms SET name = @name, description = @description, room_number = @room_number, type = @type, floor = @floor, building_id = @building_id, max_capacity = @max_capacity, area = @area, open_time = @open_time, close_time = @close_time, working_days = @working_days, is_active = @is_active, is_under_maintenance = @is_under_maintenance, maintenance_note = @maintenance_note, maintenance_until = @maintenance_until, archived_at = @archived_at, updated_at = NOW() WHERE id = @id RETURNING *'),
       parameters: {
         'id': int.parse(id),
         'name': room.name,
@@ -115,8 +113,6 @@ class RoomRepositoryImpl implements RoomRepository {
         'building_id': room.buildingId != null ? int.parse(room.buildingId!) : null,
         'max_capacity': room.maxCapacity,
         'area': room.area,
-        'has_mirrors': room.hasMirrors,
-        'has_sound_system': room.hasSoundSystem,
         'open_time': room.openTime,
         'close_time': room.closeTime,
         'working_days': room.workingDays,

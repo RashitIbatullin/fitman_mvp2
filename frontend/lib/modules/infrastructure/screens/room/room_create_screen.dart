@@ -25,8 +25,6 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
 
   String? _selectedBuildingId;
   RoomType _selectedRoomType = RoomType.groupHall;
-  bool _hasMirrors = false;
-  bool _hasSoundSystem = false;
   bool _isUnderMaintenance = false;
 
   @override
@@ -92,7 +90,13 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                 items: RoomType.values.map((type) {
                   return DropdownMenuItem(
                     value: type,
-                    child: Text(type.displayName),
+                    child: Row(
+                      children: [
+                        Icon(type.icon, size: 24),
+                        const SizedBox(width: 10),
+                        Text(type.displayName),
+                      ],
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -136,24 +140,6 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                 },
               ),
               CheckboxListTile(
-                title: const Text('Есть зеркала'),
-                value: _hasMirrors,
-                onChanged: (value) {
-                  setState(() {
-                    _hasMirrors = value!;
-                  });
-                },
-              ),
-              CheckboxListTile(
-                title: const Text('Есть аудиосистема'),
-                value: _hasSoundSystem,
-                onChanged: (value) {
-                  setState(() {
-                    _hasSoundSystem = value!;
-                  });
-                },
-              ),
-              CheckboxListTile(
                 title: const Text('На ремонте'),
                 value: _isUnderMaintenance,
                 onChanged: (value) {
@@ -192,8 +178,6 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
         buildingId: _selectedBuildingId,
         maxCapacity: int.tryParse(_maxCapacityController.text) ?? 0,
         area: double.tryParse(_areaController.text),
-        hasMirrors: _hasMirrors,
-        hasSoundSystem: _hasSoundSystem,
         isUnderMaintenance: _isUnderMaintenance,
         maintenanceNote: _maintenanceNoteController.text,
         photoUrls: [],

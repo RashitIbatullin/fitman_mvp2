@@ -9,6 +9,7 @@ import '../building/buildings_list_screen.dart';
 import '../../providers/room_provider.dart'; // Import the new provider definition
 import '../room/rooms_list_screen.dart';
 import '../room/room_detail_screen.dart';
+import '../../utils/room_utils.dart';
 
 class InfrastructureDashboardScreen extends ConsumerWidget {
   const InfrastructureDashboardScreen({super.key});
@@ -148,7 +149,7 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.meeting_room, size: 40.0), // Increased icon size
+                              Icon(room.type.icon, size: 40.0), // Increased icon size
                               const SizedBox(height: 4.0),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 4.0),

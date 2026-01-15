@@ -160,8 +160,7 @@ class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
               final building = buildings[index];
               final isSelected = _selectedBuilding?.id == building.id;
 
-              print('Building ID: ${building.id}, Archived At: ${building.archivedAt}, isSelected: $isSelected'); // LOGGING
-
+              
               return Card(
                 color: building.archivedAt != null ? Colors.grey[200] : null,
                 margin:
