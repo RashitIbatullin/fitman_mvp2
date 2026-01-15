@@ -1,9 +1,9 @@
-import 'package:fitman_app/modules/infrastructure/providers/building_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/room/room.model.dart';
-import '../../providers/room_provider.dart';
+import '../../providers/room_provider.dart'; // Import the new provider definition
 import '../../utils/room_utils.dart';
+import 'room_edit_screen.dart'; // Import the edit screen
 
 class RoomDetailScreen extends ConsumerWidget {
   const RoomDetailScreen({super.key, required this.roomId});
@@ -22,13 +22,25 @@ class RoomDetailScreen extends ConsumerWidget {
           error: (err, stack) => const Text('Ошибка'),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Navigate to Edit Room Screen
-            },
-            tooltip: 'Редактировать',
-          )
+          roomAsync.when(
+            data: (room) => IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RoomEditScreen(room: room),
+                  ),
+                ).then((_) {
+                  // Refresh room data when returning from edit screen
+                  ref.invalidate(roomByIdProvider(roomId));
+                });
+              },
+              tooltip: 'Редактировать',
+            ),
+            loading: () => const SizedBox.shrink(),
+            error: (err, stack) => const SizedBox.shrink(),
+          ),
         ],
       ),
       body: roomAsync.when(
@@ -40,8 +52,6 @@ class RoomDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildRoomDetails(BuildContext context, WidgetRef ref, Room room) {
-    final buildingsAsync = ref.watch(allBuildingsProvider);
-
     return DefaultTabController(
       length: 5, // Number of tabs
       child: Column(
@@ -60,7 +70,7 @@ class RoomDetailScreen extends ConsumerWidget {
             child: TabBarView(
               children: [
                 // 1. Основное
-                _buildMainInfoTab(context, room, buildingsAsync),
+                _buildMainInfoTab(context, room),
                 // 2. Расписание (Placeholder)
                 const Center(child: Text('Информация о расписании')),
                 // 3. Состояние (Placeholder)
@@ -77,16 +87,7 @@ class RoomDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMainInfoTab(BuildContext context, Room room, AsyncValue<List<dynamic>> buildingsAsync) {
-    final buildingName = buildingsAsync.when(
-      data: (buildings) {
-        final building = buildings.firstWhere((b) => b.id == room.buildingId, orElse: () => null);
-        return building?.name ?? 'N/A';
-      },
-      loading: () => 'Загрузка...',
-      error: (e, s) => 'Ошибка',
-    );
-
+  Widget _buildMainInfoTab(BuildContext context, Room room) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -94,14 +95,23 @@ class RoomDetailScreen extends ConsumerWidget {
         children: [
           // TODO: Add Image Carousel
           _buildInfoRow(context, 'Название:', room.name),
+          if (room.roomNumber?.isNotEmpty == true)
+            _buildInfoRow(context, 'Номер:', room.roomNumber!),
           _buildInfoRow(context, 'Тип:', room.type.displayName),
           _buildInfoRow(context, 'Описание:', room.description ?? 'N/A'),
           _buildInfoRow(context, 'Этаж:', room.floor ?? 'N/A'),
-          _buildInfoRow(context, 'Корпус:', buildingName),
+          _buildInfoRow(context, 'Корпус:', room.buildingName ?? 'N/A'),
           _buildInfoRow(context, 'Вместимость:', '${room.maxCapacity} чел.'),
           _buildInfoRow(context, 'Площадь:', '${room.area ?? 'N/A'} м²'),
           _buildInfoRow(context, 'Зеркала:', room.hasMirrors ? 'Да' : 'Нет'),
-          _buildInfoRow(context, 'Аудиосистема:', room.hasSoundSystem ? 'Да' : 'Нет'),
+          _buildInfoRow(
+              context, 'Аудиосистема:', room.hasSoundSystem ? 'Да' : 'Нет'),
+          if (room.archivedAt != null)
+            _buildInfoRow(
+                context, 'Архивировано:', room.archivedAt!.toIso8601String()),
+          if (room.isUnderMaintenance)
+            _buildInfoRow(
+                context, 'На ремонте:', room.maintenanceNote ?? 'Да'),
         ],
       ),
     );

@@ -222,8 +222,7 @@ final Router router = Router()
   ..mount('/api/group_schedules', _adminHandler(_groupScheduleController.router.call))
 
 // Infrastructure routes
-  ..get('/api/rooms', (Request request) => _adminHandler(_roomController.getAllRooms)(request))
-  ..get('/api/rooms/<id>', (Request request, String id) => _adminHandler((Request req) => _roomController.getRoomById(req, id))(request))
+  ..mount('/api/rooms', _adminHandler(_roomController.router.call))
   ..get('/api/equipment/items', (Request request) => _adminHandler(_equipmentItemController.getAllEquipmentItems)(request))
   ..get('/api/equipment/types', (Request request) => _adminHandler(_equipmentTypeController.getAllEquipmentTypes)(request))
   ..mount('/api/buildings', _adminHandler(_buildingController.router.call));

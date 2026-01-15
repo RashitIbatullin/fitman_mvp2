@@ -24,28 +24,46 @@ mixin _$Room {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
+  @JsonKey(name: 'room_number')
+  String? get roomNumber => throw _privateConstructorUsedError;
   @RoomTypeConverter()
   RoomType get type => throw _privateConstructorUsedError;
   String? get floor => throw _privateConstructorUsedError;
-  String? get buildingId =>
-      throw _privateConstructorUsedError; // Вместимость и параметры
+  @JsonKey(name: 'building_id')
+  String? get buildingId => throw _privateConstructorUsedError;
+  String? get buildingName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'max_capacity')
   int get maxCapacity => throw _privateConstructorUsedError;
   double? get area => throw _privateConstructorUsedError;
+  @JsonKey(name: 'has_mirrors')
   bool get hasMirrors => throw _privateConstructorUsedError;
+  @JsonKey(name: 'has_sound_system')
   bool get hasSoundSystem => throw _privateConstructorUsedError;
   @TimeOfDayConverter()
+  @JsonKey(name: 'open_time')
   TimeOfDay? get openTime => throw _privateConstructorUsedError;
   @TimeOfDayConverter()
+  @JsonKey(name: 'close_time')
   TimeOfDay? get closeTime => throw _privateConstructorUsedError;
+  @JsonKey(name: 'working_days')
   List<int> get workingDays => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_active')
   bool get isActive => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_under_maintenance')
   bool get isUnderMaintenance => throw _privateConstructorUsedError;
+  @JsonKey(name: 'maintenance_note')
   String? get maintenanceNote => throw _privateConstructorUsedError;
+  @JsonKey(name: 'maintenance_until')
   DateTime? get maintenanceUntil => throw _privateConstructorUsedError;
+  @JsonKey(name: 'equipment_ids')
   List<String> get equipmentIds => throw _privateConstructorUsedError;
+  @JsonKey(name: 'photo_urls')
   List<String> get photoUrls => throw _privateConstructorUsedError;
+  @JsonKey(name: 'floor_plan_url')
   String? get floorPlanUrl => throw _privateConstructorUsedError;
   String? get note => throw _privateConstructorUsedError;
+  @JsonKey(name: 'archived_at')
+  DateTime? get archivedAt => throw _privateConstructorUsedError;
 
   /// Serializes this Room to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -65,24 +83,27 @@ abstract class $RoomCopyWith<$Res> {
     String id,
     String name,
     String? description,
+    @JsonKey(name: 'room_number') String? roomNumber,
     @RoomTypeConverter() RoomType type,
     String? floor,
-    String? buildingId,
-    int maxCapacity,
+    @JsonKey(name: 'building_id') String? buildingId,
+    String? buildingName,
+    @JsonKey(name: 'max_capacity') int maxCapacity,
     double? area,
-    bool hasMirrors,
-    bool hasSoundSystem,
-    @TimeOfDayConverter() TimeOfDay? openTime,
-    @TimeOfDayConverter() TimeOfDay? closeTime,
-    List<int> workingDays,
-    bool isActive,
-    bool isUnderMaintenance,
-    String? maintenanceNote,
-    DateTime? maintenanceUntil,
-    List<String> equipmentIds,
-    List<String> photoUrls,
-    String? floorPlanUrl,
+    @JsonKey(name: 'has_mirrors') bool hasMirrors,
+    @JsonKey(name: 'has_sound_system') bool hasSoundSystem,
+    @TimeOfDayConverter() @JsonKey(name: 'open_time') TimeOfDay? openTime,
+    @TimeOfDayConverter() @JsonKey(name: 'close_time') TimeOfDay? closeTime,
+    @JsonKey(name: 'working_days') List<int> workingDays,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'is_under_maintenance') bool isUnderMaintenance,
+    @JsonKey(name: 'maintenance_note') String? maintenanceNote,
+    @JsonKey(name: 'maintenance_until') DateTime? maintenanceUntil,
+    @JsonKey(name: 'equipment_ids') List<String> equipmentIds,
+    @JsonKey(name: 'photo_urls') List<String> photoUrls,
+    @JsonKey(name: 'floor_plan_url') String? floorPlanUrl,
     String? note,
+    @JsonKey(name: 'archived_at') DateTime? archivedAt,
   });
 }
 
@@ -104,9 +125,11 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
     Object? id = null,
     Object? name = null,
     Object? description = freezed,
+    Object? roomNumber = freezed,
     Object? type = null,
     Object? floor = freezed,
     Object? buildingId = freezed,
+    Object? buildingName = freezed,
     Object? maxCapacity = null,
     Object? area = freezed,
     Object? hasMirrors = null,
@@ -122,6 +145,7 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
     Object? photoUrls = null,
     Object? floorPlanUrl = freezed,
     Object? note = freezed,
+    Object? archivedAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -137,6 +161,10 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
                       as String?,
+            roomNumber: freezed == roomNumber
+                ? _value.roomNumber
+                : roomNumber // ignore: cast_nullable_to_non_nullable
+                      as String?,
             type: null == type
                 ? _value.type
                 : type // ignore: cast_nullable_to_non_nullable
@@ -148,6 +176,10 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
             buildingId: freezed == buildingId
                 ? _value.buildingId
                 : buildingId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            buildingName: freezed == buildingName
+                ? _value.buildingName
+                : buildingName // ignore: cast_nullable_to_non_nullable
                       as String?,
             maxCapacity: null == maxCapacity
                 ? _value.maxCapacity
@@ -209,6 +241,10 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
                       as String?,
+            archivedAt: freezed == archivedAt
+                ? _value.archivedAt
+                : archivedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
           )
           as $Val,
     );
@@ -227,24 +263,27 @@ abstract class _$$RoomImplCopyWith<$Res> implements $RoomCopyWith<$Res> {
     String id,
     String name,
     String? description,
+    @JsonKey(name: 'room_number') String? roomNumber,
     @RoomTypeConverter() RoomType type,
     String? floor,
-    String? buildingId,
-    int maxCapacity,
+    @JsonKey(name: 'building_id') String? buildingId,
+    String? buildingName,
+    @JsonKey(name: 'max_capacity') int maxCapacity,
     double? area,
-    bool hasMirrors,
-    bool hasSoundSystem,
-    @TimeOfDayConverter() TimeOfDay? openTime,
-    @TimeOfDayConverter() TimeOfDay? closeTime,
-    List<int> workingDays,
-    bool isActive,
-    bool isUnderMaintenance,
-    String? maintenanceNote,
-    DateTime? maintenanceUntil,
-    List<String> equipmentIds,
-    List<String> photoUrls,
-    String? floorPlanUrl,
+    @JsonKey(name: 'has_mirrors') bool hasMirrors,
+    @JsonKey(name: 'has_sound_system') bool hasSoundSystem,
+    @TimeOfDayConverter() @JsonKey(name: 'open_time') TimeOfDay? openTime,
+    @TimeOfDayConverter() @JsonKey(name: 'close_time') TimeOfDay? closeTime,
+    @JsonKey(name: 'working_days') List<int> workingDays,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'is_under_maintenance') bool isUnderMaintenance,
+    @JsonKey(name: 'maintenance_note') String? maintenanceNote,
+    @JsonKey(name: 'maintenance_until') DateTime? maintenanceUntil,
+    @JsonKey(name: 'equipment_ids') List<String> equipmentIds,
+    @JsonKey(name: 'photo_urls') List<String> photoUrls,
+    @JsonKey(name: 'floor_plan_url') String? floorPlanUrl,
     String? note,
+    @JsonKey(name: 'archived_at') DateTime? archivedAt,
   });
 }
 
@@ -263,9 +302,11 @@ class __$$RoomImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? description = freezed,
+    Object? roomNumber = freezed,
     Object? type = null,
     Object? floor = freezed,
     Object? buildingId = freezed,
+    Object? buildingName = freezed,
     Object? maxCapacity = null,
     Object? area = freezed,
     Object? hasMirrors = null,
@@ -281,6 +322,7 @@ class __$$RoomImplCopyWithImpl<$Res>
     Object? photoUrls = null,
     Object? floorPlanUrl = freezed,
     Object? note = freezed,
+    Object? archivedAt = freezed,
   }) {
     return _then(
       _$RoomImpl(
@@ -296,6 +338,10 @@ class __$$RoomImplCopyWithImpl<$Res>
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
                   as String?,
+        roomNumber: freezed == roomNumber
+            ? _value.roomNumber
+            : roomNumber // ignore: cast_nullable_to_non_nullable
+                  as String?,
         type: null == type
             ? _value.type
             : type // ignore: cast_nullable_to_non_nullable
@@ -307,6 +353,10 @@ class __$$RoomImplCopyWithImpl<$Res>
         buildingId: freezed == buildingId
             ? _value.buildingId
             : buildingId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        buildingName: freezed == buildingName
+            ? _value.buildingName
+            : buildingName // ignore: cast_nullable_to_non_nullable
                   as String?,
         maxCapacity: null == maxCapacity
             ? _value.maxCapacity
@@ -368,6 +418,10 @@ class __$$RoomImplCopyWithImpl<$Res>
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
                   as String?,
+        archivedAt: freezed == archivedAt
+            ? _value.archivedAt
+            : archivedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
       ),
     );
   }
@@ -380,24 +434,27 @@ class _$RoomImpl implements _Room {
     required this.id,
     required this.name,
     this.description,
+    @JsonKey(name: 'room_number') this.roomNumber,
     @RoomTypeConverter() required this.type,
     this.floor,
-    this.buildingId,
-    required this.maxCapacity,
+    @JsonKey(name: 'building_id') this.buildingId,
+    this.buildingName,
+    @JsonKey(name: 'max_capacity') this.maxCapacity = 30,
     this.area,
-    this.hasMirrors = false,
-    this.hasSoundSystem = false,
-    @TimeOfDayConverter() this.openTime,
-    @TimeOfDayConverter() this.closeTime,
-    final List<int> workingDays = const [],
-    this.isActive = true,
-    this.isUnderMaintenance = false,
-    this.maintenanceNote,
-    this.maintenanceUntil,
-    final List<String> equipmentIds = const [],
-    final List<String> photoUrls = const [],
-    this.floorPlanUrl,
+    @JsonKey(name: 'has_mirrors') this.hasMirrors = false,
+    @JsonKey(name: 'has_sound_system') this.hasSoundSystem = false,
+    @TimeOfDayConverter() @JsonKey(name: 'open_time') this.openTime,
+    @TimeOfDayConverter() @JsonKey(name: 'close_time') this.closeTime,
+    @JsonKey(name: 'working_days') final List<int> workingDays = const [],
+    @JsonKey(name: 'is_active') this.isActive = true,
+    @JsonKey(name: 'is_under_maintenance') this.isUnderMaintenance = false,
+    @JsonKey(name: 'maintenance_note') this.maintenanceNote,
+    @JsonKey(name: 'maintenance_until') this.maintenanceUntil,
+    @JsonKey(name: 'equipment_ids') final List<String> equipmentIds = const [],
+    @JsonKey(name: 'photo_urls') final List<String> photoUrls = const [],
+    @JsonKey(name: 'floor_plan_url') this.floorPlanUrl,
     this.note,
+    @JsonKey(name: 'archived_at') this.archivedAt,
   }) : _workingDays = workingDays,
        _equipmentIds = equipmentIds,
        _photoUrls = photoUrls;
@@ -412,32 +469,40 @@ class _$RoomImpl implements _Room {
   @override
   final String? description;
   @override
+  @JsonKey(name: 'room_number')
+  final String? roomNumber;
+  @override
   @RoomTypeConverter()
   final RoomType type;
   @override
   final String? floor;
   @override
+  @JsonKey(name: 'building_id')
   final String? buildingId;
-  // Вместимость и параметры
   @override
+  final String? buildingName;
+  @override
+  @JsonKey(name: 'max_capacity')
   final int maxCapacity;
   @override
   final double? area;
   @override
-  @JsonKey()
+  @JsonKey(name: 'has_mirrors')
   final bool hasMirrors;
   @override
-  @JsonKey()
+  @JsonKey(name: 'has_sound_system')
   final bool hasSoundSystem;
   @override
   @TimeOfDayConverter()
+  @JsonKey(name: 'open_time')
   final TimeOfDay? openTime;
   @override
   @TimeOfDayConverter()
+  @JsonKey(name: 'close_time')
   final TimeOfDay? closeTime;
   final List<int> _workingDays;
   @override
-  @JsonKey()
+  @JsonKey(name: 'working_days')
   List<int> get workingDays {
     if (_workingDays is EqualUnmodifiableListView) return _workingDays;
     // ignore: implicit_dynamic_type
@@ -445,18 +510,20 @@ class _$RoomImpl implements _Room {
   }
 
   @override
-  @JsonKey()
+  @JsonKey(name: 'is_active')
   final bool isActive;
   @override
-  @JsonKey()
+  @JsonKey(name: 'is_under_maintenance')
   final bool isUnderMaintenance;
   @override
+  @JsonKey(name: 'maintenance_note')
   final String? maintenanceNote;
   @override
+  @JsonKey(name: 'maintenance_until')
   final DateTime? maintenanceUntil;
   final List<String> _equipmentIds;
   @override
-  @JsonKey()
+  @JsonKey(name: 'equipment_ids')
   List<String> get equipmentIds {
     if (_equipmentIds is EqualUnmodifiableListView) return _equipmentIds;
     // ignore: implicit_dynamic_type
@@ -465,7 +532,7 @@ class _$RoomImpl implements _Room {
 
   final List<String> _photoUrls;
   @override
-  @JsonKey()
+  @JsonKey(name: 'photo_urls')
   List<String> get photoUrls {
     if (_photoUrls is EqualUnmodifiableListView) return _photoUrls;
     // ignore: implicit_dynamic_type
@@ -473,13 +540,17 @@ class _$RoomImpl implements _Room {
   }
 
   @override
+  @JsonKey(name: 'floor_plan_url')
   final String? floorPlanUrl;
   @override
   final String? note;
+  @override
+  @JsonKey(name: 'archived_at')
+  final DateTime? archivedAt;
 
   @override
   String toString() {
-    return 'Room(id: $id, name: $name, description: $description, type: $type, floor: $floor, buildingId: $buildingId, maxCapacity: $maxCapacity, area: $area, hasMirrors: $hasMirrors, hasSoundSystem: $hasSoundSystem, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, isUnderMaintenance: $isUnderMaintenance, maintenanceNote: $maintenanceNote, maintenanceUntil: $maintenanceUntil, equipmentIds: $equipmentIds, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note)';
+    return 'Room(id: $id, name: $name, description: $description, roomNumber: $roomNumber, type: $type, floor: $floor, buildingId: $buildingId, buildingName: $buildingName, maxCapacity: $maxCapacity, area: $area, hasMirrors: $hasMirrors, hasSoundSystem: $hasSoundSystem, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, isUnderMaintenance: $isUnderMaintenance, maintenanceNote: $maintenanceNote, maintenanceUntil: $maintenanceUntil, equipmentIds: $equipmentIds, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note, archivedAt: $archivedAt)';
   }
 
   @override
@@ -491,10 +562,14 @@ class _$RoomImpl implements _Room {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.description, description) ||
                 other.description == description) &&
+            (identical(other.roomNumber, roomNumber) ||
+                other.roomNumber == roomNumber) &&
             (identical(other.type, type) || other.type == type) &&
             (identical(other.floor, floor) || other.floor == floor) &&
             (identical(other.buildingId, buildingId) ||
                 other.buildingId == buildingId) &&
+            (identical(other.buildingName, buildingName) ||
+                other.buildingName == buildingName) &&
             (identical(other.maxCapacity, maxCapacity) ||
                 other.maxCapacity == maxCapacity) &&
             (identical(other.area, area) || other.area == area) &&
@@ -528,7 +603,9 @@ class _$RoomImpl implements _Room {
             ) &&
             (identical(other.floorPlanUrl, floorPlanUrl) ||
                 other.floorPlanUrl == floorPlanUrl) &&
-            (identical(other.note, note) || other.note == note));
+            (identical(other.note, note) || other.note == note) &&
+            (identical(other.archivedAt, archivedAt) ||
+                other.archivedAt == archivedAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -538,9 +615,11 @@ class _$RoomImpl implements _Room {
     id,
     name,
     description,
+    roomNumber,
     type,
     floor,
     buildingId,
+    buildingName,
     maxCapacity,
     area,
     hasMirrors,
@@ -556,6 +635,7 @@ class _$RoomImpl implements _Room {
     const DeepCollectionEquality().hash(_photoUrls),
     floorPlanUrl,
     note,
+    archivedAt,
   ]);
 
   /// Create a copy of Room
@@ -577,24 +657,29 @@ abstract class _Room implements Room {
     required final String id,
     required final String name,
     final String? description,
+    @JsonKey(name: 'room_number') final String? roomNumber,
     @RoomTypeConverter() required final RoomType type,
     final String? floor,
-    final String? buildingId,
-    required final int maxCapacity,
+    @JsonKey(name: 'building_id') final String? buildingId,
+    final String? buildingName,
+    @JsonKey(name: 'max_capacity') final int maxCapacity,
     final double? area,
-    final bool hasMirrors,
-    final bool hasSoundSystem,
-    @TimeOfDayConverter() final TimeOfDay? openTime,
-    @TimeOfDayConverter() final TimeOfDay? closeTime,
-    final List<int> workingDays,
-    final bool isActive,
-    final bool isUnderMaintenance,
-    final String? maintenanceNote,
-    final DateTime? maintenanceUntil,
-    final List<String> equipmentIds,
-    final List<String> photoUrls,
-    final String? floorPlanUrl,
+    @JsonKey(name: 'has_mirrors') final bool hasMirrors,
+    @JsonKey(name: 'has_sound_system') final bool hasSoundSystem,
+    @TimeOfDayConverter() @JsonKey(name: 'open_time') final TimeOfDay? openTime,
+    @TimeOfDayConverter()
+    @JsonKey(name: 'close_time')
+    final TimeOfDay? closeTime,
+    @JsonKey(name: 'working_days') final List<int> workingDays,
+    @JsonKey(name: 'is_active') final bool isActive,
+    @JsonKey(name: 'is_under_maintenance') final bool isUnderMaintenance,
+    @JsonKey(name: 'maintenance_note') final String? maintenanceNote,
+    @JsonKey(name: 'maintenance_until') final DateTime? maintenanceUntil,
+    @JsonKey(name: 'equipment_ids') final List<String> equipmentIds,
+    @JsonKey(name: 'photo_urls') final List<String> photoUrls,
+    @JsonKey(name: 'floor_plan_url') final String? floorPlanUrl,
     final String? note,
+    @JsonKey(name: 'archived_at') final DateTime? archivedAt,
   }) = _$RoomImpl;
 
   factory _Room.fromJson(Map<String, dynamic> json) = _$RoomImpl.fromJson;
@@ -606,44 +691,66 @@ abstract class _Room implements Room {
   @override
   String? get description;
   @override
+  @JsonKey(name: 'room_number')
+  String? get roomNumber;
+  @override
   @RoomTypeConverter()
   RoomType get type;
   @override
   String? get floor;
   @override
-  String? get buildingId; // Вместимость и параметры
+  @JsonKey(name: 'building_id')
+  String? get buildingId;
   @override
+  String? get buildingName;
+  @override
+  @JsonKey(name: 'max_capacity')
   int get maxCapacity;
   @override
   double? get area;
   @override
+  @JsonKey(name: 'has_mirrors')
   bool get hasMirrors;
   @override
+  @JsonKey(name: 'has_sound_system')
   bool get hasSoundSystem;
   @override
   @TimeOfDayConverter()
+  @JsonKey(name: 'open_time')
   TimeOfDay? get openTime;
   @override
   @TimeOfDayConverter()
+  @JsonKey(name: 'close_time')
   TimeOfDay? get closeTime;
   @override
+  @JsonKey(name: 'working_days')
   List<int> get workingDays;
   @override
+  @JsonKey(name: 'is_active')
   bool get isActive;
   @override
+  @JsonKey(name: 'is_under_maintenance')
   bool get isUnderMaintenance;
   @override
+  @JsonKey(name: 'maintenance_note')
   String? get maintenanceNote;
   @override
+  @JsonKey(name: 'maintenance_until')
   DateTime? get maintenanceUntil;
   @override
+  @JsonKey(name: 'equipment_ids')
   List<String> get equipmentIds;
   @override
+  @JsonKey(name: 'photo_urls')
   List<String> get photoUrls;
   @override
+  @JsonKey(name: 'floor_plan_url')
   String? get floorPlanUrl;
   @override
   String? get note;
+  @override
+  @JsonKey(name: 'archived_at')
+  DateTime? get archivedAt;
 
   /// Create a copy of Room
   /// with the given fields replaced by the non-null parameter values.

@@ -58,10 +58,27 @@ class ApiService {
 
   // --- Infrastructure API Methods ---
 
-  static Future<List<Room>> getAllRooms() async {
+  static Future<List<Room>> getAllRooms({String? buildingId, int? roomType, bool? isUnderMaintenance, bool? isArchived}) async {
     try {
+      final queryParameters = <String, String>{};
+      if (buildingId != null) {
+        queryParameters['buildingId'] = buildingId;
+      }
+      if (roomType != null) {
+        queryParameters['roomType'] = roomType.toString();
+      }
+      if (isUnderMaintenance != null) {
+        queryParameters['isUnderMaintenance'] = isUnderMaintenance.toString();
+      }
+      if (isArchived != null) {
+        queryParameters['isArchived'] = isArchived.toString();
+      }
+
+      final uri = Uri.parse('$baseUrl/api/rooms')
+          .replace(queryParameters: queryParameters.isNotEmpty ? queryParameters : null);
+
       final response = await http.get(
-        Uri.parse('$baseUrl/api/rooms'),
+        uri,
         headers: _headers,
       );
       if (response.statusCode == 200) {
@@ -156,11 +173,25 @@ class ApiService {
 
   static Future<Room> updateRoom(String id, Room room) async {
     try {
+      final uri = Uri.parse('$baseUrl/api/rooms/$id');
+      final headers = _headers;
+      final body = jsonEncode(room.toJson());
+
+      print('--- Update Room Request ---');
+      print('URI: $uri');
+      print('Headers: $headers');
+      print('Body: $body');
+
       final response = await http.put(
-        Uri.parse('$baseUrl/api/rooms/$id'),
-        headers: _headers,
-        body: jsonEncode(room.toJson()),
+        uri,
+        headers: headers,
+        body: body,
       );
+
+      print('--- Update Room Response ---');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return Room.fromJson(data);
@@ -169,7 +200,8 @@ class ApiService {
         throw Exception(error['error'] ?? 'Failed to update room');
       }
     } catch (e) {
-      print('Update room error: $e');
+      print('--- Update Room Error ---');
+      print('Exception: $e');
       rethrow;
     }
   }

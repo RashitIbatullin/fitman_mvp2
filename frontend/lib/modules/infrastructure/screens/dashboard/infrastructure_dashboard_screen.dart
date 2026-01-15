@@ -1,13 +1,14 @@
 import 'package:fitman_app/modules/infrastructure/providers/equipment_provider.dart';
-import 'package:fitman_app/modules/infrastructure/providers/room_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/room/room.model.dart';
 import '../../models/equipment/equipment_item.model.dart';
 import '../../models/equipment/equipment_status.enum.dart';
-import '../room/rooms_list_screen.dart';
 import '../room/room_create_screen.dart';
 import '../building/buildings_list_screen.dart';
+import '../../providers/room_provider.dart'; // Import the new provider definition
+import '../room/rooms_list_screen.dart';
+import '../room/room_detail_screen.dart';
 
 class InfrastructureDashboardScreen extends ConsumerWidget {
   const InfrastructureDashboardScreen({super.key});
@@ -130,7 +131,15 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
                       width: 120, // Increased width
                       height: 120, // Increased height
                       child: InkWell(
-                        onTap: () { /* TODO: Navigate to room details */ },
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  RoomDetailScreen(roomId: room.id),
+                            ),
+                          );
+                        },
                         child: Container(
                           decoration: BoxDecoration(
                             color: _getRoomColor(room),

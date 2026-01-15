@@ -24,11 +24,8 @@ mixin _$Building {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String get address => throw _privateConstructorUsedError;
-  String? get note =>
-      throw _privateConstructorUsedError; // The analyzer may sometimes incorrectly report an 'invalid_annotation_target'
-  // error on the line below, but this annotation is correct and necessary
-  // for mapping the JSON key 'archived_at' to the 'archivedAt' field.
-  @JsonKey(name: 'archived_at')
+  String? get note => throw _privateConstructorUsedError;
+  @NullableDateTimeConverter()
   DateTime? get archivedAt => throw _privateConstructorUsedError;
 
   /// Serializes this Building to a JSON map.
@@ -51,7 +48,7 @@ abstract class $BuildingCopyWith<$Res> {
     String name,
     String address,
     String? note,
-    @JsonKey(name: 'archived_at') DateTime? archivedAt,
+    @NullableDateTimeConverter() DateTime? archivedAt,
   });
 }
 
@@ -118,7 +115,7 @@ abstract class _$$BuildingImplCopyWith<$Res>
     String name,
     String address,
     String? note,
-    @JsonKey(name: 'archived_at') DateTime? archivedAt,
+    @NullableDateTimeConverter() DateTime? archivedAt,
   });
 }
 
@@ -177,7 +174,7 @@ class _$BuildingImpl implements _Building {
     required this.name,
     required this.address,
     this.note,
-    @JsonKey(name: 'archived_at') this.archivedAt,
+    @NullableDateTimeConverter() this.archivedAt,
   });
 
   factory _$BuildingImpl.fromJson(Map<String, dynamic> json) =>
@@ -191,11 +188,8 @@ class _$BuildingImpl implements _Building {
   final String address;
   @override
   final String? note;
-  // The analyzer may sometimes incorrectly report an 'invalid_annotation_target'
-  // error on the line below, but this annotation is correct and necessary
-  // for mapping the JSON key 'archived_at' to the 'archivedAt' field.
   @override
-  @JsonKey(name: 'archived_at')
+  @NullableDateTimeConverter()
   final DateTime? archivedAt;
 
   @override
@@ -241,7 +235,7 @@ abstract class _Building implements Building {
     required final String name,
     required final String address,
     final String? note,
-    @JsonKey(name: 'archived_at') final DateTime? archivedAt,
+    @NullableDateTimeConverter() final DateTime? archivedAt,
   }) = _$BuildingImpl;
 
   factory _Building.fromJson(Map<String, dynamic> json) =
@@ -254,11 +248,9 @@ abstract class _Building implements Building {
   @override
   String get address;
   @override
-  String? get note; // The analyzer may sometimes incorrectly report an 'invalid_annotation_target'
-  // error on the line below, but this annotation is correct and necessary
-  // for mapping the JSON key 'archived_at' to the 'archivedAt' field.
+  String? get note;
   @override
-  @JsonKey(name: 'archived_at')
+  @NullableDateTimeConverter()
   DateTime? get archivedAt;
 
   /// Create a copy of Building

@@ -417,6 +417,7 @@ CREATE TABLE rooms (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
+  room_number VARCHAR(50), -- New field for room/cabinet number
   type SMALLINT NOT NULL,  -- RoomType enum (0:groupHall, 1:cardioZone, 2:strengthZone, 3:mixedZone, 4:studio, 5:boxingRing, 6:pool, 7:lockerRoom, 8:reception, 9:office, 10:other)
   
   -- Локация
@@ -424,7 +425,7 @@ CREATE TABLE rooms (
   building_id BIGINT REFERENCES buildings(id),
   
   -- Характеристики
-  max_capacity INT NOT NULL DEFAULT 10,
+  max_capacity INT NOT NULL DEFAULT 30,
   area DECIMAL(5,2),
   has_mirrors BOOLEAN DEFAULT false,
   has_sound_system BOOLEAN DEFAULT false,

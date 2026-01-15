@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:postgres/postgres.dart';
+import 'package:postgres/postgres.dart'; // Import for Time type
 import 'package:fitman_backend/modules/infrastructure/models/room/room_type.enum.dart';
 
 class Room {
@@ -7,94 +7,211 @@ class Room {
     this.id,
     required this.name,
     this.description,
+    this.roomNumber,
     required this.type,
     this.floor,
-    this.building,
+    this.buildingId,
+    this.buildingName,
     required this.maxCapacity,
     this.area,
     this.hasMirrors = false,
     this.hasSoundSystem = false,
     this.openTime,
     this.closeTime,
-    this.workingDays = const [],
+    this.workingDays,
     this.isActive = true,
     this.isUnderMaintenance = false,
     this.maintenanceNote,
     this.maintenanceUntil,
-    this.equipmentIds = const [],
-    this.photoUrls = const [],
+    this.photoUrls,
     this.floorPlanUrl,
     this.note,
+    this.createdAt,
+    this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
+    this.archivedAt,
+    this.archivedBy,
   });
 
   final String? id;
   final String name;
   final String? description;
+  final String? roomNumber;
   final RoomType type;
-
-  // Локация
   final String? floor;
-  final String? building;
-
-  // Вместимость и параметры
+  final String? buildingId;
+  final String? buildingName;
   final int maxCapacity;
   final double? area;
   final bool hasMirrors;
   final bool hasSoundSystem;
-
-  // Расписание доступности
-  final String? openTime;
-  final String? closeTime;
-  final List<int> workingDays;
-
-  // Статус
+  final Time? openTime;
+  final Time? closeTime;
+  final List<int>? workingDays;
   final bool isActive;
   final bool isUnderMaintenance;
   final String? maintenanceNote;
   final DateTime? maintenanceUntil;
-
-  // Оборудование в помещении
-  final List<String> equipmentIds;
-
-  // Фотографии
-  final List<String> photoUrls;
+  final List<String>? photoUrls;
   final String? floorPlanUrl;
   final String? note;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final String? createdBy;
+  final String? updatedBy;
+  final DateTime? archivedAt;
+  final String? archivedBy;
 
   factory Room.fromMap(Map<String, dynamic> map) {
+    // Handle area conversion
     final areaValue = map['area'];
-    final openTimeValue = map['open_time'];
-    final closeTimeValue = map['close_time'];
+    final double? parsedArea = areaValue == null
+        ? null
+        : (areaValue is String ? double.tryParse(areaValue) : (areaValue as num).toDouble());
+
+    // Handle Time conversion
+    final Time? parsedOpenTime = map['open_time'] is DateTime
+        ? Time(
+            (map['open_time'] as DateTime).hour,
+            (map['open_time'] as DateTime).minute,
+            (map['open_time'] as DateTime).second,
+          )
+        : null; // Assuming null if not DateTime from DB
+    final Time? parsedCloseTime = map['close_time'] is DateTime
+        ? Time(
+            (map['close_time'] as DateTime).hour,
+            (map['close_time'] as DateTime).minute,
+            (map['close_time'] as DateTime).second,
+          )
+        : null; // Assuming null if not DateTime from DB
+
+    // Handle workingDays (JSONB)
+    dynamic decodedWorkingDays;
+    if (map['working_days'] is String) {
+      decodedWorkingDays = jsonDecode(map['working_days'] as String);
+    } else {
+      decodedWorkingDays = map['working_days'];
+    }
+    final List<int>? parsedWorkingDays =
+        (decodedWorkingDays is List) ? decodedWorkingDays.cast<int>() : null;
+
+    // Handle photoUrls (JSONB)
+    dynamic decodedPhotoUrls;
+    if (map['photo_urls'] is String) {
+      decodedPhotoUrls = jsonDecode(map['photo_urls'] as String);
+    } else {
+      decodedPhotoUrls = map['photo_urls'];
+    }
+    final List<String>? parsedPhotoUrls =
+        (decodedPhotoUrls is List) ? decodedPhotoUrls.cast<String>() : null;
 
     return Room(
-      id: map['id'].toString(),
+      id: map['id']?.toString(),
       name: map['name'] as String,
       description: map['description'] as String?,
+      roomNumber: map['room_number'] as String?,
       type: RoomType.values.firstWhere((e) => e.value == map['type'] as int),
       floor: map['floor'] as String?,
-      building: map['building'] as String?,
+      buildingId: map['building_id']?.toString(),
+      buildingName: map['building_name'] as String?,
       maxCapacity: map['max_capacity'] as int,
-      area: areaValue is String ? double.tryParse(areaValue) : (areaValue as num?)?.toDouble(),
+      area: parsedArea,
       hasMirrors: map['has_mirrors'] as bool,
       hasSoundSystem: map['has_sound_system'] as bool,
-      openTime: openTimeValue is Time ? openTimeValue.toString() : openTimeValue as String?,
-      closeTime: closeTimeValue is Time ? closeTimeValue.toString() : closeTimeValue as String?,
-      workingDays: (map['working_days'] as List<dynamic>?)
-              ?.map((e) => e as int)
-              .toList() ??
-          const [],
+      openTime: parsedOpenTime,
+      closeTime: parsedCloseTime,
+      workingDays: parsedWorkingDays,
       isActive: map['is_active'] as bool,
       isUnderMaintenance: map['is_under_maintenance'] as bool,
       maintenanceNote: map['maintenance_note'] as String?,
-      maintenanceUntil: map['maintenance_until'] as DateTime?,
-      equipmentIds: const [], 
-      photoUrls: (map['photo_urls'] is String
-              ? (jsonDecode(map['photo_urls']) as List<dynamic>)
-              : (map['photo_urls'] as List<dynamic>?))
-          ?.map((e) => e.toString())
-          .toList() ?? const [],
+      maintenanceUntil: map['maintenance_until'] is DateTime
+          ? map['maintenance_until'] as DateTime
+          : (map['maintenance_until'] == null
+              ? null
+              : DateTime.parse(map['maintenance_until'] as String)),
+      photoUrls: parsedPhotoUrls,
       floorPlanUrl: map['floor_plan_url'] as String?,
       note: map['note'] as String?,
+      createdAt: map['created_at'] is DateTime
+          ? map['created_at'] as DateTime
+          : (map['created_at'] == null
+              ? null
+              : DateTime.parse(map['created_at'] as String)),
+      updatedAt: map['updated_at'] is DateTime
+          ? map['updated_at'] as DateTime
+          : (map['updated_at'] == null
+              ? null
+              : DateTime.parse(map['updated_at'] as String)),
+      createdBy: map['created_by']?.toString(),
+      updatedBy: map['updated_by']?.toString(),
+      archivedAt: map['archived_at'] is DateTime
+          ? map['archived_at'] as DateTime
+          : (map['archived_at'] == null
+              ? null
+              : DateTime.parse(map['archived_at'] as String)),
+      archivedBy: map['archived_by']?.toString(),
+    );
+  }
+
+  factory Room.fromJson(Map<String, dynamic> json) {
+    // This is for JSON coming from frontend or external API, which typically doesn't use snake_case for fields
+    // and might not have all DB-generated fields.
+    final double? parsedArea = json['area'] == null
+        ? null
+        : (json['area'] is String
+            ? double.tryParse(json['area'])
+            : (json['area'] as num).toDouble());
+
+    // Manual parsing of TimeOfDay strings if coming from JSON
+    Time? parseTimeFromString(String? timeString) {
+      if (timeString == null) return null;
+      final parts = timeString.split(':');
+      if (parts.length >= 2) {
+        return Time(int.parse(parts[0]), int.parse(parts[1]));
+      }
+      return null;
+    }
+
+    return Room(
+      id: json['id'] as String?,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      roomNumber: json['roomNumber'] as String?,
+      type: RoomType.values.firstWhere((e) => e.value == json['type'] as int),
+      floor: json['floor'] as String?,
+      buildingId: json['buildingId'] as String?,
+      buildingName: json['buildingName'] as String?,
+      maxCapacity: json['maxCapacity'] as int,
+      area: parsedArea,
+      hasMirrors: json['hasMirrors'] as bool? ?? false,
+      hasSoundSystem: json['hasSoundSystem'] as bool? ?? false,
+      openTime: parseTimeFromString(json['openTime'] as String?),
+      closeTime: parseTimeFromString(json['closeTime'] as String?),
+      workingDays:
+          (json['workingDays'] as List<dynamic>?)?.cast<int>() ?? const [],
+      isActive: json['isActive'] as bool? ?? true,
+      isUnderMaintenance: json['isUnderMaintenance'] as bool? ?? false,
+      maintenanceNote: json['maintenanceNote'] as String?,
+      maintenanceUntil: json['maintenanceUntil'] == null
+          ? null
+          : DateTime.parse(json['maintenanceUntil'] as String),
+      photoUrls:
+          (json['photoUrls'] as List<dynamic>?)?.cast<String>() ?? const [],
+      floorPlanUrl: json['floorPlanUrl'] as String?,
+      note: json['note'] as String?,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
+      createdBy: json['createdBy'] as String?,
+      updatedBy: json['updatedBy'] as String?,
+      archivedAt: json['archivedAt'] == null
+          ? null
+          : DateTime.parse(json['archivedAt'] as String),
+      archivedBy: json['archivedBy'] as String?,
     );
   }
 
@@ -103,24 +220,31 @@ class Room {
       'id': id,
       'name': name,
       'description': description,
+      'room_number': roomNumber,
       'type': type.value, // Convert enum to int value
       'floor': floor,
-      'building': building,
-      'maxCapacity': maxCapacity,
+      'building_id': buildingId, // Use snake_case for DB
+      'buildingName': buildingName,
+      'max_capacity': maxCapacity, // Use snake_case for DB
       'area': area,
-      'hasMirrors': hasMirrors,
-      'hasSoundSystem': hasSoundSystem,
-      'openTime': openTime,
-      'closeTime': closeTime,
-      'workingDays': workingDays,
-      'isActive': isActive,
-      'isUnderMaintenance': isUnderMaintenance,
-      'maintenanceNote': maintenanceNote,
-      'maintenanceUntil': maintenanceUntil?.toIso8601String(),
-      'equipmentIds': equipmentIds,
-      'photoUrls': photoUrls,
-      'floorPlanUrl': floorPlanUrl,
+      'has_mirrors': hasMirrors,
+      'has_sound_system': hasSoundSystem,
+      'open_time': openTime?.toString(), // Convert Time to string
+      'close_time': closeTime?.toString(), // Convert Time to string
+      'working_days': workingDays,
+      'is_active': isActive,
+      'is_under_maintenance': isUnderMaintenance,
+      'maintenance_note': maintenanceNote,
+      'maintenance_until': maintenanceUntil?.toIso8601String(),
+      'photo_urls': photoUrls, // Use snake_case for DB
+      'floor_plan_url': floorPlanUrl, // Use snake_case for DB
       'note': note,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+      'created_by': createdBy,
+      'updated_by': updatedBy,
+      'archived_at': archivedAt?.toIso8601String(),
+      'archived_by': archivedBy,
     };
   }
 }
