@@ -25,6 +25,7 @@ import '../modules/groups/controllers/training_group_types_controller.dart';
 import '../modules/infrastructure/controllers/room.controller.dart';
 import '../modules/infrastructure/controllers/equipment_item.controller.dart';
 import '../modules/infrastructure/controllers/equipment_type.controller.dart';
+import '../modules/infrastructure/controllers/building_controller.dart';
 import '../config/database.dart'; // Add this import
 import '../modules/roles/controllers/manager_controller.dart'; // New manager controller
 import '../modules/roles/controllers/instructor_controller.dart'; // New instructor controller
@@ -43,6 +44,7 @@ final _trainingGroupTypesController = TrainingGroupTypesController(_db);
 final _roomController = RoomController(_db);
 final _equipmentItemController = EquipmentItemController(_db);
 final _equipmentTypeController = EquipmentTypeController(_db);
+final _buildingController = BuildingController(_db);
 
 // Создаем обертки для protected routes
 Handler _protectedHandler(Handler handler) {
@@ -223,4 +225,5 @@ final Router router = Router()
   ..get('/api/rooms', (Request request) => _adminHandler(_roomController.getAllRooms)(request))
   ..get('/api/rooms/<id>', (Request request, String id) => _adminHandler((Request req) => _roomController.getRoomById(req, id))(request))
   ..get('/api/equipment/items', (Request request) => _adminHandler(_equipmentItemController.getAllEquipmentItems)(request))
-  ..get('/api/equipment/types', (Request request) => _adminHandler(_equipmentTypeController.getAllEquipmentTypes)(request));
+  ..get('/api/equipment/types', (Request request) => _adminHandler(_equipmentTypeController.getAllEquipmentTypes)(request))
+  ..mount('/api/buildings', _adminHandler(_buildingController.router.call));

@@ -6,6 +6,8 @@ import '../../models/room/room.model.dart';
 import '../../models/equipment/equipment_item.model.dart';
 import '../../models/equipment/equipment_status.enum.dart';
 import '../room/rooms_list_screen.dart';
+import '../room/room_create_screen.dart';
+import '../building/buildings_list_screen.dart';
 
 class InfrastructureDashboardScreen extends ConsumerWidget {
   const InfrastructureDashboardScreen({super.key});
@@ -17,7 +19,7 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Управление инфраструктурой'),
+        title: const Text('Управление помещениями'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
@@ -203,9 +205,26 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
                     runSpacing: 8.0,
                     children: [
                       ActionChip(
+                        avatar: const Icon(Icons.business),
+                        label: const Text('Здания'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const BuildingsListScreen()),
+                          );
+                        },
+                      ),
+                      ActionChip(
                         avatar: const Icon(Icons.add_home_work),
                         label: const Text('Добавить помещение'),
-                        onPressed: () { /* TODO */ },
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const RoomCreateScreen()),
+                          );
+                        },
                       ),
                       ActionChip(
                         avatar: const Icon(Icons.book),

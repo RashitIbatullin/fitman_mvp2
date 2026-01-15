@@ -1,7 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 
-// Helper class to define filter options
+/// A generic popup menu button displayed as a chip, designed for filtering lists.
+///
+/// This widget is intended to be a stable and reusable component. Its internal
+/// logic should not be modified to accommodate specific one-off UI requirements
+/// on a particular screen.
+///
+/// --- INTENDED USAGE ---
+///
+/// 1.  **As a standard filter button:**
+///    - The button's label is determined by the `label` of the `selectedOption` or
+///      falls back to `allOptionText` if no option is selected.
+///    - To include an "All" option in the dropdown menu, keep `showAllOption: true` (default).
+///      The text for this "All" option is configured via `allOptionText`.
+///
+/// 2.  **As an "Actions" button (with no "All" option in the menu):**
+///    - Set `showAllOption: false`.
+///    - Set `allOptionText` to the desired button label (e.g., "Действия").
+///    - Set `initialValue` to `null`. This makes the button display the `allOptionText`
+///      as its label, while the `showAllOption: false` flag prevents that text from
+///      appearing as a selectable item in the menu itself.
+///
+/// --- CUSTOMIZATION ---
+///
+/// For UI behaviors not covered by this widget's properties (e.g., adding a
+/// prefix to the selected label like "Статус: В архиве"), do not modify this
+/// widget. Instead, create a custom implementation in the parent screen using
+/// a standard `PopupMenuButton` wrapped in a `Chip`, as demonstrated in
+/// `buildings_list_screen.dart`.
 class FilterOption<T> {
   final String label;
   final T value;

@@ -30,6 +30,7 @@ dependencies:
   riverpod_annotation: ^2.3.5
   equatable: ^2.0.5
   collection: ^1.19.1
+  dio: ^5.5.0+1
 
 dev_dependencies:
   flutter_test:

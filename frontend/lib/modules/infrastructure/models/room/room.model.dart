@@ -6,15 +6,32 @@ import 'time_of_day_converter.dart';
 part 'room.model.freezed.dart';
 part 'room.model.g.dart';
 
+// Custom converter for RoomType enum to/from int
+class RoomTypeConverter implements JsonConverter<RoomType, int> {
+  const RoomTypeConverter();
+
+  @override
+  RoomType fromJson(int json) {
+    return RoomType.values.firstWhere((e) => e.value == json);
+  }
+
+  @override
+  int toJson(RoomType object) {
+    return object.value;
+  }
+}
+
 @freezed
 class Room with _$Room {
   const factory Room({
     required String id,
     required String name,
     String? description,
-    required RoomType type,
+    @RoomTypeConverter() required RoomType type,
     String? floor,
-    String? building,
+    String? buildingId,
+    
+    // Вместимость и параметры
     required int maxCapacity,
     double? area,
     @Default(false) bool hasMirrors,

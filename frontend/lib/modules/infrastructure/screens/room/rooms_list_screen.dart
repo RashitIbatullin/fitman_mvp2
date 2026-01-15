@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/room/room.model.dart';
 import '../../models/room/room_type.enum.dart'; // Import RoomType enum
 import 'room_detail_screen.dart';
+import 'room_create_screen.dart';
 import '../../utils/room_utils.dart';
 
 class RoomsListViewScreen extends ConsumerStatefulWidget {
@@ -31,7 +32,10 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // TODO: Navigate to Add Room Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RoomCreateScreen()),
+              );
             },
             tooltip: 'Создать помещение',
           ),

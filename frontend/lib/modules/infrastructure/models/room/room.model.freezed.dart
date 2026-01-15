@@ -24,9 +24,11 @@ mixin _$Room {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
+  @RoomTypeConverter()
   RoomType get type => throw _privateConstructorUsedError;
   String? get floor => throw _privateConstructorUsedError;
-  String? get building => throw _privateConstructorUsedError;
+  String? get buildingId =>
+      throw _privateConstructorUsedError; // Вместимость и параметры
   int get maxCapacity => throw _privateConstructorUsedError;
   double? get area => throw _privateConstructorUsedError;
   bool get hasMirrors => throw _privateConstructorUsedError;
@@ -63,9 +65,9 @@ abstract class $RoomCopyWith<$Res> {
     String id,
     String name,
     String? description,
-    RoomType type,
+    @RoomTypeConverter() RoomType type,
     String? floor,
-    String? building,
+    String? buildingId,
     int maxCapacity,
     double? area,
     bool hasMirrors,
@@ -104,7 +106,7 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
     Object? description = freezed,
     Object? type = null,
     Object? floor = freezed,
-    Object? building = freezed,
+    Object? buildingId = freezed,
     Object? maxCapacity = null,
     Object? area = freezed,
     Object? hasMirrors = null,
@@ -143,9 +145,9 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
                 ? _value.floor
                 : floor // ignore: cast_nullable_to_non_nullable
                       as String?,
-            building: freezed == building
-                ? _value.building
-                : building // ignore: cast_nullable_to_non_nullable
+            buildingId: freezed == buildingId
+                ? _value.buildingId
+                : buildingId // ignore: cast_nullable_to_non_nullable
                       as String?,
             maxCapacity: null == maxCapacity
                 ? _value.maxCapacity
@@ -225,9 +227,9 @@ abstract class _$$RoomImplCopyWith<$Res> implements $RoomCopyWith<$Res> {
     String id,
     String name,
     String? description,
-    RoomType type,
+    @RoomTypeConverter() RoomType type,
     String? floor,
-    String? building,
+    String? buildingId,
     int maxCapacity,
     double? area,
     bool hasMirrors,
@@ -263,7 +265,7 @@ class __$$RoomImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? type = null,
     Object? floor = freezed,
-    Object? building = freezed,
+    Object? buildingId = freezed,
     Object? maxCapacity = null,
     Object? area = freezed,
     Object? hasMirrors = null,
@@ -302,9 +304,9 @@ class __$$RoomImplCopyWithImpl<$Res>
             ? _value.floor
             : floor // ignore: cast_nullable_to_non_nullable
                   as String?,
-        building: freezed == building
-            ? _value.building
-            : building // ignore: cast_nullable_to_non_nullable
+        buildingId: freezed == buildingId
+            ? _value.buildingId
+            : buildingId // ignore: cast_nullable_to_non_nullable
                   as String?,
         maxCapacity: null == maxCapacity
             ? _value.maxCapacity
@@ -378,9 +380,9 @@ class _$RoomImpl implements _Room {
     required this.id,
     required this.name,
     this.description,
-    required this.type,
+    @RoomTypeConverter() required this.type,
     this.floor,
-    this.building,
+    this.buildingId,
     required this.maxCapacity,
     this.area,
     this.hasMirrors = false,
@@ -410,11 +412,13 @@ class _$RoomImpl implements _Room {
   @override
   final String? description;
   @override
+  @RoomTypeConverter()
   final RoomType type;
   @override
   final String? floor;
   @override
-  final String? building;
+  final String? buildingId;
+  // Вместимость и параметры
   @override
   final int maxCapacity;
   @override
@@ -475,7 +479,7 @@ class _$RoomImpl implements _Room {
 
   @override
   String toString() {
-    return 'Room(id: $id, name: $name, description: $description, type: $type, floor: $floor, building: $building, maxCapacity: $maxCapacity, area: $area, hasMirrors: $hasMirrors, hasSoundSystem: $hasSoundSystem, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, isUnderMaintenance: $isUnderMaintenance, maintenanceNote: $maintenanceNote, maintenanceUntil: $maintenanceUntil, equipmentIds: $equipmentIds, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note)';
+    return 'Room(id: $id, name: $name, description: $description, type: $type, floor: $floor, buildingId: $buildingId, maxCapacity: $maxCapacity, area: $area, hasMirrors: $hasMirrors, hasSoundSystem: $hasSoundSystem, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, isUnderMaintenance: $isUnderMaintenance, maintenanceNote: $maintenanceNote, maintenanceUntil: $maintenanceUntil, equipmentIds: $equipmentIds, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note)';
   }
 
   @override
@@ -489,8 +493,8 @@ class _$RoomImpl implements _Room {
                 other.description == description) &&
             (identical(other.type, type) || other.type == type) &&
             (identical(other.floor, floor) || other.floor == floor) &&
-            (identical(other.building, building) ||
-                other.building == building) &&
+            (identical(other.buildingId, buildingId) ||
+                other.buildingId == buildingId) &&
             (identical(other.maxCapacity, maxCapacity) ||
                 other.maxCapacity == maxCapacity) &&
             (identical(other.area, area) || other.area == area) &&
@@ -536,7 +540,7 @@ class _$RoomImpl implements _Room {
     description,
     type,
     floor,
-    building,
+    buildingId,
     maxCapacity,
     area,
     hasMirrors,
@@ -573,9 +577,9 @@ abstract class _Room implements Room {
     required final String id,
     required final String name,
     final String? description,
-    required final RoomType type,
+    @RoomTypeConverter() required final RoomType type,
     final String? floor,
-    final String? building,
+    final String? buildingId,
     required final int maxCapacity,
     final double? area,
     final bool hasMirrors,
@@ -602,11 +606,12 @@ abstract class _Room implements Room {
   @override
   String? get description;
   @override
+  @RoomTypeConverter()
   RoomType get type;
   @override
   String? get floor;
   @override
-  String? get building;
+  String? get buildingId; // Вместимость и параметры
   @override
   int get maxCapacity;
   @override

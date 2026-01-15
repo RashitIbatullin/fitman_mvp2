@@ -16,9 +16,10 @@ import '../modules/groups/models/training_group.model.dart';
 import '../modules/groups/models/analytic_group.model.dart';
 import '../modules/groups/models/group_schedule.model.dart';
 import '../modules/groups/models/training_group_type.model.dart';
-import '../modules/infrastructure/models/room/room.model.dart';
-import '../modules/infrastructure/models/equipment/equipment_item.model.dart'; // New import
-import '../modules/infrastructure/models/equipment/equipment_type.model.dart'; // New import
+import 'package:fitman_app/modules/infrastructure/models/room/room.model.dart';
+import 'package:fitman_app/modules/infrastructure/models/equipment/equipment_item.model.dart'; // New import
+import 'package:fitman_app/modules/infrastructure/models/equipment/equipment_type.model.dart'; // New import
+import 'package:fitman_app/modules/infrastructure/models/building/building.model.dart';
 
 class ApiService {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
@@ -132,9 +133,150 @@ class ApiService {
       rethrow;
     }
   }
+
+  static Future<Room> createRoom(Room room) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/rooms'),
+        headers: _headers,
+        body: jsonEncode(room.toJson()),
+      );
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return Room.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create room');
+      }
+    } catch (e) {
+      print('Create room error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Room> updateRoom(String id, Room room) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/rooms/$id'),
+        headers: _headers,
+        body: jsonEncode(room.toJson()),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Room.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to update room');
+      }
+    } catch (e) {
+      print('Update room error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> deleteRoom(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/rooms/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode != 204) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to delete room');
+      }
+    } catch (e) {
+      print('Delete room error: $e');
+      rethrow;
+    }
+  }
   
 
   // --- End Infrastructure API Methods ---
+
+  // --- Building API Methods ---
+  static Future<List<Building>> getAllBuildings({bool? isArchived}) async {
+    try {
+      final queryParameters = <String, String>{};
+      if (isArchived != null) {
+        queryParameters['isArchived'] = isArchived.toString();
+      }
+
+      final uri = Uri.parse('$baseUrl/api/buildings')
+          .replace(queryParameters: queryParameters.isNotEmpty ? queryParameters : null);
+
+      final response = await http.get(
+        uri,
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.map((json) => Building.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load buildings');
+      }
+    } catch (e) {
+      print('Get all buildings error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Building> createBuilding(Building building) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/buildings'),
+        headers: _headers,
+        body: jsonEncode(building.toJson()),
+      );
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return Building.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create building');
+      }
+    } catch (e) {
+      print('Create building error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Building> updateBuilding(String id, Building building) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/buildings/$id'),
+        headers: _headers,
+        body: jsonEncode(building.toJson()),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Building.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to update building');
+      }
+    } catch (e) {
+      print('Update building error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> deleteBuilding(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/buildings/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode != 204) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to delete building');
+      }
+    } catch (e) {
+      print('Delete building error: $e');
+      rethrow;
+    }
+  }
+  // --- End Building API Methods ---
 
   // Аутентификация
   static Future<AuthResponse> login(String email, String password) async {

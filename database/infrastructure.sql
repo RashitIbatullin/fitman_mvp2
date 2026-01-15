@@ -13,6 +13,7 @@
 DROP TABLE IF EXISTS equipment_bookings CASCADE;
 DROP TABLE IF EXISTS equipment_items CASCADE;
 DROP TABLE IF EXISTS rooms CASCADE;
+DROP TABLE IF EXISTS buildings CASCADE;
 
 -- Таблицы индивидуальных назначений
 DROP TABLE IF EXISTS client_exercises CASCADE;
@@ -394,6 +395,23 @@ CREATE TABLE client_exercises (
 -- 3. ТАБЛИЦЫ ПОМЕЩЕНИЙ И ОБОРУДОВАНИЯ
 -- ============================================
 
+-- Здания
+CREATE TABLE buildings (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  address TEXT,
+  
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id),
+  note VARCHAR(100)
+);
+
 -- Помещения (залы)
 CREATE TABLE rooms (
   id BIGSERIAL PRIMARY KEY,
@@ -403,7 +421,7 @@ CREATE TABLE rooms (
   
   -- Локация
   floor VARCHAR(50),
-  building VARCHAR(100),
+  building_id BIGINT REFERENCES buildings(id),
   
   -- Характеристики
   max_capacity INT NOT NULL DEFAULT 10,
@@ -616,8 +634,13 @@ CREATE INDEX idx_client_exercises_active ON client_exercises(company_id) WHERE a
 
 -- Индексы для rooms
 CREATE INDEX idx_rooms_type ON rooms(type) WHERE is_active = true;
-CREATE INDEX idx_rooms_building ON rooms(building) WHERE building IS NOT NULL;
+CREATE INDEX idx_rooms_building ON rooms(building_id) WHERE building_id IS NOT NULL;
 CREATE INDEX idx_rooms_active ON rooms(company_id) WHERE archived_at IS NULL AND is_active = true;
+
+-- Индексы для buildings
+CREATE INDEX idx_buildings_name ON buildings(name);
+CREATE INDEX idx_buildings_active ON buildings(company_id) WHERE archived_at IS NULL;
+
 
 -- Индексы для equipment_items
 CREATE INDEX idx_equipment_items_type ON equipment_items(type_id);
@@ -787,15 +810,23 @@ INSERT INTO bmr_formulas (name, formula, for_men, for_women, is_active, note) VA
 ('Харриса-Бенедикта', '447.593 + (9.247 × вес[кг]) + (3.098 × рост[см]) - (4.330 × возраст[лет])', false, true, true, 'Классическая формула для женщин'),
 ('Кетча-МакАрдла', '370 + (21.6 × LBM)', true, true, true, 'LBM = масса тела × (100 - %жира) / 100');
 
--- 5.15. Заполняем помещения (залы)
-INSERT INTO rooms (name, description, type, floor, building, max_capacity, area, has_mirrors, has_sound_system, open_time, close_time, working_days, note) VALUES
-('Зал групповых занятий', 'Основной зал для групповых тренировок, йоги, аэробики', 0, '1', 'Основной корпус', 25, 120.0, true, true, '08:00', '22:00', '[1,2,3,4,5,6]', 'Основной зал, паркетное покрытие'),
-('Кардио-зона', 'Зона с кардио оборудованием', 1, '1', 'Основной корпус', 15, 80.0, true, false, '06:00', '23:00', '[1,2,3,4,5,6,7]', '24/7 для членов клуба'),
-('Силовая зона', 'Зона со свободными весами и силовыми тренажерами', 2, '1', 'Основной корпус', 20, 100.0, true, false, '06:00', '23:00', '[1,2,3,4,5,6,7]', 'Олимпийские платформы'),
-('Йога-студия', 'Зал для йоги и пилатеса', 4, '2', 'Основной корпус', 12, 60.0, true, true, '07:00', '21:00', '[1,2,3,4,5,6]', 'Бамбуковое покрытие, оборудование для йоги'),
-('Боксерский зал', 'Зал для единоборств и функционального тренинга', 5, '2', 'Основной корпус', 10, 70.0, false, true, '09:00', '20:00', '[1,2,3,4,5]', 'Боксерские груши, татами');
+-- 5.15. Заполняем Здания
+INSERT INTO buildings (name, address, note) VALUES
+('Основной корпус', 'г. Москва, ул. Центральная, 1', 'Главное здание фитнес-центра'),
+('Водный комплекс', 'г. Москва, ул. Центральная, 2', 'Здание с бассейном и спа');
 
--- 5.16. Заполняем экземпляры оборудования
+-- 5.16. Заполняем помещения (залы)
+INSERT INTO rooms (name, description, type, floor, building_id, max_capacity, area, has_mirrors, has_sound_system, open_time, close_time, working_days, note) VALUES
+('Зал групповых занятий', 'Основной зал для групповых тренировок, йоги, аэробики', 0, '1', 1, 25, 120.0, true, true, '08:00', '22:00', '[1,2,3,4,5,6]', 'Основной зал, паркетное покрытие'),
+('Кардио-зона', 'Зона с кардио оборудованием', 1, '1', 1, 15, 80.0, true, false, '06:00', '23:00', '[1,2,3,4,5,6,7]', '24/7 для членов клуба'),
+('Силовая зона', 'Зона со свободными весами и силовыми тренажерами', 2, '1', 1, 20, 100.0, true, false, '06:00', '23:00', '[1,2,3,4,5,6,7]', 'Олимпийские платформы'),
+('Йога-студия', 'Зал для йоги и пилатеса', 4, '2', 1, 12, 60.0, true, true, '07:00', '21:00', '[1,2,3,4,5,6]', 'Бамбуковое покрытие, оборудование для йоги'),
+('Боксерский зал', 'Зал для единоборств и функционального тренинга', 5, '2', 1, 10, 70.0, false, true, '09:00', '20:00', '[1,2,3,4,5]', 'Боксерские груши, татами'),
+('Бассейн', 'Плавание', 6, '1', 2, 30, 250.0, false, false, '07:00', '22:00', '[1,2,3,4,5,6,7]', '25-метровый бассейн, 4 дорожки'),
+('Сауна', 'Зона отдыха с сауной', 7, '1', 2, 8, 20.0, false, false, '10:00', '21:00', '[1,2,3,4,5,6,7]', 'Финская сауна'),
+('Сауна 2', 'Дополнительная зона отдыха с сауной', 7, '1', 2, 8, 20.0, false, false, '10:00', '21:00', '[1,2,3,4,5,6,7]', 'Вторая финская сауна');
+
+-- 5.17. Заполняем экземпляры оборудования
 INSERT INTO equipment_items (type_id, inventory_number, serial_number, model, manufacturer, room_id, placement_note, status, condition_rating, purchase_date, purchase_price, note) VALUES
 (1, 'ТРЕД-001', 'SN123456', 'T8.5', 'Matrix', 2, 'У окна, левая сторона', 0, 5, '2023-01-15', 250000.00, 'Основная беговая дорожка'),
 (1, 'ТРЕД-002', 'SN123457', 'T8.5', 'Matrix', 2, 'У окна, правая сторона', 0, 5, '2023-01-15', 250000.00, 'Запасная беговая дорожка'),
@@ -810,7 +841,7 @@ INSERT INTO equipment_items (type_id, inventory_number, serial_number, model, ma
 (9, 'КОВ-001', NULL, 'Professional', 'Manduka', 4, 'Стеллаж для ковриков', 0, 5, '2023-04-01', 2500.00, 'Коврик для йоги 5мм'),
 (10, 'ВЕС-001', 'SN123463', 'BF-350', 'Beurer', 5, 'У входа', 0, 5, '2023-05-10', 8000.00, 'Электронные весы');
 
--- 5.17. ЗАПОЛНЕНИЕ ТАБЛИЦЫ СВЯЗИ room_equipment на основе данных из equipment_items
+-- 5.18. ЗАПОЛНЕНИЕ ТАБЛИЦЫ СВЯЗИ room_equipment на основе данных из equipment_items
 INSERT INTO room_equipment (room_id, equipment_item_id, placement_note, is_active)
 SELECT
     ei.room_id,
@@ -821,7 +852,7 @@ FROM equipment_items ei
 WHERE ei.room_id IS NOT NULL
 ON CONFLICT (room_id, equipment_item_id) DO NOTHING; -- Защита от дубликатов, если скрипт запускаетс
 
--- 5.18. Создаем несколько бронирований оборудования (пример)
+-- 5.19. Создаем несколько бронирований оборудования (пример)
 INSERT INTO equipment_bookings (equipment_item_id, booked_by, start_time, end_time, purpose, notes) VALUES
 (1, 1, '2024-01-15 10:00:00+03', '2024-01-15 11:00:00+03', 'Индивидуальная тренировка', 'Клиент: Иванов И.И.'),
 (2, 1, '2024-01-15 11:00:00+03', '2024-01-15 12:00:00+03', 'Групповое занятие', 'Группа "Кардио для начинающих"'),

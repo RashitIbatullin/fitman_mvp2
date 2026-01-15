@@ -608,7 +608,7 @@ class _GroupSchedulesProviderElement
   int get groupId => (origin as GroupSchedulesProvider).groupId;
 }
 
-String _$groupMembersHash() => r'd6f242ca8cf847fc306b4810a44035de544a3a2b';
+String _$groupMembersHash() => r'7330755538d25fab6de6ed7c415838fa9e69c86d';
 
 abstract class _$GroupMembers extends BuildlessAsyncNotifier<List<int>> {
   late final int groupId;

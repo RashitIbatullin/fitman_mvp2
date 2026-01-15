@@ -3,8 +3,8 @@ import 'package:postgres/postgres.dart';
 import 'package:fitman_backend/modules/infrastructure/models/room/room_type.enum.dart';
 
 class Room {
-  Room({
-    required this.id,
+  const Room({
+    this.id,
     required this.name,
     this.description,
     required this.type,
@@ -27,7 +27,7 @@ class Room {
     this.note,
   });
 
-  final String id;
+  final String? id;
   final String name;
   final String? description;
   final RoomType type;
@@ -70,7 +70,7 @@ class Room {
       id: map['id'].toString(),
       name: map['name'] as String,
       description: map['description'] as String?,
-      type: RoomType.values[map['type'] as int],
+      type: RoomType.values.firstWhere((e) => e.value == map['type'] as int),
       floor: map['floor'] as String?,
       building: map['building'] as String?,
       maxCapacity: map['max_capacity'] as int,
@@ -103,7 +103,7 @@ class Room {
       'id': id,
       'name': name,
       'description': description,
-      'type': type.name,
+      'type': type.value, // Convert enum to int value
       'floor': floor,
       'building': building,
       'maxCapacity': maxCapacity,

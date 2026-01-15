@@ -17,6 +17,8 @@ extension RoomTypeLocalization on RoomType {
         return 'Бокс/единоборства';
       case RoomType.pool:
         return 'Бассейн';
+      case RoomType.sauna:
+        return 'Сауна';
       case RoomType.lockerRoom:
         return 'Раздевалка';
       case RoomType.reception:

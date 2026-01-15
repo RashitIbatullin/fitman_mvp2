@@ -1,3 +1,4 @@
+import 'package:fitman_app/modules/infrastructure/providers/building_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/room/room.model.dart';
@@ -31,14 +32,16 @@ class RoomDetailScreen extends ConsumerWidget {
         ],
       ),
       body: roomAsync.when(
-        data: (room) => _buildRoomDetails(context, room),
+        data: (room) => _buildRoomDetails(context, ref, room),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Ошибка: $err')),
       ),
     );
   }
 
-  Widget _buildRoomDetails(BuildContext context, Room room) {
+  Widget _buildRoomDetails(BuildContext context, WidgetRef ref, Room room) {
+    final buildingsAsync = ref.watch(allBuildingsProvider);
+
     return DefaultTabController(
       length: 5, // Number of tabs
       child: Column(
@@ -57,7 +60,7 @@ class RoomDetailScreen extends ConsumerWidget {
             child: TabBarView(
               children: [
                 // 1. Основное
-                _buildMainInfoTab(context, room),
+                _buildMainInfoTab(context, room, buildingsAsync),
                 // 2. Расписание (Placeholder)
                 const Center(child: Text('Информация о расписании')),
                 // 3. Состояние (Placeholder)
@@ -74,7 +77,16 @@ class RoomDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMainInfoTab(BuildContext context, Room room) {
+  Widget _buildMainInfoTab(BuildContext context, Room room, AsyncValue<List<dynamic>> buildingsAsync) {
+    final buildingName = buildingsAsync.when(
+      data: (buildings) {
+        final building = buildings.firstWhere((b) => b.id == room.buildingId, orElse: () => null);
+        return building?.name ?? 'N/A';
+      },
+      loading: () => 'Загрузка...',
+      error: (e, s) => 'Ошибка',
+    );
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -85,7 +97,7 @@ class RoomDetailScreen extends ConsumerWidget {
           _buildInfoRow(context, 'Тип:', room.type.displayName),
           _buildInfoRow(context, 'Описание:', room.description ?? 'N/A'),
           _buildInfoRow(context, 'Этаж:', room.floor ?? 'N/A'),
-          _buildInfoRow(context, 'Корпус:', room.building ?? 'N/A'),
+          _buildInfoRow(context, 'Корпус:', buildingName),
           _buildInfoRow(context, 'Вместимость:', '${room.maxCapacity} чел.'),
           _buildInfoRow(context, 'Площадь:', '${room.area ?? 'N/A'} м²'),
           _buildInfoRow(context, 'Зеркала:', room.hasMirrors ? 'Да' : 'Нет'),
