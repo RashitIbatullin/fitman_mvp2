@@ -33,7 +33,7 @@ class Room with _$Room {
     @RoomTypeConverter() required RoomType type,
     String? floor,
     @JsonKey(name: 'building_id') String? buildingId,
-    String? buildingName,
+    @JsonKey(name: 'building_name') String? buildingName,
     @JsonKey(name: 'max_capacity') @Default(30) int maxCapacity,
     double? area,
     @TimeOfDayConverter() @JsonKey(name: 'open_time') TimeOfDay? openTime,

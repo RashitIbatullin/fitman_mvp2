@@ -30,6 +30,7 @@ class Room {
     this.updatedBy,
     this.archivedAt,
     this.archivedBy,
+    this.archivedReason,
   });
 
   final String? id;
@@ -58,6 +59,7 @@ class Room {
   final String? updatedBy;
   final DateTime? archivedAt;
   final String? archivedBy;
+  final String? archivedReason;
 
   factory Room.fromMap(Map<String, dynamic> map) {
     // Handle area conversion
@@ -167,43 +169,48 @@ class Room {
       return null;
     }
 
+    // Safely parse type and maxCapacity to prevent crash on null
+    final typeValue = json['type'] as int? ?? 0;
+    final maxCapacityValue = json['max_capacity'] as int? ?? 0;
+
     return Room(
       id: json['id'] as String?,
       name: json['name'] as String,
       description: json['description'] as String?,
-      roomNumber: json['roomNumber'] as String?,
-      type: RoomType.values.firstWhere((e) => e.value == json['type'] as int),
+      roomNumber: json['room_number'] as String?,
+      type: RoomType.values.firstWhere((e) => e.value == typeValue, orElse: () => RoomType.groupHall),
       floor: json['floor'] as String?,
-      buildingId: json['buildingId'] as String?,
+      buildingId: json['building_id'] as String?,
       buildingName: json['buildingName'] as String?,
-      maxCapacity: json['maxCapacity'] as int,
+      maxCapacity: maxCapacityValue,
       area: parsedArea,
-      openTime: parseTimeFromString(json['openTime'] as String?),
-      closeTime: parseTimeFromString(json['closeTime'] as String?),
+      openTime: parseTimeFromString(json['open_time'] as String?),
+      closeTime: parseTimeFromString(json['close_time'] as String?),
       workingDays:
-          (json['workingDays'] as List<dynamic>?)?.cast<int>() ?? const [],
-      isActive: json['isActive'] as bool? ?? true,
-      isUnderMaintenance: json['isUnderMaintenance'] as bool? ?? false,
-      maintenanceNote: json['maintenanceNote'] as String?,
-      maintenanceUntil: json['maintenanceUntil'] == null
+          (json['working_days'] as List<dynamic>?)?.cast<int>() ?? const [],
+      isActive: json['is_active'] as bool? ?? true,
+      isUnderMaintenance: json['is_under_maintenance'] as bool? ?? false,
+      maintenanceNote: json['maintenance_note'] as String?,
+      maintenanceUntil: json['maintenance_until'] == null
           ? null
-          : DateTime.parse(json['maintenanceUntil'] as String),
+          : DateTime.parse(json['maintenance_until'] as String),
       photoUrls:
-          (json['photoUrls'] as List<dynamic>?)?.cast<String>() ?? const [],
-      floorPlanUrl: json['floorPlanUrl'] as String?,
+          (json['photo_urls'] as List<dynamic>?)?.cast<String>() ?? const [],
+      floorPlanUrl: json['floor_plan_url'] as String?,
       note: json['note'] as String?,
-      createdAt: json['createdAt'] == null
+      createdAt: json['created_at'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] == null
+          : DateTime.parse(json['created_at'] as String),
+      updatedAt: json['updated_at'] == null
           ? null
-          : DateTime.parse(json['updatedAt'] as String),
-      createdBy: json['createdBy'] as String?,
-      updatedBy: json['updatedBy'] as String?,
-      archivedAt: json['archivedAt'] == null
+          : DateTime.parse(json['updated_at'] as String),
+      createdBy: json['created_by'] as String?,
+      updatedBy: json['updated_by'] as String?,
+      archivedAt: json['archived_at'] == null
           ? null
-          : DateTime.parse(json['archivedAt'] as String),
-      archivedBy: json['archivedBy'] as String?,
+          : DateTime.parse(json['archived_at'] as String),
+      archivedBy: json['archived_by'] as String?,
+      archivedReason: json['archived_reason'] as String?,
     );
   }
 
@@ -216,7 +223,7 @@ class Room {
       'type': type.value, // Convert enum to int value
       'floor': floor,
       'building_id': buildingId, // Use snake_case for DB
-      'buildingName': buildingName,
+      'building_name': buildingName,
       'max_capacity': maxCapacity, // Use snake_case for DB
       'area': area,
       'open_time': openTime?.toString(), // Convert Time to string

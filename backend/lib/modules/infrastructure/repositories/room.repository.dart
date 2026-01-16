@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:fitman_backend/config/database.dart';
 import 'package:fitman_backend/modules/infrastructure/models/room/room.model.dart';
 import 'package:postgres/postgres.dart';
@@ -19,9 +20,16 @@ class RoomRepositoryImpl implements RoomRepository {
   Future<Room> create(Room room) async {
     final conn = await _db.connection;
     final result = await conn.execute(
-      Sql.named(
-          'INSERT INTO rooms (name, description, room_number, type, floor, building_id, max_capacity, area, open_time, close_time, working_days, is_active, is_under_maintenance, maintenance_note, maintenance_until) '
-          'VALUES (@name, @description, @room_number, @type, @floor, @building_id, @max_capacity, @area, @open_time, @close_time, @working_days, @is_active, @is_under_maintenance, @maintenance_note, @maintenance_until) RETURNING *'),
+      Sql.named('''
+        WITH new_row AS (
+          INSERT INTO rooms (name, description, room_number, type, floor, building_id, max_capacity, area, open_time, close_time, working_days, is_active, is_under_maintenance, maintenance_note, maintenance_until) 
+          VALUES (@name, @description, @room_number, @type, @floor, @building_id, @max_capacity, @area, @open_time, @close_time, @working_days, @is_active, @is_under_maintenance, @maintenance_note, @maintenance_until) 
+          RETURNING *
+        )
+        SELECT nr.*, b.name as building_name 
+        FROM new_row nr
+        LEFT JOIN buildings b ON nr.building_id = b.id
+      '''),
       parameters: {
         'name': room.name,
         'description': room.description,
@@ -33,7 +41,7 @@ class RoomRepositoryImpl implements RoomRepository {
         'area': room.area,
         'open_time': room.openTime,
         'close_time': room.closeTime,
-        'working_days': room.workingDays,
+        'working_days': jsonEncode(room.workingDays),
         'is_active': room.isActive,
         'is_under_maintenance': room.isUnderMaintenance,
         'maintenance_note': room.maintenanceNote,
@@ -101,8 +109,35 @@ class RoomRepositoryImpl implements RoomRepository {
   Future<Room> update(String id, Room room) async {
     final conn = await _db.connection;
     final result = await conn.execute(
-      Sql.named(
-          'UPDATE rooms SET name = @name, description = @description, room_number = @room_number, type = @type, floor = @floor, building_id = @building_id, max_capacity = @max_capacity, area = @area, open_time = @open_time, close_time = @close_time, working_days = @working_days, is_active = @is_active, is_under_maintenance = @is_under_maintenance, maintenance_note = @maintenance_note, maintenance_until = @maintenance_until, archived_at = @archived_at, updated_at = NOW() WHERE id = @id RETURNING *'),
+      Sql.named('''
+        WITH updated AS (
+          UPDATE rooms 
+          SET 
+            name = @name, 
+            description = @description, 
+            room_number = @room_number, 
+            type = @type, 
+            floor = @floor, 
+            building_id = @building_id, 
+            max_capacity = @max_capacity, 
+            area = @area, 
+            open_time = @open_time, 
+            close_time = @close_time, 
+            working_days = @working_days, 
+            photo_urls = @photo_urls, 
+            is_active = @is_active, 
+            is_under_maintenance = @is_under_maintenance, 
+            maintenance_note = @maintenance_note, 
+            maintenance_until = @maintenance_until, 
+            archived_at = @archived_at, 
+            updated_at = NOW() 
+          WHERE id = @id 
+          RETURNING *
+        )
+        SELECT u.*, b.name as building_name 
+        FROM updated u
+        LEFT JOIN buildings b ON u.building_id = b.id
+      '''),
       parameters: {
         'id': int.parse(id),
         'name': room.name,
@@ -115,7 +150,8 @@ class RoomRepositoryImpl implements RoomRepository {
         'area': room.area,
         'open_time': room.openTime,
         'close_time': room.closeTime,
-        'working_days': room.workingDays,
+        'working_days': jsonEncode(room.workingDays),
+        'photo_urls': jsonEncode(room.photoUrls),
         'is_active': room.isActive,
         'is_under_maintenance': room.isUnderMaintenance,
         'maintenance_note': room.maintenanceNote,
