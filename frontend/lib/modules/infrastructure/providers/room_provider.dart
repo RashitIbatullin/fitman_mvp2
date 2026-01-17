@@ -5,21 +5,22 @@ import '../models/room/room_type.enum.dart'; // Ensure RoomType is imported
 
 // Providers for filters
 final roomTypeFilterProvider = StateProvider<RoomType?>((ref) => null);
-final roomIsUnderMaintenanceFilterProvider = StateProvider<bool?>((ref) => null);
-final roomIsArchivedFilterProvider = StateProvider<bool?>((ref) => null); // New filter provider
+final roomIsActiveFilterProvider = StateProvider<bool?>((ref) => true); // Default to active
+final roomIsArchivedFilterProvider = StateProvider<bool?>((ref) => false); // Default to not archived
 
 // Provider to fetch rooms based on filters
 class RoomsNotifier extends AsyncNotifier<List<Room>> {
   @override
   Future<List<Room>> build() async {
     final selectedRoomType = ref.watch(roomTypeFilterProvider);
-    final isUnderMaintenance = ref.watch(roomIsUnderMaintenanceFilterProvider);
+    final isActive = ref.watch(roomIsActiveFilterProvider);
     final isArchived = ref.watch(roomIsArchivedFilterProvider);
 
     return ApiService.getAllRooms(
-        roomType: selectedRoomType?.value,
-        isUnderMaintenance: isUnderMaintenance,
-        isArchived: isArchived);
+      roomType: selectedRoomType?.value,
+      isActive: isActive,
+      isArchived: isArchived,
+    );
   }
 
   Future<void> refresh() async {

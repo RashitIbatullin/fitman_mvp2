@@ -46,12 +46,12 @@ mixin _$Room {
   List<int> get workingDays => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_active')
   bool get isActive => throw _privateConstructorUsedError;
-  @JsonKey(name: 'is_under_maintenance')
-  bool get isUnderMaintenance => throw _privateConstructorUsedError;
-  @JsonKey(name: 'maintenance_note')
-  String? get maintenanceNote => throw _privateConstructorUsedError;
-  @JsonKey(name: 'maintenance_until')
-  DateTime? get maintenanceUntil => throw _privateConstructorUsedError;
+  @JsonKey(name: 'deactivate_reason')
+  String? get deactivateReason => throw _privateConstructorUsedError;
+  @JsonKey(name: 'deactivate_at')
+  DateTime? get deactivateAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'deactivate_by')
+  String? get deactivateBy => throw _privateConstructorUsedError;
   @JsonKey(name: 'equipment_ids')
   List<String> get equipmentIds => throw _privateConstructorUsedError;
   @JsonKey(name: 'photo_urls')
@@ -91,9 +91,9 @@ abstract class $RoomCopyWith<$Res> {
     @TimeOfDayConverter() @JsonKey(name: 'close_time') TimeOfDay? closeTime,
     @JsonKey(name: 'working_days') List<int> workingDays,
     @JsonKey(name: 'is_active') bool isActive,
-    @JsonKey(name: 'is_under_maintenance') bool isUnderMaintenance,
-    @JsonKey(name: 'maintenance_note') String? maintenanceNote,
-    @JsonKey(name: 'maintenance_until') DateTime? maintenanceUntil,
+    @JsonKey(name: 'deactivate_reason') String? deactivateReason,
+    @JsonKey(name: 'deactivate_at') DateTime? deactivateAt,
+    @JsonKey(name: 'deactivate_by') String? deactivateBy,
     @JsonKey(name: 'equipment_ids') List<String> equipmentIds,
     @JsonKey(name: 'photo_urls') List<String> photoUrls,
     @JsonKey(name: 'floor_plan_url') String? floorPlanUrl,
@@ -131,9 +131,9 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
     Object? closeTime = freezed,
     Object? workingDays = null,
     Object? isActive = null,
-    Object? isUnderMaintenance = null,
-    Object? maintenanceNote = freezed,
-    Object? maintenanceUntil = freezed,
+    Object? deactivateReason = freezed,
+    Object? deactivateAt = freezed,
+    Object? deactivateBy = freezed,
     Object? equipmentIds = null,
     Object? photoUrls = null,
     Object? floorPlanUrl = freezed,
@@ -198,18 +198,18 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
                 ? _value.isActive
                 : isActive // ignore: cast_nullable_to_non_nullable
                       as bool,
-            isUnderMaintenance: null == isUnderMaintenance
-                ? _value.isUnderMaintenance
-                : isUnderMaintenance // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            maintenanceNote: freezed == maintenanceNote
-                ? _value.maintenanceNote
-                : maintenanceNote // ignore: cast_nullable_to_non_nullable
+            deactivateReason: freezed == deactivateReason
+                ? _value.deactivateReason
+                : deactivateReason // ignore: cast_nullable_to_non_nullable
                       as String?,
-            maintenanceUntil: freezed == maintenanceUntil
-                ? _value.maintenanceUntil
-                : maintenanceUntil // ignore: cast_nullable_to_non_nullable
+            deactivateAt: freezed == deactivateAt
+                ? _value.deactivateAt
+                : deactivateAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            deactivateBy: freezed == deactivateBy
+                ? _value.deactivateBy
+                : deactivateBy // ignore: cast_nullable_to_non_nullable
+                      as String?,
             equipmentIds: null == equipmentIds
                 ? _value.equipmentIds
                 : equipmentIds // ignore: cast_nullable_to_non_nullable
@@ -259,9 +259,9 @@ abstract class _$$RoomImplCopyWith<$Res> implements $RoomCopyWith<$Res> {
     @TimeOfDayConverter() @JsonKey(name: 'close_time') TimeOfDay? closeTime,
     @JsonKey(name: 'working_days') List<int> workingDays,
     @JsonKey(name: 'is_active') bool isActive,
-    @JsonKey(name: 'is_under_maintenance') bool isUnderMaintenance,
-    @JsonKey(name: 'maintenance_note') String? maintenanceNote,
-    @JsonKey(name: 'maintenance_until') DateTime? maintenanceUntil,
+    @JsonKey(name: 'deactivate_reason') String? deactivateReason,
+    @JsonKey(name: 'deactivate_at') DateTime? deactivateAt,
+    @JsonKey(name: 'deactivate_by') String? deactivateBy,
     @JsonKey(name: 'equipment_ids') List<String> equipmentIds,
     @JsonKey(name: 'photo_urls') List<String> photoUrls,
     @JsonKey(name: 'floor_plan_url') String? floorPlanUrl,
@@ -296,9 +296,9 @@ class __$$RoomImplCopyWithImpl<$Res>
     Object? closeTime = freezed,
     Object? workingDays = null,
     Object? isActive = null,
-    Object? isUnderMaintenance = null,
-    Object? maintenanceNote = freezed,
-    Object? maintenanceUntil = freezed,
+    Object? deactivateReason = freezed,
+    Object? deactivateAt = freezed,
+    Object? deactivateBy = freezed,
     Object? equipmentIds = null,
     Object? photoUrls = null,
     Object? floorPlanUrl = freezed,
@@ -363,18 +363,18 @@ class __$$RoomImplCopyWithImpl<$Res>
             ? _value.isActive
             : isActive // ignore: cast_nullable_to_non_nullable
                   as bool,
-        isUnderMaintenance: null == isUnderMaintenance
-            ? _value.isUnderMaintenance
-            : isUnderMaintenance // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        maintenanceNote: freezed == maintenanceNote
-            ? _value.maintenanceNote
-            : maintenanceNote // ignore: cast_nullable_to_non_nullable
+        deactivateReason: freezed == deactivateReason
+            ? _value.deactivateReason
+            : deactivateReason // ignore: cast_nullable_to_non_nullable
                   as String?,
-        maintenanceUntil: freezed == maintenanceUntil
-            ? _value.maintenanceUntil
-            : maintenanceUntil // ignore: cast_nullable_to_non_nullable
+        deactivateAt: freezed == deactivateAt
+            ? _value.deactivateAt
+            : deactivateAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        deactivateBy: freezed == deactivateBy
+            ? _value.deactivateBy
+            : deactivateBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
         equipmentIds: null == equipmentIds
             ? _value._equipmentIds
             : equipmentIds // ignore: cast_nullable_to_non_nullable
@@ -418,9 +418,9 @@ class _$RoomImpl implements _Room {
     @TimeOfDayConverter() @JsonKey(name: 'close_time') this.closeTime,
     @JsonKey(name: 'working_days') final List<int> workingDays = const [],
     @JsonKey(name: 'is_active') this.isActive = true,
-    @JsonKey(name: 'is_under_maintenance') this.isUnderMaintenance = false,
-    @JsonKey(name: 'maintenance_note') this.maintenanceNote,
-    @JsonKey(name: 'maintenance_until') this.maintenanceUntil,
+    @JsonKey(name: 'deactivate_reason') this.deactivateReason,
+    @JsonKey(name: 'deactivate_at') this.deactivateAt,
+    @JsonKey(name: 'deactivate_by') this.deactivateBy,
     @JsonKey(name: 'equipment_ids') final List<String> equipmentIds = const [],
     @JsonKey(name: 'photo_urls') final List<String> photoUrls = const [],
     @JsonKey(name: 'floor_plan_url') this.floorPlanUrl,
@@ -479,14 +479,14 @@ class _$RoomImpl implements _Room {
   @JsonKey(name: 'is_active')
   final bool isActive;
   @override
-  @JsonKey(name: 'is_under_maintenance')
-  final bool isUnderMaintenance;
+  @JsonKey(name: 'deactivate_reason')
+  final String? deactivateReason;
   @override
-  @JsonKey(name: 'maintenance_note')
-  final String? maintenanceNote;
+  @JsonKey(name: 'deactivate_at')
+  final DateTime? deactivateAt;
   @override
-  @JsonKey(name: 'maintenance_until')
-  final DateTime? maintenanceUntil;
+  @JsonKey(name: 'deactivate_by')
+  final String? deactivateBy;
   final List<String> _equipmentIds;
   @override
   @JsonKey(name: 'equipment_ids')
@@ -516,7 +516,7 @@ class _$RoomImpl implements _Room {
 
   @override
   String toString() {
-    return 'Room(id: $id, name: $name, description: $description, roomNumber: $roomNumber, type: $type, floor: $floor, buildingId: $buildingId, buildingName: $buildingName, maxCapacity: $maxCapacity, area: $area, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, isUnderMaintenance: $isUnderMaintenance, maintenanceNote: $maintenanceNote, maintenanceUntil: $maintenanceUntil, equipmentIds: $equipmentIds, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note, archivedAt: $archivedAt)';
+    return 'Room(id: $id, name: $name, description: $description, roomNumber: $roomNumber, type: $type, floor: $floor, buildingId: $buildingId, buildingName: $buildingName, maxCapacity: $maxCapacity, area: $area, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, deactivateReason: $deactivateReason, deactivateAt: $deactivateAt, deactivateBy: $deactivateBy, equipmentIds: $equipmentIds, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note, archivedAt: $archivedAt)';
   }
 
   @override
@@ -549,12 +549,12 @@ class _$RoomImpl implements _Room {
             ) &&
             (identical(other.isActive, isActive) ||
                 other.isActive == isActive) &&
-            (identical(other.isUnderMaintenance, isUnderMaintenance) ||
-                other.isUnderMaintenance == isUnderMaintenance) &&
-            (identical(other.maintenanceNote, maintenanceNote) ||
-                other.maintenanceNote == maintenanceNote) &&
-            (identical(other.maintenanceUntil, maintenanceUntil) ||
-                other.maintenanceUntil == maintenanceUntil) &&
+            (identical(other.deactivateReason, deactivateReason) ||
+                other.deactivateReason == deactivateReason) &&
+            (identical(other.deactivateAt, deactivateAt) ||
+                other.deactivateAt == deactivateAt) &&
+            (identical(other.deactivateBy, deactivateBy) ||
+                other.deactivateBy == deactivateBy) &&
             const DeepCollectionEquality().equals(
               other._equipmentIds,
               _equipmentIds,
@@ -588,9 +588,9 @@ class _$RoomImpl implements _Room {
     closeTime,
     const DeepCollectionEquality().hash(_workingDays),
     isActive,
-    isUnderMaintenance,
-    maintenanceNote,
-    maintenanceUntil,
+    deactivateReason,
+    deactivateAt,
+    deactivateBy,
     const DeepCollectionEquality().hash(_equipmentIds),
     const DeepCollectionEquality().hash(_photoUrls),
     floorPlanUrl,
@@ -630,9 +630,9 @@ abstract class _Room implements Room {
     final TimeOfDay? closeTime,
     @JsonKey(name: 'working_days') final List<int> workingDays,
     @JsonKey(name: 'is_active') final bool isActive,
-    @JsonKey(name: 'is_under_maintenance') final bool isUnderMaintenance,
-    @JsonKey(name: 'maintenance_note') final String? maintenanceNote,
-    @JsonKey(name: 'maintenance_until') final DateTime? maintenanceUntil,
+    @JsonKey(name: 'deactivate_reason') final String? deactivateReason,
+    @JsonKey(name: 'deactivate_at') final DateTime? deactivateAt,
+    @JsonKey(name: 'deactivate_by') final String? deactivateBy,
     @JsonKey(name: 'equipment_ids') final List<String> equipmentIds,
     @JsonKey(name: 'photo_urls') final List<String> photoUrls,
     @JsonKey(name: 'floor_plan_url') final String? floorPlanUrl,
@@ -682,14 +682,14 @@ abstract class _Room implements Room {
   @JsonKey(name: 'is_active')
   bool get isActive;
   @override
-  @JsonKey(name: 'is_under_maintenance')
-  bool get isUnderMaintenance;
+  @JsonKey(name: 'deactivate_reason')
+  String? get deactivateReason;
   @override
-  @JsonKey(name: 'maintenance_note')
-  String? get maintenanceNote;
+  @JsonKey(name: 'deactivate_at')
+  DateTime? get deactivateAt;
   @override
-  @JsonKey(name: 'maintenance_until')
-  DateTime? get maintenanceUntil;
+  @JsonKey(name: 'deactivate_by')
+  String? get deactivateBy;
   @override
   @JsonKey(name: 'equipment_ids')
   List<String> get equipmentIds;

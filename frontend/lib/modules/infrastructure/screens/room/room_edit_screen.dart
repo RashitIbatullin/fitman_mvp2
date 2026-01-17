@@ -1,6 +1,7 @@
 import 'package:fitman_app/modules/infrastructure/models/room/room.model.dart';
 import 'package:fitman_app/modules/infrastructure/models/room/room_type.enum.dart';
 import 'package:fitman_app/modules/infrastructure/providers/building_provider.dart';
+import 'package:fitman_app/providers/auth_provider.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,11 +24,11 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
   late TextEditingController _floorController;
   late TextEditingController _maxCapacityController;
   late TextEditingController _areaController;
-  late TextEditingController _maintenanceNoteController;
+  late TextEditingController _deactivationReasonController;
 
   String? _selectedBuildingId;
   late RoomType _selectedRoomType;
-  late bool _isUnderMaintenance;
+  late bool _isActive;
 
   @override
   void initState() {
@@ -38,11 +39,11 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
     _floorController = TextEditingController(text: widget.room.floor);
     _maxCapacityController = TextEditingController(text: widget.room.maxCapacity.toString());
     _areaController = TextEditingController(text: widget.room.area?.toString());
-    _maintenanceNoteController = TextEditingController(text: widget.room.maintenanceNote);
+    _deactivationReasonController = TextEditingController(text: widget.room.deactivateReason);
 
     _selectedBuildingId = widget.room.buildingId;
     _selectedRoomType = widget.room.type;
-    _isUnderMaintenance = widget.room.isUnderMaintenance;
+    _isActive = widget.room.isActive;
   }
 
   @override
@@ -53,7 +54,7 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
     _floorController.dispose();
     _maxCapacityController.dispose();
     _areaController.dispose();
-    _maintenanceNoteController.dispose();
+    _deactivationReasonController.dispose();
     super.dispose();
   }
 
@@ -169,20 +170,19 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                   return null;
                 },
               ),
-              CheckboxListTile(
-                title: const Text('На ремонте'),
-                value: _isUnderMaintenance,
+              SwitchListTile(
+                title: const Text('Активно'),
+                value: _isActive,
                 onChanged: (value) {
-                  setState(() {
-                    _isUnderMaintenance = value!;
-                  });
+                  _handleActivityChange(value);
                 },
               ),
-              if (_isUnderMaintenance)
+              if (!_isActive)
                 TextFormField(
-                  controller: _maintenanceNoteController,
+                  controller: _deactivationReasonController,
                   decoration:
-                      const InputDecoration(labelText: 'Причина ремонта'),
+                      const InputDecoration(labelText: 'Причина деактивации'),
+                  enabled: false, // Make it read-only
                 ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -196,8 +196,79 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
     );
   }
 
+  void _handleActivityChange(bool value) {
+    if (value) {
+      // If activating, just update the state
+      setState(() {
+        _isActive = true;
+        _deactivationReasonController.clear();
+      });
+    } else {
+      // If deactivating, show the dialog
+      _showDeactivationDialog();
+    }
+  }
+
+  void _showDeactivationDialog() {
+    final reasonController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Деактивировать помещение'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: reasonController,
+              decoration:
+                  const InputDecoration(labelText: 'Причина деактивации'),
+              validator: (value) {
+                if (value == null || value.trim().length < 5) {
+                  return 'Причина должна содержать не менее 5 символов.';
+                }
+                return null;
+              },
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Отмена'),
+            ),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: reasonController,
+              builder: (context, value, child) {
+                return ElevatedButton(
+                  onPressed: value.text.trim().length >= 5
+                      ? () {
+                          if (formKey.currentState!.validate()) {
+                            setState(() {
+                              _isActive = false;
+                              _deactivationReasonController.text =
+                                  reasonController.text;
+                            });
+                            Navigator.of(context).pop();
+                          }
+                        }
+                      : null,
+                  child: const Text('Деактивировать'),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _updateRoom() async {
     if (_formKey.currentState!.validate()) {
+      final authState = ref.read(authProvider).value;
+      final userId = authState?.user?.id;
+
       final updatedRoom = widget.room.copyWith(
         name: _nameController.text,
         description: _descriptionController.text,
@@ -207,8 +278,10 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
         buildingId: _selectedBuildingId,
         maxCapacity: int.tryParse(_maxCapacityController.text) ?? 0,
         area: double.tryParse(_areaController.text),
-        isUnderMaintenance: _isUnderMaintenance,
-        maintenanceNote: _maintenanceNoteController.text,
+        isActive: _isActive,
+        deactivateReason: !_isActive ? _deactivationReasonController.text : null,
+        deactivateAt: !_isActive ? DateTime.now() : null,
+        deactivateBy: !_isActive ? userId?.toString() : null,
       );
 
       try {

@@ -22,8 +22,8 @@ class RoomRepositoryImpl implements RoomRepository {
     final result = await conn.execute(
       Sql.named('''
         WITH new_row AS (
-          INSERT INTO rooms (name, description, room_number, type, floor, building_id, max_capacity, area, open_time, close_time, working_days, is_active, is_under_maintenance, maintenance_note, maintenance_until) 
-          VALUES (@name, @description, @room_number, @type, @floor, @building_id, @max_capacity, @area, @open_time, @close_time, @working_days, @is_active, @is_under_maintenance, @maintenance_note, @maintenance_until) 
+          INSERT INTO rooms (name, description, room_number, type, floor, building_id, max_capacity, area, open_time, close_time, working_days, is_active, deactivate_reason, deactivate_at, deactivate_by) 
+          VALUES (@name, @description, @room_number, @type, @floor, @building_id, @max_capacity, @area, @open_time, @close_time, @working_days, @is_active, @deactivate_reason, @deactivate_at, @deactivate_by) 
           RETURNING *
         )
         SELECT nr.*, b.name as building_name 
@@ -43,9 +43,9 @@ class RoomRepositoryImpl implements RoomRepository {
         'close_time': room.closeTime,
         'working_days': jsonEncode(room.workingDays),
         'is_active': room.isActive,
-        'is_under_maintenance': room.isUnderMaintenance,
-        'maintenance_note': room.maintenanceNote,
-        'maintenance_until': room.maintenanceUntil,
+        'deactivate_reason': room.deactivateReason,
+        'deactivate_at': room.deactivateAt,
+        'deactivate_by': room.deactivateBy != null ? int.parse(room.deactivateBy!) : null,
       },
     );
     return Room.fromMap(result.first.toColumnMap());
@@ -126,9 +126,9 @@ class RoomRepositoryImpl implements RoomRepository {
             working_days = @working_days, 
             photo_urls = @photo_urls, 
             is_active = @is_active, 
-            is_under_maintenance = @is_under_maintenance, 
-            maintenance_note = @maintenance_note, 
-            maintenance_until = @maintenance_until, 
+            deactivate_reason = @deactivate_reason, 
+            deactivate_at = @deactivate_at, 
+            deactivate_by = @deactivate_by, 
             archived_at = @archived_at, 
             updated_at = NOW() 
           WHERE id = @id 
@@ -153,9 +153,9 @@ class RoomRepositoryImpl implements RoomRepository {
         'working_days': jsonEncode(room.workingDays),
         'photo_urls': jsonEncode(room.photoUrls),
         'is_active': room.isActive,
-        'is_under_maintenance': room.isUnderMaintenance,
-        'maintenance_note': room.maintenanceNote,
-        'maintenance_until': room.maintenanceUntil,
+        'deactivate_reason': room.deactivateReason,
+        'deactivate_at': room.deactivateAt,
+        'deactivate_by': room.deactivateBy != null ? int.parse(room.deactivateBy!) : null,
         'archived_at': room.archivedAt,
       },
     );

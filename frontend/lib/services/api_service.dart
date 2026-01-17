@@ -58,7 +58,7 @@ class ApiService {
 
   // --- Infrastructure API Methods ---
 
-  static Future<List<Room>> getAllRooms({String? buildingId, int? roomType, bool? isUnderMaintenance, bool? isArchived}) async {
+  static Future<List<Room>> getAllRooms({String? buildingId, int? roomType, bool? isActive, bool? isArchived}) async {
     try {
       final queryParameters = <String, String>{};
       if (buildingId != null) {
@@ -67,8 +67,8 @@ class ApiService {
       if (roomType != null) {
         queryParameters['roomType'] = roomType.toString();
       }
-      if (isUnderMaintenance != null) {
-        queryParameters['isUnderMaintenance'] = isUnderMaintenance.toString();
+      if (isActive != null) {
+        queryParameters['isActive'] = isActive.toString();
       }
       if (isArchived != null) {
         queryParameters['isArchived'] = isArchived.toString();

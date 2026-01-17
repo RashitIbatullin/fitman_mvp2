@@ -18,9 +18,9 @@ class Room {
     this.closeTime,
     this.workingDays,
     this.isActive = true,
-    this.isUnderMaintenance = false,
-    this.maintenanceNote,
-    this.maintenanceUntil,
+    this.deactivateReason,
+    this.deactivateAt,
+    this.deactivateBy,
     this.photoUrls,
     this.floorPlanUrl,
     this.note,
@@ -47,9 +47,9 @@ class Room {
   final Time? closeTime;
   final List<int>? workingDays;
   final bool isActive;
-  final bool isUnderMaintenance;
-  final String? maintenanceNote;
-  final DateTime? maintenanceUntil;
+  final String? deactivateReason;
+  final DateTime? deactivateAt;
+  final String? deactivateBy;
   final List<String>? photoUrls;
   final String? floorPlanUrl;
   final String? note;
@@ -119,13 +119,13 @@ class Room {
       closeTime: parsedCloseTime,
       workingDays: parsedWorkingDays,
       isActive: map['is_active'] as bool,
-      isUnderMaintenance: map['is_under_maintenance'] as bool,
-      maintenanceNote: map['maintenance_note'] as String?,
-      maintenanceUntil: map['maintenance_until'] is DateTime
-          ? map['maintenance_until'] as DateTime
-          : (map['maintenance_until'] == null
+      deactivateReason: map['deactivate_reason'] as String?,
+      deactivateAt: map['deactivate_at'] is DateTime
+          ? map['deactivate_at'] as DateTime
+          : (map['deactivate_at'] == null
               ? null
-              : DateTime.parse(map['maintenance_until'] as String)),
+              : DateTime.parse(map['deactivate_at'] as String)),
+      deactivateBy: map['deactivate_by']?.toString(),
       photoUrls: parsedPhotoUrls,
       floorPlanUrl: map['floor_plan_url'] as String?,
       note: map['note'] as String?,
@@ -189,11 +189,11 @@ class Room {
       workingDays:
           (json['working_days'] as List<dynamic>?)?.cast<int>() ?? const [],
       isActive: json['is_active'] as bool? ?? true,
-      isUnderMaintenance: json['is_under_maintenance'] as bool? ?? false,
-      maintenanceNote: json['maintenance_note'] as String?,
-      maintenanceUntil: json['maintenance_until'] == null
+      deactivateReason: json['deactivate_reason'] as String?,
+      deactivateAt: json['deactivate_at'] == null
           ? null
-          : DateTime.parse(json['maintenance_until'] as String),
+          : DateTime.parse(json['deactivate_at'] as String),
+      deactivateBy: json['deactivate_by'] as String?,
       photoUrls:
           (json['photo_urls'] as List<dynamic>?)?.cast<String>() ?? const [],
       floorPlanUrl: json['floor_plan_url'] as String?,
@@ -230,9 +230,9 @@ class Room {
       'close_time': closeTime?.toString(), // Convert Time to string
       'working_days': workingDays,
       'is_active': isActive,
-      'is_under_maintenance': isUnderMaintenance,
-      'maintenance_note': maintenanceNote,
-      'maintenance_until': maintenanceUntil?.toIso8601String(),
+      'deactivate_reason': deactivateReason,
+      'deactivate_at': deactivateAt?.toIso8601String(),
+      'deactivate_by': deactivateBy,
       'photo_urls': photoUrls, // Use snake_case for DB
       'floor_plan_url': floorPlanUrl, // Use snake_case for DB
       'note': note,

@@ -21,11 +21,9 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
   final _floorController = TextEditingController();
   final _maxCapacityController = TextEditingController();
   final _areaController = TextEditingController();
-  final _maintenanceNoteController = TextEditingController();
 
   String? _selectedBuildingId;
   RoomType _selectedRoomType = RoomType.groupHall;
-  bool _isUnderMaintenance = false;
 
   @override
   Widget build(BuildContext context) {
@@ -139,21 +137,6 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                   return null;
                 },
               ),
-              CheckboxListTile(
-                title: const Text('На ремонте'),
-                value: _isUnderMaintenance,
-                onChanged: (value) {
-                  setState(() {
-                    _isUnderMaintenance = value!;
-                  });
-                },
-              ),
-              if (_isUnderMaintenance)
-                TextFormField(
-                  controller: _maintenanceNoteController,
-                  decoration:
-                      const InputDecoration(labelText: 'Причина ремонта'),
-                ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _createRoom,
@@ -178,8 +161,6 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
         buildingId: _selectedBuildingId,
         maxCapacity: int.tryParse(_maxCapacityController.text) ?? 0,
         area: double.tryParse(_areaController.text),
-        isUnderMaintenance: _isUnderMaintenance,
-        maintenanceNote: _maintenanceNoteController.text,
         photoUrls: [],
         workingDays: [], // Default to empty
       );

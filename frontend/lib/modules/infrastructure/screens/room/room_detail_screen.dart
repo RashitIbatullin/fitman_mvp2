@@ -105,12 +105,12 @@ class RoomDetailScreen extends ConsumerWidget {
             _buildInfoRow(context, 'Корпус:', room.buildingName!),
           _buildInfoRow(context, 'Вместимость:', '${room.maxCapacity} чел.'),
           _buildInfoRow(context, 'Площадь:', '${room.area ?? 'N/A'} м²'),
+          _buildInfoRow(context, 'Статус:', room.isActive ? 'Активно' : 'Неактивно'),
+          if (!room.isActive)
+            _buildInfoRow(context, 'Причина:', room.deactivateReason ?? 'Не указана'),
           if (room.archivedAt != null)
             _buildInfoRow(
                 context, 'Архивировано:', room.archivedAt!.toIso8601String()),
-          if (room.isUnderMaintenance)
-            _buildInfoRow(
-                context, 'На ремонте:', room.maintenanceNote ?? 'Да'),
         ],
       ),
     );

@@ -47,12 +47,10 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
     AsyncValue<List<EquipmentItem>> equipmentItemsAsync,
   ) {
     final totalRooms = roomsAsync.valueOrNull?.length ?? 0;
-    final activeRooms = roomsAsync.valueOrNull
-            ?.where((room) => room.isActive && !room.isUnderMaintenance)
-            .length ??
-        0;
-    final roomsUnderMaintenance =
-        roomsAsync.valueOrNull?.where((room) => room.isUnderMaintenance).length ?? 0;
+    final activeRooms =
+        roomsAsync.valueOrNull?.where((room) => room.isActive).length ?? 0;
+    final inactiveRooms =
+        roomsAsync.valueOrNull?.where((room) => !room.isActive).length ?? 0;
 
     final totalEquipmentItems = equipmentItemsAsync.valueOrNull?.length ?? 0;
     final availableEquipment = equipmentItemsAsync.valueOrNull
@@ -80,7 +78,7 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
             _buildKpiChip(context, 'Всего оборудования', totalEquipmentItems.toString(), equipmentItemsAsync),
             _buildKpiChip(context, 'Залы в работе', activeRooms.toString(), roomsAsync),
             _buildKpiChip(context, 'Оборудование доступно', availableEquipment.toString(), equipmentItemsAsync),
-            _buildKpiChip(context, 'На ремонте', roomsUnderMaintenance.toString(), roomsAsync),
+            _buildKpiChip(context, 'Неактивные', inactiveRooms.toString(), roomsAsync),
             _buildKpiChip(context, 'Требует ТО', equipmentNeedsMaintenance.toString(), equipmentItemsAsync),
           ],
         ),
@@ -192,9 +190,8 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
   }
 
   Color _getRoomColor(Room room) {
-    if (room.isUnderMaintenance) return Colors.orange.shade100;
-    if (room.isActive) return Colors.green.shade100;
-    return Colors.grey.shade300;
+    if (!room.isActive) return Colors.orange.shade100;
+    return Colors.green.shade100;
   }
 
   Widget _buildQuickActions(BuildContext context) {

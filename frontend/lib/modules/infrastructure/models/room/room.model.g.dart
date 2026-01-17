@@ -25,11 +25,11 @@ _$RoomImpl _$$RoomImplFromJson(Map<String, dynamic> json) => _$RoomImpl(
           .toList() ??
       const [],
   isActive: json['is_active'] as bool? ?? true,
-  isUnderMaintenance: json['is_under_maintenance'] as bool? ?? false,
-  maintenanceNote: json['maintenance_note'] as String?,
-  maintenanceUntil: json['maintenance_until'] == null
+  deactivateReason: json['deactivate_reason'] as String?,
+  deactivateAt: json['deactivate_at'] == null
       ? null
-      : DateTime.parse(json['maintenance_until'] as String),
+      : DateTime.parse(json['deactivate_at'] as String),
+  deactivateBy: json['deactivate_by'] as String?,
   equipmentIds:
       (json['equipment_ids'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -63,9 +63,9 @@ Map<String, dynamic> _$$RoomImplToJson(_$RoomImpl instance) =>
       'close_time': const TimeOfDayConverter().toJson(instance.closeTime),
       'working_days': instance.workingDays,
       'is_active': instance.isActive,
-      'is_under_maintenance': instance.isUnderMaintenance,
-      'maintenance_note': instance.maintenanceNote,
-      'maintenance_until': instance.maintenanceUntil?.toIso8601String(),
+      'deactivate_reason': instance.deactivateReason,
+      'deactivate_at': instance.deactivateAt?.toIso8601String(),
+      'deactivate_by': instance.deactivateBy,
       'equipment_ids': instance.equipmentIds,
       'photo_urls': instance.photoUrls,
       'floor_plan_url': instance.floorPlanUrl,

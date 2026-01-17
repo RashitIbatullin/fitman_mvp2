@@ -92,7 +92,6 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
   Widget build(BuildContext context) {
     final roomsAsync = ref.watch(allRoomsProvider);
     final roomTypeFilter = ref.watch(roomTypeFilterProvider);
-    final isUnderMaintenanceFilter = ref.watch(roomIsUnderMaintenanceFilterProvider);
 
 
     return Scaffold(
@@ -195,14 +194,14 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                     FilterPopupMenuButton<bool?>(
                       tooltip: 'Статус',
                       allOptionText: 'Статус: Все',
-                      initialValue: isUnderMaintenanceFilter,
-                      avatar: const Icon(Icons.build_outlined),
+                      initialValue: ref.watch(roomIsActiveFilterProvider),
+                      avatar: const Icon(Icons.power_settings_new_outlined),
                       onSelected: (value) {
-                        ref.read(roomIsUnderMaintenanceFilterProvider.notifier).state = value;
+                        ref.read(roomIsActiveFilterProvider.notifier).state = value;
                       },
                       options: const [
-                        FilterOption(label: 'На ремонте', value: true),
-                        FilterOption(label: 'Активные', value: false),
+                        FilterOption(label: 'Активные', value: true),
+                        FilterOption(label: 'Неактивные', value: false),
                       ],
                       showAllOption: true,
                     ),
@@ -257,15 +256,10 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                       Row(
                         children: [
                           Text('Статус: '),
-                          room.isUnderMaintenance
-                              ? const Chip(
-                                  label: Text('На ремонте'),
-                                  backgroundColor: Colors.orangeAccent,
-                                )
-                              : const Chip(
-                                  label: Text('Активно'),
-                                  backgroundColor: Colors.greenAccent,
-                                ),
+                          Chip(
+                            label: Text(room.isActive ? 'Активно' : 'Неактивно'),
+                            backgroundColor: room.isActive ? Colors.greenAccent : Colors.orangeAccent,
+                          ),
                           if (room.archivedAt != null)
                             const Padding(
                               padding: EdgeInsets.only(left: 8.0),
@@ -276,6 +270,14 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                             ),
                         ],
                       ),
+                      if (!room.isActive && room.deactivateReason != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            'Причина: ${room.deactivateReason}',
+                            style: TextStyle(color: Colors.red[700]),
+                          ),
+                        ),
                     ],
                   ),
                   onTap: () {

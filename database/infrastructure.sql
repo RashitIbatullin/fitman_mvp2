@@ -435,9 +435,9 @@ CREATE TABLE rooms (
   
   -- Статус
   is_active BOOLEAN DEFAULT true,
-  is_under_maintenance BOOLEAN DEFAULT false,
-  maintenance_note TEXT,
-  maintenance_until DATE,
+  deactivate_reason TEXT,
+  deactivate_at TIMESTAMPTZ,
+  deactivate_by BIGINT REFERENCES users(id),
   
   -- Файлы
   photo_urls JSONB,
