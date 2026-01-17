@@ -66,7 +66,7 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
               ),
               // 2. Тип
               DropdownButtonFormField<RoomType>(
-                value: _selectedRoomType,
+                initialValue: _selectedRoomType,
                 decoration: const InputDecoration(labelText: 'Тип помещения *'),
                 items: RoomType.values.map((type) {
                   return DropdownMenuItem(
@@ -129,7 +129,7 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                     });
                   }
                   return DropdownButtonFormField<String>(
-                    value: _selectedBuildingId,
+                    initialValue: _selectedBuildingId,
                     decoration: const InputDecoration(labelText: 'Здание *'),
                     items: activeBuildings.map((building) {
                       return DropdownMenuItem<String>(

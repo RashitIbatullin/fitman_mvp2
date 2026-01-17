@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/room/room.model.dart';
 import '../../models/equipment/equipment_item.model.dart';
 import '../../models/equipment/equipment_status.enum.dart';
-import '../room/room_create_screen.dart';
+
 import '../building/buildings_list_screen.dart';
 import '../../providers/room_provider.dart';
 import '../room/rooms_list_screen.dart';
@@ -23,6 +23,18 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Управление помещениями'),
+        actions: [
+          TextButton.icon(
+            icon: const Icon(Icons.business, color: Colors.black),
+            label: const Text('Здания', style: TextStyle(color: Colors.black)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BuildingsListScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
@@ -246,28 +258,8 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
               spacing: 8.0,
               runSpacing: 8.0,
               children: [
-                ActionChip(
-                  avatar: const Icon(Icons.business),
-                  label: const Text('Здания'),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const BuildingsListScreen()),
-                    );
-                  },
-                ),
-                ActionChip(
-                  avatar: const Icon(Icons.add_home_work),
-                  label: const Text('Добавить помещение'),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const RoomCreateScreen()),
-                    );
-                  },
-                ),
+
+
                 ActionChip(
                   avatar: const Icon(Icons.book),
                   label: const Text('Забронировать'),
