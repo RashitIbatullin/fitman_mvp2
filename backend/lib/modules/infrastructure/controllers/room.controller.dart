@@ -29,8 +29,12 @@ class RoomController {
     final isArchived = queryParams['isArchived'] == null
         ? null
         : queryParams['isArchived'] == 'true';
+    final isActive = queryParams['isActive'] == null
+        ? null
+        : queryParams['isActive'] == 'true';
 
-    final rooms = await _roomService.getRooms(isArchived: isArchived);
+    final rooms =
+        await _roomService.getRooms(isArchived: isArchived, isActive: isActive);
     final roomsJson = rooms.map((r) => r.toJson()).toList();
     return Response.ok(jsonEncode(roomsJson));
   }

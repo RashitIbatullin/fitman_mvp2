@@ -451,9 +451,9 @@ CREATE TABLE rooms (
   updated_by BIGINT REFERENCES users(id),
   archived_at TIMESTAMPTZ,
   archived_by BIGINT REFERENCES users(id),
+  archived_reason TEXT,
   note VARCHAR(100)
 );
-
 -- Экземпляры оборудования
 CREATE TABLE equipment_items (
   id BIGSERIAL PRIMARY KEY,

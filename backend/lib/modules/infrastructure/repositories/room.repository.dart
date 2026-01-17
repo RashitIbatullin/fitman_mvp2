@@ -5,7 +5,7 @@ import 'package:postgres/postgres.dart';
 
 abstract class RoomRepository {
   Future<Room?> getById(String id);
-  Future<List<Room>> getAll({bool? isArchived});
+  Future<List<Room>> getAll({bool? isArchived, bool? isActive});
   Future<Room> create(Room room);
   Future<Room> update(String id, Room room);
   Future<void> archive(String id);
@@ -22,11 +22,11 @@ class RoomRepositoryImpl implements RoomRepository {
     final result = await conn.execute(
       Sql.named('''
         WITH new_row AS (
-          INSERT INTO rooms (name, description, room_number, type, floor, building_id, max_capacity, area, open_time, close_time, working_days, is_active, deactivate_reason, deactivate_at, deactivate_by) 
-          VALUES (@name, @description, @room_number, @type, @floor, @building_id, @max_capacity, @area, @open_time, @close_time, @working_days, @is_active, @deactivate_reason, @deactivate_at, @deactivate_by) 
+          INSERT INTO rooms (name, description, room_number, type, floor, building_id, max_capacity, area, open_time, close_time, working_days, is_active, deactivate_reason, deactivate_at, deactivate_by, archived_at, archived_by, archived_reason) 
+          VALUES (@name, @description, @room_number, @type, @floor, @building_id, @max_capacity, @area, @open_time, @close_time, @working_days, @is_active, @deactivate_reason, @deactivate_at, @deactivate_by, @archived_at, @archived_by, @archived_reason) 
           RETURNING *
         )
-        SELECT nr.*, b.name as building_name 
+        SELECT nr.id, nr.name, nr.description, nr.room_number, nr.type, nr.floor, nr.building_id, b.name as building_name, nr.max_capacity, nr.area, nr.open_time, nr.close_time, nr.working_days, nr.is_active, nr.deactivate_reason, nr.deactivate_at, nr.deactivate_by, nr.photo_urls, nr.floor_plan_url, nr.note, nr.created_at, nr.updated_at, nr.created_by, nr.updated_by, nr.archived_at, nr.archived_by, nr.archived_reason
         FROM new_row nr
         LEFT JOIN buildings b ON nr.building_id = b.id
       '''),
@@ -46,6 +46,9 @@ class RoomRepositoryImpl implements RoomRepository {
         'deactivate_reason': room.deactivateReason,
         'deactivate_at': room.deactivateAt,
         'deactivate_by': room.deactivateBy != null ? int.parse(room.deactivateBy!) : null,
+        'archived_at': room.archivedAt,
+        'archived_by': room.archivedBy != null ? int.parse(room.archivedBy!) : null,
+        'archived_reason': room.archivedReason,
       },
     );
     return Room.fromMap(result.first.toColumnMap());
@@ -61,17 +64,32 @@ class RoomRepositoryImpl implements RoomRepository {
   }
 
   @override
-  Future<List<Room>> getAll({bool? isArchived}) async {
+  Future<List<Room>> getAll({bool? isArchived, bool? isActive}) async {
     try {
       final conn = await _db.connection;
       var query =
-          'SELECT r.*, b.name as building_name FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id';
+          'SELECT r.id, r.name, r.description, r.room_number, r.type, r.floor, r.building_id, b.name as building_name, r.max_capacity, r.area, r.open_time, r.close_time, r.working_days, r.is_active, r.deactivate_reason, r.deactivate_at, r.deactivate_by, r.photo_urls, r.floor_plan_url, r.note, r.created_at, r.updated_at, r.created_by, r.updated_by, r.archived_at, r.archived_by, r.archived_reason FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id';
+      final conditions = <String>[];
+      final parameters = <String, dynamic>{};
+
       if (isArchived != null) {
-        query += isArchived
-            ? ' WHERE r.archived_at IS NOT NULL'
-            : ' WHERE r.archived_at IS NULL';
+        conditions.add(isArchived
+            ? 'r.archived_at IS NOT NULL'
+            : 'r.archived_at IS NULL');
       }
-      final result = await conn.execute(query);
+      if (isActive != null) {
+        conditions.add('r.is_active = @isActive');
+        parameters['isActive'] = isActive;
+      }
+
+      if (conditions.isNotEmpty) {
+        query += ' WHERE ${conditions.join(' AND ')}';
+      }
+
+      final result = await conn.execute(
+        Sql.named(query),
+        parameters: parameters,
+      );
 
       return result
           .map(
@@ -90,7 +108,7 @@ class RoomRepositoryImpl implements RoomRepository {
       final conn = await _db.connection;
       final result = await conn.execute(
         Sql.named(
-            'SELECT r.*, b.name as building_name FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id WHERE r.id = @id'),
+            'SELECT r.id, r.name, r.description, r.room_number, r.type, r.floor, r.building_id, b.name as building_name, r.max_capacity, r.area, r.open_time, r.close_time, r.working_days, r.is_active, r.deactivate_reason, r.deactivate_at, r.deactivate_by, r.photo_urls, r.floor_plan_url, r.note, r.created_at, r.updated_at, r.created_by, r.updated_by, r.archived_at, r.archived_by, r.archived_reason FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id WHERE r.id = @id'),
         parameters: {'id': int.parse(id)},
       );
 
@@ -130,6 +148,7 @@ class RoomRepositoryImpl implements RoomRepository {
             deactivate_at = @deactivate_at, 
             deactivate_by = @deactivate_by, 
             archived_at = @archived_at, 
+            archived_reason = @archived_reason,
             updated_at = NOW() 
           WHERE id = @id 
           RETURNING *
@@ -157,6 +176,7 @@ class RoomRepositoryImpl implements RoomRepository {
         'deactivate_at': room.deactivateAt,
         'deactivate_by': room.deactivateBy != null ? int.parse(room.deactivateBy!) : null,
         'archived_at': room.archivedAt,
+        'archived_reason': room.archivedReason,
       },
     );
     return Room.fromMap(result.first.toColumnMap());

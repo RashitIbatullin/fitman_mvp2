@@ -147,6 +147,7 @@ class Room {
               ? null
               : DateTime.parse(map['archived_at'] as String)),
       archivedBy: map['archived_by']?.toString(),
+      archivedReason: map['archived_reason'] as String?,
     );
   }
 
@@ -242,6 +243,7 @@ class Room {
       'updated_by': updatedBy,
       'archived_at': archivedAt?.toIso8601String(),
       'archived_by': archivedBy,
+      'archived_reason': archivedReason,
     };
   }
 }

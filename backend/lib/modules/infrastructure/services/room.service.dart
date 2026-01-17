@@ -6,8 +6,8 @@ class RoomService {
 
   final RoomRepository _roomRepository;
 
-  Future<List<Room>> getRooms({bool? isArchived}) {
-    return _roomRepository.getAll(isArchived: isArchived);
+  Future<List<Room>> getRooms({bool? isArchived, bool? isActive}) {
+    return _roomRepository.getAll(isArchived: isArchived, isActive: isActive);
   }
 
   Future<Room?> getRoomById(String id) {

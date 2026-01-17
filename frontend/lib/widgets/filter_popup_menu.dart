@@ -33,8 +33,9 @@ class FilterOption<T> {
   final String label;
   final T value;
   final bool enabled; // New property
+  final Widget? avatar;
 
-  const FilterOption({required this.label, required this.value, this.enabled = true});
+  const FilterOption({required this.label, required this.value, this.enabled = true, this.avatar});
 }
 
 // Placeholder for the "All" option to distinguish it from a null value
@@ -87,8 +88,17 @@ class FilterPopupMenuButton<T> extends StatelessWidget {
               ...options.map((option) => PopupMenuItem<dynamic>(
                     value: option.value,
                     enabled: option.enabled, // Use the new enabled property
-                    child: Text(option.label),
-                  )),      ],
+                    child: Row(
+                      children: [
+                        if (option.avatar != null) ...[
+                          option.avatar!,
+                          const SizedBox(width: 8),
+                        ],
+                        Text(option.label),
+                      ],
+                    ),
+                  )),
+            ],
       child: Chip(
         key: ValueKey('filter_chip_${initialValue ?? _kAllValuePlaceholder}'),
         label: Text(currentLabel),

@@ -45,6 +45,7 @@ _$RoomImpl _$$RoomImplFromJson(Map<String, dynamic> json) => _$RoomImpl(
   archivedAt: json['archived_at'] == null
       ? null
       : DateTime.parse(json['archived_at'] as String),
+  archivedReason: json['archived_reason'] as String?,
 );
 
 Map<String, dynamic> _$$RoomImplToJson(_$RoomImpl instance) =>
@@ -71,4 +72,5 @@ Map<String, dynamic> _$$RoomImplToJson(_$RoomImpl instance) =>
       'floor_plan_url': instance.floorPlanUrl,
       'note': instance.note,
       'archived_at': instance.archivedAt?.toIso8601String(),
+      'archived_reason': instance.archivedReason,
     };

@@ -20,6 +20,8 @@ class RoomsListViewScreen extends ConsumerStatefulWidget {
 class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
   Room? _selectedRoom;
   final TextEditingController _searchQueryController = TextEditingController();
+  final TextEditingController _archiveReasonController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -32,6 +34,7 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
   @override
   void dispose() {
     _searchQueryController.dispose();
+    _archiveReasonController.dispose();
     super.dispose();
   }
 
@@ -46,11 +49,12 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
     }).toList();
   }
 
-  Future<void> _archiveRoom() async {
+  Future<void> _performArchive(String reason) async {
     final selectedRoom = _selectedRoom;
-    if (selectedRoom == null) return; // _selectedRoom?.id was already checked in FilterOption
+    if (selectedRoom == null) return;
     try {
-      await ApiService.updateRoom(selectedRoom.id, selectedRoom.copyWith(archivedAt: DateTime.now()));
+      await ApiService.updateRoom(
+          selectedRoom.id, selectedRoom.copyWith(archivedAt: DateTime.now(), archivedReason: reason));
       ref.invalidate(allRoomsProvider);
       if (mounted) {
         setState(() => _selectedRoom = null);
@@ -67,11 +71,65 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
     }
   }
 
+  void _showArchiveRoomDialog() async {
+    final roomToArchive = _selectedRoom;
+    if (roomToArchive == null) return;
+
+    _archiveReasonController.clear();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Подтвердите архивацию'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Вы уверены, что хотите архивировать помещение "${roomToArchive.name}"?'),
+              TextFormField(
+                controller: _archiveReasonController,
+                decoration: const InputDecoration(
+                  hintText: 'Причина архивации (не менее 5 символов)*',
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().length < 5) {
+                    return 'Причина должна содержать не менее 5 символов.';
+                  }
+                  return null;
+                },
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                Navigator.of(context).pop(true);
+              }
+            },
+            child: const Text('Архивировать'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _performArchive(_archiveReasonController.text.trim());
+    }
+  }
+
   Future<void> _unarchiveRoom() async {
     final selectedRoom = _selectedRoom;
-    if (selectedRoom == null) return; // _selectedRoom?.id was already checked in FilterOption
+    if (selectedRoom == null) return;
     try {
-      await ApiService.updateRoom(selectedRoom.id, selectedRoom.copyWith(archivedAt: null));
+      await ApiService.updateRoom(selectedRoom.id, selectedRoom.copyWith(archivedAt: null, archivedReason: null));
       ref.invalidate(allRoomsProvider);
       if (mounted) {
         setState(() => _selectedRoom = null);
@@ -149,16 +207,10 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                             }
                             break;
                           case 'archive':
-                            final selectedRoom = _selectedRoom;
-                            if (selectedRoom != null && selectedRoom.archivedAt == null) {
-                              _archiveRoom();
-                            }
+                            _showArchiveRoomDialog();
                             break;
                           case 'unarchive':
-                            final selectedRoom = _selectedRoom;
-                            if (selectedRoom != null && selectedRoom.archivedAt != null) {
-                              _unarchiveRoom();
-                            }
+                            _unarchiveRoom();
                             break;
                         }
                       },
@@ -187,7 +239,7 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                       onSelected: (value) {
                         ref.read(roomTypeFilterProvider.notifier).state = value;
                       },
-                      options: RoomType.values.map((type) => FilterOption(label: type.displayName, value: type)).toList(),
+                      options: RoomType.values.map((type) => FilterOption(label: type.displayName, value: type, avatar: Icon(type.icon))).toList(),
                       showAllOption: true,
                     ),
                     const SizedBox(width: 8),
@@ -202,6 +254,21 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                       options: const [
                         FilterOption(label: 'Активные', value: true),
                         FilterOption(label: 'Неактивные', value: false),
+                      ],
+                      showAllOption: true,
+                    ),
+                    const SizedBox(width: 8),
+                    FilterPopupMenuButton<bool?>(
+                      tooltip: 'Фильтр по архивации',
+                      allOptionText: 'Архив: Все',
+                      initialValue: ref.watch(roomIsArchivedFilterProvider),
+                      avatar: const Icon(Icons.archive_outlined),
+                      onSelected: (value) {
+                        ref.read(roomIsArchivedFilterProvider.notifier).state = value;
+                      },
+                      options: const [
+                        FilterOption(label: 'В архиве', value: true),
+                        FilterOption(label: 'Не в архиве', value: false),
                       ],
                       showAllOption: true,
                     ),

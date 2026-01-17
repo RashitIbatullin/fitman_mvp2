@@ -48,6 +48,7 @@ class Room with _$Room {
     @JsonKey(name: 'floor_plan_url') String? floorPlanUrl,
     String? note,
     @JsonKey(name: 'archived_at') DateTime? archivedAt,
+    @JsonKey(name: 'archived_reason') String? archivedReason,
   }) = _Room;
 
   factory Room.fromJson(Map<String, dynamic> json) => _$RoomFromJson(json);
