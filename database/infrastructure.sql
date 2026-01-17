@@ -421,7 +421,7 @@ CREATE TABLE rooms (
   type SMALLINT NOT NULL,  -- RoomType enum (0:groupHall, 1:cardioZone, 2:strengthZone, 3:mixedZone, 4:studio, 5:boxingRing, 6:pool, 7:lockerRoom, 8:reception, 9:office, 10:other)
   
   -- Локация
-  floor VARCHAR(50),
+  floor INT,
   building_id BIGINT REFERENCES buildings(id),
   
   -- Характеристики

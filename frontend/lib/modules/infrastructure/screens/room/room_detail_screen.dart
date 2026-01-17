@@ -100,8 +100,8 @@ class RoomDetailScreen extends ConsumerWidget {
           _buildInfoRow(context, 'Вместимость:', '${room.maxCapacity} чел.'),
           if (room.buildingName?.isNotEmpty == true)
             _buildInfoRow(context, 'Корпус:', room.buildingName!),
-          if (room.floor?.isNotEmpty == true)
-            _buildInfoRow(context, 'Этаж:', room.floor!),
+          if (room.floor != null) // Changed from isNotEmpty
+            _buildInfoRow(context, 'Этаж:', room.floor.toString()), // Changed to toString()
           if (room.roomNumber?.isNotEmpty == true)
             _buildInfoRow(context, 'Номер комнаты:', room.roomNumber!),
           _buildInfoRow(context, 'Площадь:', '${room.area ?? 'N/A'} м²'),

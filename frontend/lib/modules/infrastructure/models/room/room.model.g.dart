@@ -12,7 +12,7 @@ _$RoomImpl _$$RoomImplFromJson(Map<String, dynamic> json) => _$RoomImpl(
   description: json['description'] as String?,
   roomNumber: json['room_number'] as String?,
   type: const RoomTypeConverter().fromJson((json['type'] as num).toInt()),
-  floor: json['floor'] as String?,
+  floor: (json['floor'] as num?)?.toInt(),
   buildingId: json['building_id'] as String?,
   buildingName: json['building_name'] as String?,
   maxCapacity: (json['max_capacity'] as num?)?.toInt() ?? 30,

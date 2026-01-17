@@ -1,6 +1,7 @@
 import 'package:fitman_app/modules/infrastructure/models/room/room.model.dart';
 import 'package:fitman_app/modules/infrastructure/models/room/room_type.enum.dart';
 import 'package:fitman_app/modules/infrastructure/providers/building_provider.dart';
+import 'package:fitman_app/modules/infrastructure/providers/room_provider.dart';
 import 'package:fitman_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +24,18 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
   final _areaController = TextEditingController();
 
   String? _selectedBuildingId;
-  RoomType _selectedRoomType = RoomType.groupHall;
+  RoomType? _selectedRoomType; // Changed to nullable
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _roomNumberController.dispose();
+    _floorController.dispose();
+    _maxCapacityController.dispose();
+    _areaController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +52,10 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 1. Название
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Название'),
+                decoration: const InputDecoration(labelText: 'Название *'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Пожалуйста, введите название';
@@ -50,9 +63,10 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                   return null;
                 },
               ),
+              // 2. Тип
               DropdownButtonFormField<RoomType>(
                 initialValue: _selectedRoomType,
-                decoration: const InputDecoration(labelText: 'Тип помещения'),
+                decoration: const InputDecoration(labelText: 'Тип помещения *'),
                 items: RoomType.values.map((type) {
                   return DropdownMenuItem(
                     value: type,
@@ -66,31 +80,39 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedRoomType = value;
-                    });
-                  }
+                  setState(() {
+                    _selectedRoomType = value;
+                  });
                 },
+                validator: (value) =>
+                    value == null ? 'Пожалуйста, выберите тип помещения' : null,
               ),
+              // 3. Описание
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Описание'),
               ),
+              // 4. Вместимость
               TextFormField(
                 controller: _maxCapacityController,
                 decoration:
-                    const InputDecoration(labelText: 'Макс. вместимость'),
+                    const InputDecoration(labelText: 'Макс. вместимость *'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      int.tryParse(value) == null) {
+                  if (value == null || value.isEmpty) {
+                    return 'Пожалуйста, введите вместимость';
+                  }
+                  final capacity = int.tryParse(value);
+                  if (capacity == null) {
                     return 'Введите корректное число';
+                  }
+                  if (capacity <= 0) {
+                    return 'Вместимость должна быть больше 0';
                   }
                   return null;
                 },
               ),
+              // 5. Корпус
               buildingsAsync.when(
                 data: (buildings) => DropdownButtonFormField<String>(
                   initialValue: _selectedBuildingId,
@@ -108,21 +130,30 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                       _selectedBuildingId = value;
                     });
                   },
-                  validator: (value) =>
-                      value == null ? 'Выберите здание' : null,
+                  // Removed validator to make it optional
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) =>
                     Text('Не удалось загрузить здания: $err'),
               ),
+              // 6. Этаж
               TextFormField(
                 controller: _floorController,
                 decoration: const InputDecoration(labelText: 'Этаж'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
+                    return 'Введите корректное число';
+                  }
+                  return null;
+                },
               ),
+              // 7. Номер комнаты
               TextFormField(
                 controller: _roomNumberController,
                 decoration: const InputDecoration(labelText: 'Номер комнаты'),
               ),
+              // 8. Площадь
               TextFormField(
                 controller: _areaController,
                 decoration: const InputDecoration(labelText: 'Площадь (м²)'),
@@ -156,8 +187,8 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
         name: _nameController.text,
         description: _descriptionController.text,
         roomNumber: _roomNumberController.text, // New field
-        type: _selectedRoomType,
-        floor: _floorController.text,
+        type: _selectedRoomType!, // Ensure type is not null
+        floor: int.tryParse(_floorController.text), // Changed to parse int
         buildingId: _selectedBuildingId,
         maxCapacity: int.tryParse(_maxCapacityController.text) ?? 0,
         area: double.tryParse(_areaController.text),
@@ -167,7 +198,7 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
 
       try {
         await ApiService.createRoom(newRoom);
-        // ref.refresh(allRoomsProvider); //This provider does not exist, so commenting out
+        ref.invalidate(allRoomsProvider); // Invalidate to refetch the list
         if (mounted) {
           Navigator.of(context).pop();
         }

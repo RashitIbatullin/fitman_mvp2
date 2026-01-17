@@ -329,7 +329,7 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                     children: [
                       if (room.roomNumber?.isNotEmpty == true) Text('Номер: ${room.roomNumber}'), // Display room number
                       if (room.buildingName?.isNotEmpty == true) Text('Корпус: ${room.buildingName}'), // Display building name
-                      if (room.floor?.isNotEmpty == true) Text('Этаж: ${room.floor}'), // Display floor
+                      if (room.floor != null) Text('Этаж: ${room.floor.toString()}'), // Display floor
                       Text('Тип: ${room.type.displayName}'),
                       Text('Вместимость: ${room.maxCapacity} чел.'),
                       Text('Площадь: ${room.area == null ? 'N/A' : room.area.toString()} м²'), // ignore: unnecessary_null_comparison

@@ -35,7 +35,7 @@ class RoomRepositoryImpl implements RoomRepository {
         'description': room.description,
         'room_number': room.roomNumber,
         'type': room.type.value,
-        'floor': room.floor,
+        'floor': room.floor, // Now int?
         'building_id': room.buildingId != null ? int.parse(room.buildingId!) : null,
         'max_capacity': room.maxCapacity,
         'area': room.area,
@@ -153,7 +153,7 @@ class RoomRepositoryImpl implements RoomRepository {
           WHERE id = @id 
           RETURNING *
         )
-        SELECT u.*, b.name as building_name 
+        SELECT u.id, u.name, u.description, u.room_number, u.type, u.floor, u.building_id, b.name as building_name, u.max_capacity, u.area, u.open_time, u.close_time, u.working_days, u.is_active, u.deactivate_reason, u.deactivate_at, u.deactivate_by, u.photo_urls, u.floor_plan_url, u.note, u.created_at, u.updated_at, u.created_by, u.updated_by, u.archived_at, u.archived_by, u.archived_reason 
         FROM updated u
         LEFT JOIN buildings b ON u.building_id = b.id
       '''),
@@ -163,7 +163,7 @@ class RoomRepositoryImpl implements RoomRepository {
         'description': room.description,
         'room_number': room.roomNumber,
         'type': room.type.value,
-        'floor': room.floor,
+        'floor': room.floor, // Now int?
         'building_id': room.buildingId != null ? int.parse(room.buildingId!) : null,
         'max_capacity': room.maxCapacity,
         'area': room.area,

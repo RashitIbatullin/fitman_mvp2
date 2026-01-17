@@ -38,7 +38,7 @@ class Room {
   final String? description;
   final String? roomNumber;
   final RoomType type;
-  final String? floor;
+  final int? floor; // Changed to int?
   final String? buildingId;
   final String? buildingName;
   final int maxCapacity;
@@ -110,7 +110,7 @@ class Room {
       description: map['description'] as String?,
       roomNumber: map['room_number'] as String?,
       type: RoomType.values.firstWhere((e) => e.value == map['type'] as int),
-      floor: map['floor'] as String?,
+      floor: map['floor'] as int?, // Changed from String?
       buildingId: map['building_id']?.toString(),
       buildingName: map['building_name'] as String?,
       maxCapacity: map['max_capacity'] as int,
@@ -180,7 +180,7 @@ class Room {
       description: json['description'] as String?,
       roomNumber: json['room_number'] as String?,
       type: RoomType.values.firstWhere((e) => e.value == typeValue, orElse: () => RoomType.groupHall),
-      floor: json['floor'] as String?,
+      floor: json['floor'] as int?, // Changed from String?
       buildingId: json['building_id'] as String?,
       buildingName: json['buildingName'] as String?,
       maxCapacity: maxCapacityValue,
@@ -222,7 +222,7 @@ class Room {
       'description': description,
       'room_number': roomNumber,
       'type': type.value, // Convert enum to int value
-      'floor': floor,
+      'floor': floor, // Changed from String?
       'building_id': buildingId, // Use snake_case for DB
       'building_name': buildingName,
       'max_capacity': maxCapacity, // Use snake_case for DB

@@ -36,7 +36,7 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
     _nameController = TextEditingController(text: widget.room.name);
     _descriptionController = TextEditingController(text: widget.room.description);
     _roomNumberController = TextEditingController(text: widget.room.roomNumber);
-    _floorController = TextEditingController(text: widget.room.floor);
+    _floorController = TextEditingController(text: widget.room.floor?.toString()); // Changed
     _maxCapacityController = TextEditingController(text: widget.room.maxCapacity.toString());
     _areaController = TextEditingController(text: widget.room.area?.toString());
     _deactivationReasonController = TextEditingController(text: widget.room.deactivateReason);
@@ -87,7 +87,7 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
               // 2. Тип
               DropdownButtonFormField<RoomType>(
                 initialValue: _selectedRoomType,
-                decoration: const InputDecoration(labelText: 'Тип помещения'),
+                decoration: const InputDecoration(labelText: 'Тип помещения *'),
                 items: RoomType.values.map((type) {
                   return DropdownMenuItem(
                     value: type,
@@ -107,6 +107,8 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                     });
                   }
                 },
+                validator: (value) =>
+                    value == null ? 'Пожалуйста, выберите тип помещения' : null,
               ),
               // 3. Описание
               TextFormField(
@@ -117,13 +119,18 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
               TextFormField(
                 controller: _maxCapacityController,
                 decoration:
-                    const InputDecoration(labelText: 'Макс. вместимость'),
+                    const InputDecoration(labelText: 'Макс. вместимость *'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      int.tryParse(value) == null) {
+                  if (value == null || value.isEmpty) {
+                    return 'Пожалуйста, введите вместимость';
+                  }
+                  final capacity = int.tryParse(value);
+                  if (capacity == null) {
                     return 'Введите корректное число';
+                  }
+                  if (capacity <= 0) {
+                    return 'Вместимость должна быть больше 0';
                   }
                   return null;
                 },
@@ -146,8 +153,7 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                       _selectedBuildingId = value;
                     });
                   },
-                  validator: (value) =>
-                      value == null ? 'Выберите здание' : null,
+                  // Removed validator to make it optional
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) =>
@@ -157,6 +163,13 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
               TextFormField(
                 controller: _floorController,
                 decoration: const InputDecoration(labelText: 'Этаж'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
+                    return 'Введите корректное число';
+                  }
+                  return null;
+                },
               ),
               // 7. Номер комнаты
               TextFormField(
@@ -298,7 +311,7 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
         description: _descriptionController.text,
         roomNumber: _roomNumberController.text,
         type: _selectedRoomType,
-        floor: _floorController.text,
+        floor: int.tryParse(_floorController.text), // Changed
         buildingId: _selectedBuildingId,
         maxCapacity: int.tryParse(_maxCapacityController.text) ?? 0,
         area: double.tryParse(_areaController.text),

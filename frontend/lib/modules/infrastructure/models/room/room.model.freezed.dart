@@ -28,7 +28,8 @@ mixin _$Room {
   String? get roomNumber => throw _privateConstructorUsedError;
   @RoomTypeConverter()
   RoomType get type => throw _privateConstructorUsedError;
-  String? get floor => throw _privateConstructorUsedError;
+  @JsonKey(name: 'floor')
+  int? get floor => throw _privateConstructorUsedError; // Changed to int?
   @JsonKey(name: 'building_id')
   String? get buildingId => throw _privateConstructorUsedError;
   @JsonKey(name: 'building_name')
@@ -84,7 +85,7 @@ abstract class $RoomCopyWith<$Res> {
     String? description,
     @JsonKey(name: 'room_number') String? roomNumber,
     @RoomTypeConverter() RoomType type,
-    String? floor,
+    @JsonKey(name: 'floor') int? floor,
     @JsonKey(name: 'building_id') String? buildingId,
     @JsonKey(name: 'building_name') String? buildingName,
     @JsonKey(name: 'max_capacity') int maxCapacity,
@@ -169,7 +170,7 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
             floor: freezed == floor
                 ? _value.floor
                 : floor // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as int?,
             buildingId: freezed == buildingId
                 ? _value.buildingId
                 : buildingId // ignore: cast_nullable_to_non_nullable
@@ -258,7 +259,7 @@ abstract class _$$RoomImplCopyWith<$Res> implements $RoomCopyWith<$Res> {
     String? description,
     @JsonKey(name: 'room_number') String? roomNumber,
     @RoomTypeConverter() RoomType type,
-    String? floor,
+    @JsonKey(name: 'floor') int? floor,
     @JsonKey(name: 'building_id') String? buildingId,
     @JsonKey(name: 'building_name') String? buildingName,
     @JsonKey(name: 'max_capacity') int maxCapacity,
@@ -340,7 +341,7 @@ class __$$RoomImplCopyWithImpl<$Res>
         floor: freezed == floor
             ? _value.floor
             : floor // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as int?,
         buildingId: freezed == buildingId
             ? _value.buildingId
             : buildingId // ignore: cast_nullable_to_non_nullable
@@ -423,7 +424,7 @@ class _$RoomImpl implements _Room {
     this.description,
     @JsonKey(name: 'room_number') this.roomNumber,
     @RoomTypeConverter() required this.type,
-    this.floor,
+    @JsonKey(name: 'floor') this.floor,
     @JsonKey(name: 'building_id') this.buildingId,
     @JsonKey(name: 'building_name') this.buildingName,
     @JsonKey(name: 'max_capacity') this.maxCapacity = 30,
@@ -461,7 +462,9 @@ class _$RoomImpl implements _Room {
   @RoomTypeConverter()
   final RoomType type;
   @override
-  final String? floor;
+  @JsonKey(name: 'floor')
+  final int? floor;
+  // Changed to int?
   @override
   @JsonKey(name: 'building_id')
   final String? buildingId;
@@ -640,7 +643,7 @@ abstract class _Room implements Room {
     final String? description,
     @JsonKey(name: 'room_number') final String? roomNumber,
     @RoomTypeConverter() required final RoomType type,
-    final String? floor,
+    @JsonKey(name: 'floor') final int? floor,
     @JsonKey(name: 'building_id') final String? buildingId,
     @JsonKey(name: 'building_name') final String? buildingName,
     @JsonKey(name: 'max_capacity') final int maxCapacity,
@@ -677,7 +680,8 @@ abstract class _Room implements Room {
   @RoomTypeConverter()
   RoomType get type;
   @override
-  String? get floor;
+  @JsonKey(name: 'floor')
+  int? get floor; // Changed to int?
   @override
   @JsonKey(name: 'building_id')
   String? get buildingId;
