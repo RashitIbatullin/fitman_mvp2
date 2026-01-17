@@ -312,27 +312,12 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                 child: ListTile(
                   selected: isSelected,
                   selectedTileColor: Theme.of(context).primaryColorLight,
-                  leading: SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: room.photoUrls.isNotEmpty
-                        ? Image.network(
-                            room.photoUrls.first,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
-                          )
-                        : const Icon(Icons.meeting_room),
-                  ),
+                  leading: Icon(room.type.icon, size: 40),
                   title: Text(room.name),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (room.roomNumber?.isNotEmpty == true) Text('Номер: ${room.roomNumber}'), // Display room number
-                      if (room.buildingName?.isNotEmpty == true) Text('Корпус: ${room.buildingName}'), // Display building name
-                      if (room.floor != null) Text('Этаж: ${room.floor.toString()}'), // Display floor
                       Text('Тип: ${room.type.displayName}'),
-                      Text('Вместимость: ${room.maxCapacity} чел.'),
-                      Text('Площадь: ${room.area == null ? 'N/A' : room.area.toString()} м²'), // ignore: unnecessary_null_comparison
                       Row(
                         children: [
                           Text('Статус: '),
@@ -355,7 +340,7 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             'Причина: ${room.deactivateReason}',
-                            style: TextStyle(color: Colors.red[700]),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.red[700]),
                           ),
                         ),
                     ],

@@ -25,6 +25,7 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
 
   String? _selectedBuildingId;
   RoomType? _selectedRoomType; // Changed to nullable
+  bool _buildingDefaultSet = false;
 
   @override
   void dispose() {
@@ -65,7 +66,7 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
               ),
               // 2. Тип
               DropdownButtonFormField<RoomType>(
-                initialValue: _selectedRoomType,
+                value: _selectedRoomType,
                 decoration: const InputDecoration(labelText: 'Тип помещения *'),
                 items: RoomType.values.map((type) {
                   return DropdownMenuItem(
@@ -114,24 +115,37 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
               ),
               // 5. Корпус
               buildingsAsync.when(
-                data: (buildings) => DropdownButtonFormField<String>(
-                  initialValue: _selectedBuildingId,
-                  decoration: const InputDecoration(labelText: 'Здание'),
-                  items: buildings
-                      .where((b) => b.archivedAt == null)
-                      .map((building) {
-                    return DropdownMenuItem<String>(
-                      value: building.id,
-                      child: Text(building.name),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedBuildingId = value;
+                data: (buildings) {
+                  final activeBuildings =
+                      buildings.where((b) => b.archivedAt == null).toList();
+                  if (activeBuildings.length == 1 && !_buildingDefaultSet) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() {
+                          _selectedBuildingId = activeBuildings.first.id;
+                          _buildingDefaultSet = true;
+                        });
+                      }
                     });
-                  },
-                  // Removed validator to make it optional
-                ),
+                  }
+                  return DropdownButtonFormField<String>(
+                    value: _selectedBuildingId,
+                    decoration: const InputDecoration(labelText: 'Здание *'),
+                    items: activeBuildings.map((building) {
+                      return DropdownMenuItem<String>(
+                        value: building.id,
+                        child: Text(building.name),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedBuildingId = value;
+                      });
+                    },
+                    validator: (value) =>
+                        value == null ? 'Пожалуйста, выберите здание' : null,
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) =>
                     Text('Не удалось загрузить здания: $err'),
@@ -142,7 +156,9 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                 decoration: const InputDecoration(labelText: 'Этаж'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      int.tryParse(value) == null) {
                     return 'Введите корректное число';
                   }
                   return null;

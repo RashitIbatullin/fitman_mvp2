@@ -139,7 +139,7 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
               buildingsAsync.when(
                 data: (buildings) => DropdownButtonFormField<String>(
                   initialValue: _selectedBuildingId,
-                  decoration: const InputDecoration(labelText: 'Здание'),
+                  decoration: const InputDecoration(labelText: 'Здание *'),
                   items: buildings
                       .where((b) => b.archivedAt == null)
                       .map((building) {
@@ -153,7 +153,8 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                       _selectedBuildingId = value;
                     });
                   },
-                  // Removed validator to make it optional
+                  validator: (value) =>
+                      value == null ? 'Пожалуйста, выберите здание' : null,
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) =>
