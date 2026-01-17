@@ -50,13 +50,46 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                   return null;
                 },
               ),
+              DropdownButtonFormField<RoomType>(
+                initialValue: _selectedRoomType,
+                decoration: const InputDecoration(labelText: 'Тип помещения'),
+                items: RoomType.values.map((type) {
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Row(
+                      children: [
+                        Icon(type.icon, size: 24),
+                        const SizedBox(width: 10),
+                        Text(type.displayName),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedRoomType = value;
+                    });
+                  }
+                },
+              ),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Описание'),
               ),
               TextFormField(
-                controller: _roomNumberController,
-                decoration: const InputDecoration(labelText: 'Номер комнаты'),
+                controller: _maxCapacityController,
+                decoration:
+                    const InputDecoration(labelText: 'Макс. вместимость'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      int.tryParse(value) == null) {
+                    return 'Введите корректное число';
+                  }
+                  return null;
+                },
               ),
               buildingsAsync.when(
                 data: (buildings) => DropdownButtonFormField<String>(
@@ -82,46 +115,13 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
                 error: (err, stack) =>
                     Text('Не удалось загрузить здания: $err'),
               ),
-              DropdownButtonFormField<RoomType>(
-                initialValue: _selectedRoomType,
-                decoration: const InputDecoration(labelText: 'Тип помещения'),
-                items: RoomType.values.map((type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Row(
-                      children: [
-                        Icon(type.icon, size: 24),
-                        const SizedBox(width: 10),
-                        Text(type.displayName),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedRoomType = value;
-                    });
-                  }
-                },
-              ),
               TextFormField(
                 controller: _floorController,
                 decoration: const InputDecoration(labelText: 'Этаж'),
               ),
               TextFormField(
-                controller: _maxCapacityController,
-                decoration:
-                    const InputDecoration(labelText: 'Макс. вместимость'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      int.tryParse(value) == null) {
-                    return 'Введите корректное число';
-                  }
-                  return null;
-                },
+                controller: _roomNumberController,
+                decoration: const InputDecoration(labelText: 'Номер комнаты'),
               ),
               TextFormField(
                 controller: _areaController,

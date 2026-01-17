@@ -1,4 +1,5 @@
 import 'package:fitman_app/modules/infrastructure/providers/equipment_provider.dart';
+import 'package:fitman_app/widgets/filter_popup_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/room/room.model.dart';
@@ -6,7 +7,7 @@ import '../../models/equipment/equipment_item.model.dart';
 import '../../models/equipment/equipment_status.enum.dart';
 import '../room/room_create_screen.dart';
 import '../building/buildings_list_screen.dart';
-import '../../providers/room_provider.dart'; // Import the new provider definition
+import '../../providers/room_provider.dart';
 import '../room/rooms_list_screen.dart';
 import '../room/room_detail_screen.dart';
 import '../../utils/room_utils.dart';
@@ -26,15 +27,10 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // KPI Section
           _buildKpiSection(context, roomsAsync, equipmentItemsAsync),
           const SizedBox(height: 24.0),
-
-          // Room Map Section
-          _buildRoomMap(context, roomsAsync),
+          _buildRoomMap(context, ref, roomsAsync),
           const SizedBox(height: 24.0),
-
-          // Quick Actions Placeholder
           _buildQuickActions(context),
         ],
       ),
@@ -100,7 +96,7 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRoomMap(BuildContext context, AsyncValue<List<Room>> roomsAsync) {
+  Widget _buildRoomMap(BuildContext context, WidgetRef ref, AsyncValue<List<Room>> roomsAsync) {
     return Card(
       elevation: 2.0,
       clipBehavior: Clip.antiAlias,
@@ -109,9 +105,47 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Карта залов',
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Карта залов',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                Row(
+                  children: [
+                    FilterPopupMenuButton<bool?>(
+                      tooltip: 'Статус',
+                      allOptionText: 'Статус: Все',
+                      initialValue: ref.watch(roomIsActiveFilterProvider),
+                      avatar: const Icon(Icons.power_settings_new_outlined),
+                      onSelected: (value) {
+                        ref.read(roomIsActiveFilterProvider.notifier).state = value;
+                      },
+                      options: const [
+                        FilterOption(label: 'Активные', value: true),
+                        FilterOption(label: 'Неактивные', value: false),
+                      ],
+                      showAllOption: true,
+                    ),
+                    const SizedBox(width: 8),
+                    FilterPopupMenuButton<bool?>(
+                      tooltip: 'Фильтр по архивации',
+                      allOptionText: 'Архив: Все',
+                      initialValue: ref.watch(roomIsArchivedFilterProvider),
+                      avatar: const Icon(Icons.archive_outlined),
+                      onSelected: (value) {
+                        ref.read(roomIsArchivedFilterProvider.notifier).state = value;
+                      },
+                      options: const [
+                        FilterOption(label: 'В архиве', value: true),
+                        FilterOption(label: 'Не в архиве', value: false),
+                      ],
+                      showAllOption: true,
+                    ),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 12.0),
             roomsAsync.when(
@@ -127,8 +161,8 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
                   runSpacing: 8.0,
                   children: rooms.map((room) {
                     return SizedBox(
-                      width: 120, // Increased width
-                      height: 120, // Increased height
+                      width: 120,
+                      height: 120,
                       child: InkWell(
                         onTap: () {
                           Navigator.push(
@@ -147,7 +181,7 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(room.type.icon, size: 40.0), // Increased icon size
+                              Icon(room.type.icon, size: 40.0),
                               const SizedBox(height: 4.0),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -190,6 +224,7 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
   }
 
   Color _getRoomColor(Room room) {
+    if (room.archivedAt != null) return Colors.grey.shade300;
     if (!room.isActive) return Colors.orange.shade100;
     return Colors.green.shade100;
   }
@@ -207,44 +242,44 @@ class InfrastructureDashboardScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12.0),
-                  Wrap(
-                    spacing: 8.0,
-                    runSpacing: 8.0,
-                    children: [
-                      ActionChip(
-                        avatar: const Icon(Icons.business),
-                        label: const Text('Здания'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const BuildingsListScreen()),
-                          );
-                        },
-                      ),
-                      ActionChip(
-                        avatar: const Icon(Icons.add_home_work),
-                        label: const Text('Добавить помещение'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const RoomCreateScreen()),
-                          );
-                        },
-                      ),
-                      ActionChip(
-                        avatar: const Icon(Icons.book),
-                        label: const Text('Забронировать'),
-                        onPressed: () { /* TODO */ },
-                      ),
-                      ActionChip(
-                        avatar: const Icon(Icons.calendar_month),
-                        label: const Text('Расписание'),
-                        onPressed: () { /* TODO */ },
-                      ),
-                    ],
-                  ),
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: [
+                ActionChip(
+                  avatar: const Icon(Icons.business),
+                  label: const Text('Здания'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const BuildingsListScreen()),
+                    );
+                  },
+                ),
+                ActionChip(
+                  avatar: const Icon(Icons.add_home_work),
+                  label: const Text('Добавить помещение'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const RoomCreateScreen()),
+                    );
+                  },
+                ),
+                ActionChip(
+                  avatar: const Icon(Icons.book),
+                  label: const Text('Забронировать'),
+                  onPressed: () { /* TODO */ },
+                ),
+                ActionChip(
+                  avatar: const Icon(Icons.calendar_month),
+                  label: const Text('Расписание'),
+                  onPressed: () { /* TODO */ },
+                ),
+              ],
+            ),
           ],
         ),
       ),

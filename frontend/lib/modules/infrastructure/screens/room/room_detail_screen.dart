@@ -95,22 +95,34 @@ class RoomDetailScreen extends ConsumerWidget {
         children: [
           // TODO: Add Image Carousel
           _buildInfoRow(context, 'Название:', room.name),
-          if (room.roomNumber?.isNotEmpty == true)
-            _buildInfoRow(context, 'Номер:', room.roomNumber!),
           _buildInfoRow(context, 'Тип:', room.type.displayName),
           _buildInfoRow(context, 'Описание:', room.description ?? 'N/A'),
-          if (room.floor?.isNotEmpty == true)
-            _buildInfoRow(context, 'Этаж:', room.floor!),
+          _buildInfoRow(context, 'Вместимость:', '${room.maxCapacity} чел.'),
           if (room.buildingName?.isNotEmpty == true)
             _buildInfoRow(context, 'Корпус:', room.buildingName!),
-          _buildInfoRow(context, 'Вместимость:', '${room.maxCapacity} чел.'),
+          if (room.floor?.isNotEmpty == true)
+            _buildInfoRow(context, 'Этаж:', room.floor!),
+          if (room.roomNumber?.isNotEmpty == true)
+            _buildInfoRow(context, 'Номер комнаты:', room.roomNumber!),
           _buildInfoRow(context, 'Площадь:', '${room.area ?? 'N/A'} м²'),
-          _buildInfoRow(context, 'Статус:', room.isActive ? 'Активно' : 'Неактивно'),
-          if (!room.isActive)
-            _buildInfoRow(context, 'Причина:', room.deactivateReason ?? 'Не указана'),
-          if (room.archivedAt != null)
-            _buildInfoRow(
-                context, 'Архивировано:', room.archivedAt!.toIso8601String()),
+          const SizedBox(height: 16.0),
+          Container(
+            padding: const EdgeInsets.all(12.0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).dividerColor),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoRow(context, 'Статус:', room.isActive ? 'Активно' : 'Неактивно'),
+                if (!room.isActive)
+                  _buildInfoRow(context, 'Причина:', room.deactivateReason ?? 'Не указана'),
+                if (room.archivedAt != null)
+                  _buildInfoRow(context, 'Архивировано:', room.archivedAt!.toIso8601String()),
+              ],
+            ),
+          ),
         ],
       ),
     );

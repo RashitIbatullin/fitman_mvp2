@@ -73,6 +73,7 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 1. Название
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Название *'),
@@ -83,14 +84,51 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                   return null;
                 },
               ),
+              // 2. Тип
+              DropdownButtonFormField<RoomType>(
+                initialValue: _selectedRoomType,
+                decoration: const InputDecoration(labelText: 'Тип помещения'),
+                items: RoomType.values.map((type) {
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Row(
+                      children: [
+                        Icon(type.icon, size: 24),
+                        const SizedBox(width: 10),
+                        Text(type.displayName),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedRoomType = value;
+                    });
+                  }
+                },
+              ),
+              // 3. Описание
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Описание'),
               ),
+              // 4. Вместимость
               TextFormField(
-                controller: _roomNumberController,
-                decoration: const InputDecoration(labelText: 'Номер комнаты'),
+                controller: _maxCapacityController,
+                decoration:
+                    const InputDecoration(labelText: 'Макс. вместимость'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      int.tryParse(value) == null) {
+                    return 'Введите корректное число';
+                  }
+                  return null;
+                },
               ),
+              // 5. Корпус
               buildingsAsync.when(
                 data: (buildings) => DropdownButtonFormField<String>(
                   initialValue: _selectedBuildingId,
@@ -115,47 +153,17 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                 error: (err, stack) =>
                     Text('Не удалось загрузить здания: $err'),
               ),
-              DropdownButtonFormField<RoomType>(
-                initialValue: _selectedRoomType,
-                decoration: const InputDecoration(labelText: 'Тип помещения'),
-                items: RoomType.values.map((type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Row(
-                      children: [
-                        Icon(type.icon, size: 24),
-                        const SizedBox(width: 10),
-                        Text(type.displayName),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedRoomType = value;
-                    });
-                  }
-                },
-              ),
+              // 6. Этаж
               TextFormField(
                 controller: _floorController,
                 decoration: const InputDecoration(labelText: 'Этаж'),
               ),
+              // 7. Номер комнаты
               TextFormField(
-                controller: _maxCapacityController,
-                decoration:
-                    const InputDecoration(labelText: 'Макс. вместимость'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      int.tryParse(value) == null) {
-                    return 'Введите корректное число';
-                  }
-                  return null;
-                },
+                controller: _roomNumberController,
+                decoration: const InputDecoration(labelText: 'Номер комнаты'),
               ),
+              // 8. Площадь
               TextFormField(
                 controller: _areaController,
                 decoration: const InputDecoration(labelText: 'Площадь (м²)'),
@@ -170,20 +178,36 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
                   return null;
                 },
               ),
-              SwitchListTile(
-                title: const Text('Активно'),
-                value: _isActive,
-                onChanged: (value) {
-                  _handleActivityChange(value);
-                },
-              ),
-              if (!_isActive)
-                TextFormField(
-                  controller: _deactivationReasonController,
-                  decoration:
-                      const InputDecoration(labelText: 'Причина деактивации'),
-                  enabled: false, // Make it read-only
+              const SizedBox(height: 16.0),
+              // 9. Status Box
+              Container(
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Активно'),
+                      value: _isActive,
+                      onChanged: (value) {
+                        _handleActivityChange(value);
+                      },
+                    ),
+                    if (!_isActive)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: TextFormField(
+                          controller: _deactivationReasonController,
+                          decoration:
+                              const InputDecoration(labelText: 'Причина деактивации'),
+                          enabled: false,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _updateRoom,

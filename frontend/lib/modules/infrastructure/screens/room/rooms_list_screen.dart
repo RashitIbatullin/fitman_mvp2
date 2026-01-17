@@ -54,7 +54,13 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
     if (selectedRoom == null) return;
     try {
       await ApiService.updateRoom(
-          selectedRoom.id, selectedRoom.copyWith(archivedAt: DateTime.now(), archivedReason: reason));
+          selectedRoom.id,
+          selectedRoom.copyWith(
+              isActive: false,
+              archivedAt: DateTime.now(),
+              archivedReason: reason,
+              deactivateReason: reason,
+              deactivateAt: DateTime.now()));
       ref.invalidate(allRoomsProvider);
       if (mounted) {
         setState(() => _selectedRoom = null);
@@ -129,7 +135,14 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
     final selectedRoom = _selectedRoom;
     if (selectedRoom == null) return;
     try {
-      await ApiService.updateRoom(selectedRoom.id, selectedRoom.copyWith(archivedAt: null, archivedReason: null));
+      await ApiService.updateRoom(
+          selectedRoom.id,
+          selectedRoom.copyWith(
+              isActive: true,
+              archivedAt: null,
+              archivedReason: null,
+              deactivateReason: null,
+              deactivateAt: null));
       ref.invalidate(allRoomsProvider);
       if (mounted) {
         setState(() => _selectedRoom = null);
