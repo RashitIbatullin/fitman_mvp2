@@ -43,17 +43,63 @@ class EquipmentType {
   final bool isActive;
 
   factory EquipmentType.fromMap(Map<String, dynamic> map) {
+    final category = EquipmentCategory.values[map['category'] as int];
+    EquipmentSubType? subType;
+    final subTypeValue = map['sub_type'] as int?;
+
+    if (subTypeValue != null) {
+      switch (category) {
+        case EquipmentCategory.cardio:
+          const mapping = {
+            0: EquipmentSubType.treadmill,
+            1: EquipmentSubType.elliptical,
+            2: EquipmentSubType.bike,
+          };
+          subType = mapping[subTypeValue];
+          break;
+        case EquipmentCategory.strength:
+          const mapping = {
+            0: EquipmentSubType.bench,
+            1: EquipmentSubType.legPress,
+          };
+          subType = mapping[subTypeValue];
+          break;
+        case EquipmentCategory.freeWeights:
+          const mapping = {
+            0: EquipmentSubType.dumbbell,
+            1: EquipmentSubType.barbell,
+          };
+          subType = mapping[subTypeValue];
+          break;
+        case EquipmentCategory.functional:
+          const mapping = {0: EquipmentSubType.fitball};
+          subType = mapping[subTypeValue];
+          break;
+        case EquipmentCategory.accessories:
+          const mapping = {0: EquipmentSubType.yogaMat};
+          subType = mapping[subTypeValue];
+          break;
+        case EquipmentCategory.measurement:
+          const mapping = {0: EquipmentSubType.scales};
+          subType = mapping[subTypeValue];
+          break;
+        case EquipmentCategory.other:
+          subType = EquipmentSubType.none;
+          break;
+      }
+    }
+
     return EquipmentType(
       id: map['id'].toString(),
       name: map['name'] as String,
       description: map['description'] as String?,
-      category: EquipmentCategory.values[map['category'] as int],
-      subType: map['sub_type'] != null ? EquipmentSubType.values[map['sub_type'] as int] : null,
+      category: category,
+      subType: subType,
       weightRange: map['weight_range'] as String?,
       dimensions: map['dimensions'] as String?,
       powerRequirements: map['power_requirements'] as String?,
       isMobile: map['is_mobile'] as bool,
-      exerciseTypeId: map['exercise_type_id']?.toString(), // exercise_type_id can be null
+      exerciseTypeId: map['exercise_type_id']?.toString(),
       photoUrl: map['photo_url'] as String?,
       manualUrl: map['manual_url'] as String?,
       isActive: map['is_active'] as bool,

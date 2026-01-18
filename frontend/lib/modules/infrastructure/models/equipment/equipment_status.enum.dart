@@ -43,4 +43,21 @@ extension EquipmentStatusExtension on EquipmentStatus {
         return Colors.grey;
     }
   }
+
+  IconData get icon {
+    switch (this) {
+      case EquipmentStatus.available:
+        return Icons.check_circle_outline;
+      case EquipmentStatus.inUse:
+        return Icons.sync;
+      case EquipmentStatus.reserved:
+        return Icons.bookmark_border;
+      case EquipmentStatus.maintenance:
+        return Icons.build;
+      case EquipmentStatus.outOfOrder:
+        return Icons.error_outline;
+      case EquipmentStatus.storage:
+        return Icons.inventory_2_outlined;
+    }
+  }
 }
