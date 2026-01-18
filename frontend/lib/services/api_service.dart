@@ -3,8 +3,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../modules/equipment/models/equipment/equipment_item.model.dart';
+import '../modules/equipment/models/equipment/equipment_type.model.dart';
 import '../modules/roles/models/role.dart';
 import '../models/schedule_item.dart';
+import '../modules/rooms/models/building/building.model.dart';
+import '../modules/rooms/models/room/room.model.dart';
 import '../modules/users/models/user.dart';
 import '../models/work_schedule.dart';
 import '../models/client_schedule_preference.dart'; // Import ClientSchedulePreference
@@ -15,11 +19,8 @@ import '../models/level_training.dart';
 import '../modules/groups/models/training_group.model.dart';
 import '../modules/groups/models/analytic_group.model.dart';
 import '../modules/groups/models/group_schedule.model.dart';
+import 'package:fitman_app/modules/equipment/models/equipment/equipment_category.enum.dart';
 import '../modules/groups/models/training_group_type.model.dart';
-import 'package:fitman_app/modules/infrastructure/models/room/room.model.dart';
-import 'package:fitman_app/modules/infrastructure/models/equipment/equipment_item.model.dart'; // New import
-import 'package:fitman_app/modules/infrastructure/models/equipment/equipment_type.model.dart'; // New import
-import 'package:fitman_app/modules/infrastructure/models/building/building.model.dart';
 
 class ApiService {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
@@ -140,10 +141,41 @@ class ApiService {
     }
   }
 
-  static Future<List<EquipmentType>> getAllEquipmentTypes() async {
+  static Future<List<EquipmentItem>> getEquipmentItemsByRoomId(String roomId) async {
+    return getAllEquipmentItems(roomId: roomId);
+  }
+
+  static Future<EquipmentItem> getEquipmentItemById(String id) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/api/equipment/types'),
+        Uri.parse('$baseUrl/api/equipment/items/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return EquipmentItem.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load equipment item $id');
+      }
+    } catch (e) {
+      print('Get equipment item by ID error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<EquipmentType>> getAllEquipmentTypes({EquipmentCategory? category}) async {
+    try {
+      final queryParameters = <String, String>{};
+      if (category != null) {
+        queryParameters['category'] = category.index.toString();
+      }
+
+      final uri = Uri.parse('$baseUrl/api/equipment/types')
+          .replace(queryParameters: queryParameters.isNotEmpty ? queryParameters : null);
+
+      final response = await http.get(
+        uri,
         headers: _headers,
       );
       if (response.statusCode == 200) {
@@ -388,6 +420,25 @@ class ApiService {
       }
     } catch (e) {
       print('Delete building error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Building> getBuildingById(String id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/buildings/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Building.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load building $id');
+      }
+    } catch (e) {
+      print('Get building by ID error: $e');
       rethrow;
     }
   }

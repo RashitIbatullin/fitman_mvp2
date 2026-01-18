@@ -1,6 +1,6 @@
-import 'package:fitman_app/modules/infrastructure/screens/dashboard/equipment_dashboard_screen.dart';
-import 'package:fitman_app/modules/infrastructure/screens/dashboard/infrastructure_dashboard_screen.dart';
+import 'package:fitman_app/modules/rooms/screens/dashboard/infrastructure_dashboard_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:fitman_app/modules/equipment/screens/dashboard/equipment_dashboard_screen.dart';
 import 'work_schedule_screen.dart'; // Import the WorkScheduleScreen
 import 'generic_catalog_screen.dart'; // Import the GenericCatalogScreen
 

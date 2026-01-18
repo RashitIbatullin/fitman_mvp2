@@ -6,9 +6,9 @@ import '../modules/users/models/user.dart';
 import '../modules/roles/models/role.dart';
 
 import '../modules/groups/repositories/group_repository.dart'; // New import
-import '../modules/infrastructure/repositories/room.repository.dart';
-import '../modules/infrastructure/repositories/equipment_item.repository.dart';
-import '../modules/infrastructure/repositories/equipment_type.repository.dart';
+import '../modules/rooms/repositories/room.repository.dart';
+import '../modules/equipment/repositories/equipment_item.repository.dart';
+import '../modules/equipment/repositories/equipment_type.repository.dart';
 
 class Database {
   static final Database _instance = Database._internal();
