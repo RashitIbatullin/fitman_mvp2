@@ -89,161 +89,165 @@ class _EquipmentDashboardScreenState
               ),
             ),
           ),
-           // Actions button row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: FilterPopupMenuButton<String>(
-                tooltip: 'Действия',
-                allOptionText: 'Действия',
-                showAllOption: false,
-                initialValue: null,
-                avatar: const Icon(Icons.more_vert),
-                onSelected: (value) async {
-                  final selectedItem = _selectedEquipmentItem; // Declare selectedItem once
-                  switch (value) {
-                    case 'add':
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const EquipmentItemCreateScreen()),
-                      );
-                      ref.invalidate(allEquipmentItemsProvider);
-                      break;
-                    case 'edit':
-                      if (selectedItem != null) { // Check if an item is selected before editing
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EquipmentItemEditScreen(equipmentItem: selectedItem),
-                          ),
-                        );
-                        ref.invalidate(allEquipmentItemsProvider);
-                      }
-                      break;
-                    case 'archive':
-                      // TODO: Implement archive logic
-                      break;
-                    case 'maintenance':
-                      // TODO: Implement mark maintenance logic
-                      break;
-                    case 'book':
-                      // TODO: Implement booking logic
-                      break;
-                  }
-                  // Clear selection after any action (moved outside switch for all cases)
-                  setState(() {
-                    _selectedEquipmentItem = null;
-                  });
-                },
-                options: [
-                  const FilterOption(label: 'Добавить', value: 'add', enabled: true),
-                  const FilterOption(label: 'Изменить', value: 'edit'),
-                  const FilterOption(label: 'Отметить ТО', value: 'maintenance'),
-                  const FilterOption(label: 'Бронировать', value: 'book'),
-                  const FilterOption(label: 'Архивировать', value: 'archive'),
-                ]
-                    .map((e) => e.value == 'add'
-                        ? e
-                        : FilterOption(
-                            label: e.label,
-                            value: e.value,
-                            enabled: _selectedEquipmentItem != null))
-                    .toList(),
-              ),
-            ),
-          ),
-          // Filter Dropdowns Row
+          // Filter Rows
           Padding(
             padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 8.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 200,
-                    child: equipmentTypesAsync.when(
-                      data: (types) => DropdownButtonFormField<EquipmentType>(
-                        decoration: const InputDecoration(labelText: 'Тип оборудования', border: OutlineInputBorder()),
-                        initialValue: _selectedEquipmentType,
-                        items: [
-                          const DropdownMenuItem(value: null, child: Text('Все')),
-                          ...types.map((type) => DropdownMenuItem(value: type, child: Text(type.name))),
-                        ],
-                        onChanged: (value) => setState(() => _selectedEquipmentType = value),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: equipmentTypesAsync.when(
+                                              data: (types) => DropdownButtonFormField<EquipmentType>(
+                                                decoration: const InputDecoration(labelText: 'Тип оборудования', border: OutlineInputBorder()),
+                                                initialValue: _selectedEquipmentType,
+                                                items: [
+                                                  const DropdownMenuItem(value: null, child: Text('Все')),
+                                                  ...types.map((type) => DropdownMenuItem(
+                                                    value: type,
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(width: 8.0),
+                                                        Text(type.name),
+                                                      ],
+                                                    ),
+                                                  )),
+                                                ],
+                                                onChanged: (value) => setState(() => _selectedEquipmentType = value),
+                                              ),                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (err, stack) => Text('Error: ${err.toString()}'),
                       ),
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (err, stack) => Text('Error: ${err.toString()}'),
                     ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  SizedBox(
-                    width: 180, // Increased width for Status with icon
-                    child: DropdownButtonFormField<EquipmentStatus>(
-                      decoration: const InputDecoration(labelText: 'Статус', border: OutlineInputBorder()),
-                      initialValue: _selectedStatus,
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('Все')),
-                        ...EquipmentStatus.values.map((status) =>
-                            DropdownMenuItem(
-                              value: status,
-                              child: Row(
-                                children: [
-                                  Icon(status.icon, size: 20, color: status.color),
-                                  const SizedBox(width: 8.0),
-                                  Text(status.displayName),
-                                ],
-                              ),
-                            )),
-                      ],
-                      onChanged: (value) => setState(() => _selectedStatus = value),
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  SizedBox(
-                    width: 200,
-                    child: roomsAsync.when(
-                      data: (rooms) => DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(labelText: 'Помещение', border: OutlineInputBorder()),
-                        initialValue: _selectedRoomId,
+                    const SizedBox(width: 8.0),
+                    Expanded(
+                      child: DropdownButtonFormField<EquipmentStatus>(
+                        decoration: const InputDecoration(labelText: 'Статус', border: OutlineInputBorder()),
+                        initialValue: _selectedStatus,
                         items: [
                           const DropdownMenuItem(value: null, child: Text('Все')),
-                          ...rooms.map((room) => DropdownMenuItem(
-                                value: room.id,
+                          ...EquipmentStatus.values.map((status) =>
+                              DropdownMenuItem(
+                                value: status,
                                 child: Row(
                                   children: [
-                                    Icon(room.type.icon, size: 20),
+                                    Icon(status.icon, size: 20, color: status.color),
                                     const SizedBox(width: 8.0),
-                                    Text(room.name),
+                                    Text(status.displayName),
                                   ],
                                 ),
                               )),
                         ],
-                        onChanged: (value) => setState(() => _selectedRoomId = value),
+                        onChanged: (value) => setState(() => _selectedStatus = value),
                       ),
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (err, stack) => Text('Error: ${err.toString()}'),
                     ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  SizedBox(
-                    width: 180,
-                    child: DropdownButtonFormField<int>(
-                      decoration: const InputDecoration(labelText: 'Состояние', border: OutlineInputBorder()),
-                      initialValue: _selectedConditionRating,
-                      items: const [
-                        DropdownMenuItem(value: null, child: Text('Все')),
-                        DropdownMenuItem(value: 5, child: Text('5 - Отличное')),
-                        DropdownMenuItem(value: 4, child: Text('4 - Хорошее')),
-                        DropdownMenuItem(value: 3, child: Text('3 - Удовлетвор.')),
-                        DropdownMenuItem(value: 2, child: Text('2 - Плохое')),
-                        DropdownMenuItem(value: 1, child: Text('1 - Очень плохое')),
-                      ],
-                      onChanged: (value) => setState(() => _selectedConditionRating = value),
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+                Row(
+                  children: [
+                    Expanded(
+                      child: roomsAsync.when(
+                        data: (rooms) => DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(labelText: 'Помещение', border: OutlineInputBorder()),
+                          initialValue: _selectedRoomId,
+                          items: [
+                            const DropdownMenuItem(value: null, child: Text('Все')),
+                            ...rooms.map((room) => DropdownMenuItem(
+                                  value: room.id,
+                                  child: Row(
+                                    children: [
+                                      Icon(room.type.icon, size: 20),
+                                      const SizedBox(width: 8.0),
+                                      Text(room.name),
+                                    ],
+                                  ),
+                                )),
+                          ],
+                          onChanged: (value) => setState(() => _selectedRoomId = value),
+                        ),
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (err, stack) => Text('Error: ${err.toString()}'),
+                      ),
                     ),
+                    const SizedBox(width: 8.0),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        decoration: const InputDecoration(labelText: 'Состояние', border: OutlineInputBorder()),
+                        initialValue: _selectedConditionRating,
+                        items: const [
+                          DropdownMenuItem(value: null, child: Text('Все')),
+                          DropdownMenuItem(value: 5, child: Text('5 - Отличное')),
+                          DropdownMenuItem(value: 4, child: Text('4 - Хорошее')),
+                          DropdownMenuItem(value: 3, child: Text('3 - Удовлетвор.')),
+                          DropdownMenuItem(value: 2, child: Text('2 - Плохое')),
+                          DropdownMenuItem(value: 1, child: Text('1 - Очень плохое')),
+                        ],
+                        onChanged: (value) => setState(() => _selectedConditionRating = value),
+                      ),
+                    ),
+                  ],
+                ),
+                 const SizedBox(height: 8.0),
+                 Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilterPopupMenuButton<String>(
+                    tooltip: 'Действия',
+                    allOptionText: 'Действия',
+                    showAllOption: false,
+                    initialValue: null,
+                    avatar: const Icon(Icons.more_vert),
+                    onSelected: (value) async {
+                      final selectedItem = _selectedEquipmentItem;
+                      switch (value) {
+                        case 'add':
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const EquipmentItemCreateScreen()),
+                          );
+                          ref.invalidate(allEquipmentItemsProvider);
+                          break;
+                        case 'edit':
+                          if (selectedItem != null) {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EquipmentItemEditScreen(equipmentItem: selectedItem),
+                              ),
+                            );
+                            ref.invalidate(allEquipmentItemsProvider);
+                          }
+                          break;
+                        case 'archive':
+                          // TODO: Implement archive logic
+                          break;
+                        case 'maintenance':
+                          // TODO: Implement mark maintenance logic
+                          break;
+                        case 'book':
+                          // TODO: Implement booking logic
+                          break;
+                      }
+                      setState(() {
+                        _selectedEquipmentItem = null;
+                      });
+                    },
+                    options: [
+                      const FilterOption(label: 'Добавить', value: 'add', enabled: true),
+                      const FilterOption(label: 'Изменить', value: 'edit'),
+                      const FilterOption(label: 'Отметить ТО', value: 'maintenance'),
+                      const FilterOption(label: 'Бронировать', value: 'book'),
+                      const FilterOption(label: 'Архивировать', value: 'archive'),
+                    ]
+                        .map((e) => e.value == 'add'
+                            ? e
+                            : FilterOption(
+                                label: e.label,
+                                value: e.value,
+                                enabled: _selectedEquipmentItem != null))
+                        .toList(),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -341,37 +345,76 @@ class EquipmentItemCard extends StatelessWidget {
                 )
               : const Icon(Icons.fitness_center),
         ),
-        title: Text(item.inventoryNumber),
-        subtitle: Column(
+        title: Text(
+          item.inventoryNumber,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        subtitle: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Тип: ${equipmentTypeName ?? 'N/A'}'),
-            Text('Модель: ${item.model ?? 'N/A'}'),
-            Text('Производитель: ${item.manufacturer ?? 'N/A'}'),
-            Text('Помещение: ${roomName ?? 'Не назначено'}'),
-            Row(
-              children: [
-                const Text('Статус: '),
-                Chip(
-                  label: Text(item.status.displayName),
-                  backgroundColor: item.status.color,
-                ),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(context, 'Тип:', equipmentTypeName ?? 'N/A'),
+                  _buildInfoRow(context, 'Модель:', item.model ?? 'N/A'),
+                  _buildInfoRow(context, 'Помещение:', roomName ?? 'Не назначено'),
+                ],
+              ),
             ),
-            Row(
-              children: [
-                const Text('Состояние: '),
-                ...List.generate(5, (index) {
-                  return Icon(
-                    index < item.conditionRating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 16,
-                  );
-                }),
-              ],
+            const SizedBox(width: 16.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(context, 'Производитель:', item.manufacturer ?? 'N/A'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    child: Row(
+                      children: [
+                        Text('Статус: ', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
+                        Flexible(
+                          child: Chip(
+                            label: Text(item.status.displayName),
+                            backgroundColor: item.status.color,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    child: Row(
+                      children: [
+                        Text('Состояние: ', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
+                        ...List.generate(5, (index) {
+                          return Icon(
+                            index < item.conditionRating ? Icons.star : Icons.star_border,
+                            color: Colors.amber,
+                            size: 16,
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        children: [
+          Text('$label ', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
+          Expanded(child: Text(value, style: Theme.of(context).textTheme.bodySmall)),
+        ],
       ),
     );
   }
