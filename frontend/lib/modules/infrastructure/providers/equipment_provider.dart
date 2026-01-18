@@ -7,6 +7,10 @@ final allEquipmentTypesProvider = FutureProvider<List<EquipmentType>>((ref) {
   return ApiService.getAllEquipmentTypes();
 });
 
+final equipmentTypeByIdProvider = FutureProvider.family<EquipmentType, String>((ref, id) {
+  return ApiService.getEquipmentTypeById(id);
+});
+
 final allEquipmentItemsProvider = FutureProvider<List<EquipmentItem>>((ref) {
   return ApiService.getAllEquipmentItems();
 });

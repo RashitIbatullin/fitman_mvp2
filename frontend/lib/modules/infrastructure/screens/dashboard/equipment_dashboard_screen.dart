@@ -11,6 +11,7 @@ import '../../utils/room_utils.dart'; // Add this import
 import '../equipment/item/equipment_item_detail_screen.dart';
 import '../equipment/item/equipment_item_create_screen.dart';
 import '../equipment/item/equipment_item_edit_screen.dart';
+import 'package:fitman_app/modules/infrastructure/screens/equipment/type/equipment_types_list_screen.dart'; // Import for EquipmentTypesListScreen
 
 class EquipmentDashboardScreen extends ConsumerStatefulWidget {
   const EquipmentDashboardScreen({super.key});
@@ -70,6 +71,22 @@ class _EquipmentDashboardScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Управление оборудованием'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EquipmentTypesListScreen()),
+              );
+            },
+            child: const Text(
+              'Типы оборудования',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+          // Add any other existing actions here if there were any that were overwritten
+          // For now, I'll assume there were no other actions besides the title, based on the previous read.
+        ],
       ),
       body: Column(
         children: [

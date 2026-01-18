@@ -159,6 +159,81 @@ class ApiService {
     }
   }
 
+  static Future<EquipmentType> getEquipmentTypeById(String id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/equipment/types/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return EquipmentType.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to load equipment type $id');
+      }
+    } catch (e) {
+      print('Get equipment type by ID error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<EquipmentType> createEquipmentType(EquipmentType equipmentType) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/equipment/types'),
+        headers: _headers,
+        body: jsonEncode(equipmentType.toJson()),
+      );
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return EquipmentType.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to create equipment type');
+      }
+    } catch (e) {
+      print('Create equipment type error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<EquipmentType> updateEquipmentType(String id, EquipmentType equipmentType) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/equipment/types/$id'),
+        headers: _headers,
+        body: jsonEncode(equipmentType.toJson()),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return EquipmentType.fromJson(data);
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to update equipment type');
+      }
+    } catch (e) {
+      print('Update equipment type error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> deleteEquipmentType(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/equipment/types/$id'),
+        headers: _headers,
+      );
+      if (response.statusCode != 204) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Failed to delete equipment type');
+      }
+    } catch (e) {
+      print('Delete equipment type error: $e');
+      rethrow;
+    }
+  }
+
   static Future<Room> createRoom(Room room) async {
     try {
       final response = await http.post(
