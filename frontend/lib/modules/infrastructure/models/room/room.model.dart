@@ -43,7 +43,6 @@ class Room with _$Room {
     @JsonKey(name: 'deactivate_reason') String? deactivateReason,
     @JsonKey(name: 'deactivate_at') DateTime? deactivateAt,
     @JsonKey(name: 'deactivate_by') String? deactivateBy,
-    @JsonKey(name: 'equipment_ids') @Default([]) List<String> equipmentIds,
     @JsonKey(name: 'photo_urls') @Default([]) List<String> photoUrls,
     @JsonKey(name: 'floor_plan_url') String? floorPlanUrl,
     String? note,

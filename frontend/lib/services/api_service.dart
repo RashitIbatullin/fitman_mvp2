@@ -113,10 +113,18 @@ class ApiService {
     }
   }
 
-  static Future<List<EquipmentItem>> getAllEquipmentItems() async {
+  static Future<List<EquipmentItem>> getAllEquipmentItems({String? roomId}) async {
     try {
+      final queryParameters = <String, String>{};
+      if (roomId != null) {
+        queryParameters['roomId'] = roomId;
+      }
+
+      final uri = Uri.parse('$baseUrl/api/equipment/items')
+          .replace(queryParameters: queryParameters.isNotEmpty ? queryParameters : null);
+
       final response = await http.get(
-        Uri.parse('$baseUrl/api/equipment/items'),
+        uri,
         headers: _headers,
       );
       if (response.statusCode == 200) {

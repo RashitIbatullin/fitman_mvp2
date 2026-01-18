@@ -30,11 +30,6 @@ _$RoomImpl _$$RoomImplFromJson(Map<String, dynamic> json) => _$RoomImpl(
       ? null
       : DateTime.parse(json['deactivate_at'] as String),
   deactivateBy: json['deactivate_by'] as String?,
-  equipmentIds:
-      (json['equipment_ids'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ??
-      const [],
   photoUrls:
       (json['photo_urls'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -67,7 +62,6 @@ Map<String, dynamic> _$$RoomImplToJson(_$RoomImpl instance) =>
       'deactivate_reason': instance.deactivateReason,
       'deactivate_at': instance.deactivateAt?.toIso8601String(),
       'deactivate_by': instance.deactivateBy,
-      'equipment_ids': instance.equipmentIds,
       'photo_urls': instance.photoUrls,
       'floor_plan_url': instance.floorPlanUrl,
       'note': instance.note,

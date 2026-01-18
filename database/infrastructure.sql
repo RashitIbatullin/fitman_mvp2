@@ -41,7 +41,6 @@ DROP TABLE IF EXISTS types_body_build CASCADE;
 DROP TABLE IF EXISTS goals_training CASCADE;
 DROP TABLE IF EXISTS levels_training CASCADE;
 DROP TABLE IF EXISTS kinds_activity_client CASCADE;
-DROP TABLE IF EXISTS room_equipment CASCADE;
 
 
 -- Отключаем проверку внешних ключей для удобства
@@ -505,28 +504,6 @@ CREATE TABLE equipment_items (
   note VARCHAR(100)
 );
 
--- ТАБЛИЦА СВЯЗИ ПОМЕЩЕНИЙ И ОБОРУДОВАНИЯ
-CREATE TABLE room_equipment (
-  id BIGSERIAL PRIMARY KEY,
-  room_id BIGINT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
-  equipment_item_id BIGINT NOT NULL REFERENCES equipment_items(id) ON DELETE CASCADE,
-  placement_note TEXT,
-  -- Можно добавить quantity INT DEFAULT 1, если оборудования несколько одного типа
-  date_placed TIMESTAMPTZ DEFAULT NOW(),
-  is_active BOOLEAN DEFAULT true, -- Для учета истории перемещений
-  -- Системные поля
-  company_id BIGINT DEFAULT -1,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by BIGINT,
-  updated_by BIGINT,
-  archived_at TIMESTAMPTZ,
-  archived_by BIGINT,
-  note VARCHAR(100),
-  UNIQUE(room_id, equipment_item_id) -- Оборудование не может числиться в одном помещении дважды
-);
-
-
 -- Бронирование оборудования
 CREATE TABLE equipment_bookings (
   id BIGSERIAL PRIMARY KEY,
@@ -647,12 +624,6 @@ CREATE INDEX idx_equipment_items_room ON equipment_items(room_id) WHERE room_id 
 CREATE INDEX idx_equipment_items_status ON equipment_items(status) WHERE status = 0;
 CREATE INDEX idx_equipment_items_inventory ON equipment_items(inventory_number);
 CREATE INDEX idx_equipment_items_active ON equipment_items(company_id) WHERE archived_at IS NULL;
-
--- ИНДЕКСЫ ДЛЯ ТАБЛИЦЫ СВЯЗИ room_equipment
-CREATE INDEX idx_room_equipment_room ON room_equipment(room_id);
-CREATE INDEX idx_room_equipment_item ON room_equipment(equipment_item_id);
-CREATE INDEX idx_room_equipment_active ON room_equipment(room_id, equipment_item_id) WHERE is_active = true;
-CREATE INDEX idx_room_equipment_active_room ON room_equipment(room_id) WHERE is_active = true;
 
 -- Индексы для equipment_bookings
 CREATE INDEX idx_equipment_bookings_item ON equipment_bookings(equipment_item_id);
@@ -839,17 +810,6 @@ INSERT INTO equipment_items (type_id, inventory_number, serial_number, model, ma
 (8, 'ФИТ-001', NULL, 'Anti-Burst', 'Ledraplastik', 4, 'Корзина с мячами', 0, 5, '2023-04-01', 3000.00, 'Фитбол 65 см'),
 (9, 'КОВ-001', NULL, 'Professional', 'Manduka', 4, 'Стеллаж для ковриков', 0, 5, '2023-04-01', 2500.00, 'Коврик для йоги 5мм'),
 (10, 'ВЕС-001', 'SN123463', 'BF-350', 'Beurer', 5, 'У входа', 0, 5, '2023-05-10', 8000.00, 'Электронные весы');
-
--- 5.18. ЗАПОЛНЕНИЕ ТАБЛИЦЫ СВЯЗИ room_equipment на основе данных из equipment_items
-INSERT INTO room_equipment (room_id, equipment_item_id, placement_note, is_active)
-SELECT
-    ei.room_id,
-    ei.id,
-    ei.placement_note,
-    true
-FROM equipment_items ei
-WHERE ei.room_id IS NOT NULL
-ON CONFLICT (room_id, equipment_item_id) DO NOTHING; -- Защита от дубликатов, если скрипт запускаетс
 
 -- 5.19. Создаем несколько бронирований оборудования (пример)
 INSERT INTO equipment_bookings (equipment_item_id, booked_by, start_time, end_time, purpose, notes) VALUES

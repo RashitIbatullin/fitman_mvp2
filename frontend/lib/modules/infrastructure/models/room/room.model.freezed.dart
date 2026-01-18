@@ -53,8 +53,6 @@ mixin _$Room {
   DateTime? get deactivateAt => throw _privateConstructorUsedError;
   @JsonKey(name: 'deactivate_by')
   String? get deactivateBy => throw _privateConstructorUsedError;
-  @JsonKey(name: 'equipment_ids')
-  List<String> get equipmentIds => throw _privateConstructorUsedError;
   @JsonKey(name: 'photo_urls')
   List<String> get photoUrls => throw _privateConstructorUsedError;
   @JsonKey(name: 'floor_plan_url')
@@ -97,7 +95,6 @@ abstract class $RoomCopyWith<$Res> {
     @JsonKey(name: 'deactivate_reason') String? deactivateReason,
     @JsonKey(name: 'deactivate_at') DateTime? deactivateAt,
     @JsonKey(name: 'deactivate_by') String? deactivateBy,
-    @JsonKey(name: 'equipment_ids') List<String> equipmentIds,
     @JsonKey(name: 'photo_urls') List<String> photoUrls,
     @JsonKey(name: 'floor_plan_url') String? floorPlanUrl,
     String? note,
@@ -138,7 +135,6 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
     Object? deactivateReason = freezed,
     Object? deactivateAt = freezed,
     Object? deactivateBy = freezed,
-    Object? equipmentIds = null,
     Object? photoUrls = null,
     Object? floorPlanUrl = freezed,
     Object? note = freezed,
@@ -215,10 +211,6 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
                 ? _value.deactivateBy
                 : deactivateBy // ignore: cast_nullable_to_non_nullable
                       as String?,
-            equipmentIds: null == equipmentIds
-                ? _value.equipmentIds
-                : equipmentIds // ignore: cast_nullable_to_non_nullable
-                      as List<String>,
             photoUrls: null == photoUrls
                 ? _value.photoUrls
                 : photoUrls // ignore: cast_nullable_to_non_nullable
@@ -271,7 +263,6 @@ abstract class _$$RoomImplCopyWith<$Res> implements $RoomCopyWith<$Res> {
     @JsonKey(name: 'deactivate_reason') String? deactivateReason,
     @JsonKey(name: 'deactivate_at') DateTime? deactivateAt,
     @JsonKey(name: 'deactivate_by') String? deactivateBy,
-    @JsonKey(name: 'equipment_ids') List<String> equipmentIds,
     @JsonKey(name: 'photo_urls') List<String> photoUrls,
     @JsonKey(name: 'floor_plan_url') String? floorPlanUrl,
     String? note,
@@ -309,7 +300,6 @@ class __$$RoomImplCopyWithImpl<$Res>
     Object? deactivateReason = freezed,
     Object? deactivateAt = freezed,
     Object? deactivateBy = freezed,
-    Object? equipmentIds = null,
     Object? photoUrls = null,
     Object? floorPlanUrl = freezed,
     Object? note = freezed,
@@ -386,10 +376,6 @@ class __$$RoomImplCopyWithImpl<$Res>
             ? _value.deactivateBy
             : deactivateBy // ignore: cast_nullable_to_non_nullable
                   as String?,
-        equipmentIds: null == equipmentIds
-            ? _value._equipmentIds
-            : equipmentIds // ignore: cast_nullable_to_non_nullable
-                  as List<String>,
         photoUrls: null == photoUrls
             ? _value._photoUrls
             : photoUrls // ignore: cast_nullable_to_non_nullable
@@ -436,14 +422,12 @@ class _$RoomImpl implements _Room {
     @JsonKey(name: 'deactivate_reason') this.deactivateReason,
     @JsonKey(name: 'deactivate_at') this.deactivateAt,
     @JsonKey(name: 'deactivate_by') this.deactivateBy,
-    @JsonKey(name: 'equipment_ids') final List<String> equipmentIds = const [],
     @JsonKey(name: 'photo_urls') final List<String> photoUrls = const [],
     @JsonKey(name: 'floor_plan_url') this.floorPlanUrl,
     this.note,
     @JsonKey(name: 'archived_at') this.archivedAt,
     @JsonKey(name: 'archived_reason') this.archivedReason,
   }) : _workingDays = workingDays,
-       _equipmentIds = equipmentIds,
        _photoUrls = photoUrls;
 
   factory _$RoomImpl.fromJson(Map<String, dynamic> json) =>
@@ -505,15 +489,6 @@ class _$RoomImpl implements _Room {
   @override
   @JsonKey(name: 'deactivate_by')
   final String? deactivateBy;
-  final List<String> _equipmentIds;
-  @override
-  @JsonKey(name: 'equipment_ids')
-  List<String> get equipmentIds {
-    if (_equipmentIds is EqualUnmodifiableListView) return _equipmentIds;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_equipmentIds);
-  }
-
   final List<String> _photoUrls;
   @override
   @JsonKey(name: 'photo_urls')
@@ -537,7 +512,7 @@ class _$RoomImpl implements _Room {
 
   @override
   String toString() {
-    return 'Room(id: $id, name: $name, description: $description, roomNumber: $roomNumber, type: $type, floor: $floor, buildingId: $buildingId, buildingName: $buildingName, maxCapacity: $maxCapacity, area: $area, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, deactivateReason: $deactivateReason, deactivateAt: $deactivateAt, deactivateBy: $deactivateBy, equipmentIds: $equipmentIds, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note, archivedAt: $archivedAt, archivedReason: $archivedReason)';
+    return 'Room(id: $id, name: $name, description: $description, roomNumber: $roomNumber, type: $type, floor: $floor, buildingId: $buildingId, buildingName: $buildingName, maxCapacity: $maxCapacity, area: $area, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, deactivateReason: $deactivateReason, deactivateAt: $deactivateAt, deactivateBy: $deactivateBy, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note, archivedAt: $archivedAt, archivedReason: $archivedReason)';
   }
 
   @override
@@ -577,10 +552,6 @@ class _$RoomImpl implements _Room {
             (identical(other.deactivateBy, deactivateBy) ||
                 other.deactivateBy == deactivateBy) &&
             const DeepCollectionEquality().equals(
-              other._equipmentIds,
-              _equipmentIds,
-            ) &&
-            const DeepCollectionEquality().equals(
               other._photoUrls,
               _photoUrls,
             ) &&
@@ -614,7 +585,6 @@ class _$RoomImpl implements _Room {
     deactivateReason,
     deactivateAt,
     deactivateBy,
-    const DeepCollectionEquality().hash(_equipmentIds),
     const DeepCollectionEquality().hash(_photoUrls),
     floorPlanUrl,
     note,
@@ -657,7 +627,6 @@ abstract class _Room implements Room {
     @JsonKey(name: 'deactivate_reason') final String? deactivateReason,
     @JsonKey(name: 'deactivate_at') final DateTime? deactivateAt,
     @JsonKey(name: 'deactivate_by') final String? deactivateBy,
-    @JsonKey(name: 'equipment_ids') final List<String> equipmentIds,
     @JsonKey(name: 'photo_urls') final List<String> photoUrls,
     @JsonKey(name: 'floor_plan_url') final String? floorPlanUrl,
     final String? note,
@@ -716,9 +685,6 @@ abstract class _Room implements Room {
   @override
   @JsonKey(name: 'deactivate_by')
   String? get deactivateBy;
-  @override
-  @JsonKey(name: 'equipment_ids')
-  List<String> get equipmentIds;
   @override
   @JsonKey(name: 'photo_urls')
   List<String> get photoUrls;

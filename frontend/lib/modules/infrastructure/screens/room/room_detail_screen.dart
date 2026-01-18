@@ -1,3 +1,5 @@
+import 'package:fitman_app/modules/infrastructure/models/equipment/equipment_status.enum.dart';
+import 'package:fitman_app/modules/infrastructure/providers/equipment_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/room/room.model.dart';
@@ -75,14 +77,71 @@ class RoomDetailScreen extends ConsumerWidget {
                 const Center(child: Text('Информация о расписании')),
                 // 3. Состояние (Placeholder)
                 const Center(child: Text('Информация о состоянии')),
-                // 4. Оборудование (Placeholder)
-                const Center(child: Text('Информация об оборудовании')),
+                // 4. Оборудование (Implemented)
+                _buildEquipmentTab(context, ref, room.id),
                 // 5. Статистика (Placeholder)
                 const Center(child: Text('Информация о статистике')),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEquipmentTab(BuildContext context, WidgetRef ref, String roomId) {
+    final equipmentAsync = ref.watch(equipmentByRoomProvider(roomId));
+
+    return equipmentAsync.when(
+      data: (equipmentList) {
+        if (equipmentList.isEmpty) {
+          return const Center(
+            child: Text(
+              'В этом зале нет оборудования.',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(8.0),
+          itemCount: equipmentList.length,
+          itemBuilder: (context, index) {
+            final item = equipmentList[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              child: ListTile(
+                leading: const Icon(Icons.fitness_center, color: Colors.blue),
+                title: Text(item.model ?? 'Оборудование без модели'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Инв. №: ${item.inventoryNumber}'),
+                    if (item.manufacturer != null)
+                      Text('Производитель: ${item.manufacturer}'),
+                  ],
+                ),
+                trailing: Text(
+                  item.status.displayName,
+                  style: TextStyle(
+                    color: item.status.color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Ошибка загрузки оборудования: $err',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
       ),
     );
   }
@@ -149,3 +208,4 @@ class RoomDetailScreen extends ConsumerWidget {
     );
   }
 }
+

@@ -1,9 +1,11 @@
 import 'package:fitman_backend/config/database.dart';
 import 'package:fitman_backend/modules/infrastructure/models/equipment/equipment_item.model.dart';
+import 'package:postgres/postgres.dart';
 
 abstract class EquipmentItemRepository {
   Future<EquipmentItem> getById(String id);
   Future<List<EquipmentItem>> getAll();
+  Future<List<EquipmentItem>> getByRoomId(String roomId);
   Future<EquipmentItem> create(EquipmentItem equipmentItem);
   Future<EquipmentItem> update(EquipmentItem equipmentItem);
   Future<void> delete(String id);
@@ -30,7 +32,7 @@ class EquipmentItemRepositoryImpl implements EquipmentItemRepository {
   Future<List<EquipmentItem>> getAll() async {
     try {
       final conn = await _db.connection;
-      final result = await conn.execute('SELECT * FROM equipment_items WHERE archived_at IS NULL');
+      final result = await conn.execute(Sql.named('SELECT * FROM equipment_items WHERE archived_at IS NULL'));
 
       return result
           .map(
@@ -39,6 +41,28 @@ class EquipmentItemRepositoryImpl implements EquipmentItemRepository {
           .toList();
     } catch (e) {
       print('Error fetching all equipment items: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<EquipmentItem>> getByRoomId(String roomId) async {
+    try {
+      final conn = await _db.connection;
+      final result = await conn.execute(
+        Sql.named('SELECT * FROM equipment_items WHERE room_id = @roomId AND archived_at IS NULL'),
+        parameters: {
+          'roomId': roomId,
+        },
+      );
+
+      return result
+          .map(
+            (row) => EquipmentItem.fromMap(row.toColumnMap()),
+          )
+          .toList();
+    } catch (e) {
+      print('Error fetching equipment items by room ID: $e');
       rethrow;
     }
   }

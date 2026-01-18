@@ -13,6 +13,7 @@ abstract class EquipmentService {
 
   Future<EquipmentItem> getItemById(String id);
   Future<List<EquipmentItem>> getAllItems();
+  Future<List<EquipmentItem>> getItemsByRoomId(String roomId);
   Future<EquipmentItem> createItem(EquipmentItem equipmentItem);
   Future<EquipmentItem> updateItem(EquipmentItem equipmentItem);
   Future<void> deleteItem(String id);
@@ -62,6 +63,11 @@ class EquipmentServiceImpl implements EquipmentService {
   @override
   Future<List<EquipmentItem>> getAllItems() {
     return _itemRepository.getAll();
+  }
+
+  @override
+  Future<List<EquipmentItem>> getItemsByRoomId(String roomId) {
+    return _itemRepository.getByRoomId(roomId);
   }
 
   @override

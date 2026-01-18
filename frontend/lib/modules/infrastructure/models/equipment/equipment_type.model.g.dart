@@ -11,8 +11,9 @@ _$EquipmentTypeImpl _$$EquipmentTypeImplFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
-      category: $enumDecode(_$EquipmentCategoryEnumMap, json['category']),
-      subType: $enumDecodeNullable(_$EquipmentSubTypeEnumMap, json['subType']),
+      category: const EquipmentCategoryConverter().fromJson(
+        (json['category'] as num).toInt(),
+      ),
       weightRange: json['weightRange'] as String?,
       dimensions: json['dimensions'] as String?,
       powerRequirements: json['powerRequirements'] as String?,
@@ -28,8 +29,7 @@ Map<String, dynamic> _$$EquipmentTypeImplToJson(_$EquipmentTypeImpl instance) =>
       'id': instance.id,
       'name': instance.name,
       'description': instance.description,
-      'category': _$EquipmentCategoryEnumMap[instance.category]!,
-      'subType': _$EquipmentSubTypeEnumMap[instance.subType],
+      'category': const EquipmentCategoryConverter().toJson(instance.category),
       'weightRange': instance.weightRange,
       'dimensions': instance.dimensions,
       'powerRequirements': instance.powerRequirements,
@@ -39,15 +39,3 @@ Map<String, dynamic> _$$EquipmentTypeImplToJson(_$EquipmentTypeImpl instance) =>
       'manualUrl': instance.manualUrl,
       'isActive': instance.isActive,
     };
-
-const _$EquipmentCategoryEnumMap = {
-  EquipmentCategory.cardio: 'cardio',
-  EquipmentCategory.strength: 'strength',
-  EquipmentCategory.freeWeights: 'freeWeights',
-  EquipmentCategory.functional: 'functional',
-  EquipmentCategory.accessories: 'accessories',
-  EquipmentCategory.measurement: 'measurement',
-  EquipmentCategory.other: 'other',
-};
-
-const _$EquipmentSubTypeEnumMap = {EquipmentSubType.none: 'none'};

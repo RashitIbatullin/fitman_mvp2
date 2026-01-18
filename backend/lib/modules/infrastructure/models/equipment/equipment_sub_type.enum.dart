@@ -1,7 +1,29 @@
-// Комментарий: Для детализации внутри категорий
-// Примеры для cardio: treadmill, elliptical, bike, rower
-// Примеры для freeWeights: dumbbell, barbell, kettlebell, plate
-// В БД хранится как SMALLINT
 enum EquipmentSubType {
+  // Cardio
+  treadmill,
+  elliptical,
+  bike,
+  rower,
+
+  // Strength
+  bench,
+  legPress,
+
+  // Free Weights
+  dumbbell,
+  barbell,
+  kettlebell,
+  plate,
+
+  // Functional
+  fitball,
+
+  // Accessories
+  yogaMat,
+
+  // Measurement
+  scales,
+
+  // General/None
   none,
 }

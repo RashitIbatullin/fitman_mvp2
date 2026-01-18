@@ -24,8 +24,8 @@ mixin _$EquipmentType {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
-  EquipmentCategory get category => throw _privateConstructorUsedError;
-  EquipmentSubType? get subType => throw _privateConstructorUsedError;
+  @EquipmentCategoryConverter()
+  EquipmentCategory get category => throw _privateConstructorUsedError; // EquipmentSubType? subType, // Commented out due to inconsistent DB values
   String? get weightRange => throw _privateConstructorUsedError;
   String? get dimensions => throw _privateConstructorUsedError;
   String? get powerRequirements => throw _privateConstructorUsedError;
@@ -56,8 +56,7 @@ abstract class $EquipmentTypeCopyWith<$Res> {
     String id,
     String name,
     String? description,
-    EquipmentCategory category,
-    EquipmentSubType? subType,
+    @EquipmentCategoryConverter() EquipmentCategory category,
     String? weightRange,
     String? dimensions,
     String? powerRequirements,
@@ -88,7 +87,6 @@ class _$EquipmentTypeCopyWithImpl<$Res, $Val extends EquipmentType>
     Object? name = null,
     Object? description = freezed,
     Object? category = null,
-    Object? subType = freezed,
     Object? weightRange = freezed,
     Object? dimensions = freezed,
     Object? powerRequirements = freezed,
@@ -116,10 +114,6 @@ class _$EquipmentTypeCopyWithImpl<$Res, $Val extends EquipmentType>
                 ? _value.category
                 : category // ignore: cast_nullable_to_non_nullable
                       as EquipmentCategory,
-            subType: freezed == subType
-                ? _value.subType
-                : subType // ignore: cast_nullable_to_non_nullable
-                      as EquipmentSubType?,
             weightRange: freezed == weightRange
                 ? _value.weightRange
                 : weightRange // ignore: cast_nullable_to_non_nullable
@@ -171,8 +165,7 @@ abstract class _$$EquipmentTypeImplCopyWith<$Res>
     String id,
     String name,
     String? description,
-    EquipmentCategory category,
-    EquipmentSubType? subType,
+    @EquipmentCategoryConverter() EquipmentCategory category,
     String? weightRange,
     String? dimensions,
     String? powerRequirements,
@@ -202,7 +195,6 @@ class __$$EquipmentTypeImplCopyWithImpl<$Res>
     Object? name = null,
     Object? description = freezed,
     Object? category = null,
-    Object? subType = freezed,
     Object? weightRange = freezed,
     Object? dimensions = freezed,
     Object? powerRequirements = freezed,
@@ -230,10 +222,6 @@ class __$$EquipmentTypeImplCopyWithImpl<$Res>
             ? _value.category
             : category // ignore: cast_nullable_to_non_nullable
                   as EquipmentCategory,
-        subType: freezed == subType
-            ? _value.subType
-            : subType // ignore: cast_nullable_to_non_nullable
-                  as EquipmentSubType?,
         weightRange: freezed == weightRange
             ? _value.weightRange
             : weightRange // ignore: cast_nullable_to_non_nullable
@@ -278,8 +266,7 @@ class _$EquipmentTypeImpl implements _EquipmentType {
     required this.id,
     required this.name,
     this.description,
-    required this.category,
-    this.subType,
+    @EquipmentCategoryConverter() required this.category,
     this.weightRange,
     this.dimensions,
     this.powerRequirements,
@@ -300,9 +287,9 @@ class _$EquipmentTypeImpl implements _EquipmentType {
   @override
   final String? description;
   @override
+  @EquipmentCategoryConverter()
   final EquipmentCategory category;
-  @override
-  final EquipmentSubType? subType;
+  // EquipmentSubType? subType, // Commented out due to inconsistent DB values
   @override
   final String? weightRange;
   @override
@@ -324,7 +311,7 @@ class _$EquipmentTypeImpl implements _EquipmentType {
 
   @override
   String toString() {
-    return 'EquipmentType(id: $id, name: $name, description: $description, category: $category, subType: $subType, weightRange: $weightRange, dimensions: $dimensions, powerRequirements: $powerRequirements, isMobile: $isMobile, exerciseTypeId: $exerciseTypeId, photoUrl: $photoUrl, manualUrl: $manualUrl, isActive: $isActive)';
+    return 'EquipmentType(id: $id, name: $name, description: $description, category: $category, weightRange: $weightRange, dimensions: $dimensions, powerRequirements: $powerRequirements, isMobile: $isMobile, exerciseTypeId: $exerciseTypeId, photoUrl: $photoUrl, manualUrl: $manualUrl, isActive: $isActive)';
   }
 
   @override
@@ -338,7 +325,6 @@ class _$EquipmentTypeImpl implements _EquipmentType {
                 other.description == description) &&
             (identical(other.category, category) ||
                 other.category == category) &&
-            (identical(other.subType, subType) || other.subType == subType) &&
             (identical(other.weightRange, weightRange) ||
                 other.weightRange == weightRange) &&
             (identical(other.dimensions, dimensions) ||
@@ -365,7 +351,6 @@ class _$EquipmentTypeImpl implements _EquipmentType {
     name,
     description,
     category,
-    subType,
     weightRange,
     dimensions,
     powerRequirements,
@@ -395,8 +380,7 @@ abstract class _EquipmentType implements EquipmentType {
     required final String id,
     required final String name,
     final String? description,
-    required final EquipmentCategory category,
-    final EquipmentSubType? subType,
+    @EquipmentCategoryConverter() required final EquipmentCategory category,
     final String? weightRange,
     final String? dimensions,
     final String? powerRequirements,
@@ -417,9 +401,8 @@ abstract class _EquipmentType implements EquipmentType {
   @override
   String? get description;
   @override
-  EquipmentCategory get category;
-  @override
-  EquipmentSubType? get subType;
+  @EquipmentCategoryConverter()
+  EquipmentCategory get category; // EquipmentSubType? subType, // Commented out due to inconsistent DB values
   @override
   String? get weightRange;
   @override
