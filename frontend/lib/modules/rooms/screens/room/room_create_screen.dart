@@ -40,7 +40,7 @@ class _RoomCreateScreenState extends ConsumerState<RoomCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final buildingsAsync = ref.watch(allBuildingsProvider);
+    final buildingsAsync = ref.watch(allBuildingsProvider(false));
 
     return Scaffold(
       appBar: AppBar(

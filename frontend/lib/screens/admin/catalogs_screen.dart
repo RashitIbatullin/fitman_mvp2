@@ -1,4 +1,4 @@
-import 'package:fitman_app/modules/rooms/screens/dashboard/infrastructure_dashboard_screen.dart';
+import 'package:fitman_app/modules/rooms/screens/dashboard/rooms_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fitman_app/modules/equipment/screens/dashboard/equipment_dashboard_screen.dart';
 import 'work_schedule_screen.dart'; // Import the WorkScheduleScreen
@@ -22,7 +22,7 @@ class CatalogsScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const InfrastructureDashboardScreen(),
+                  builder: (context) => const RoomsDashboardScreen(),
                 ),
               );
             },

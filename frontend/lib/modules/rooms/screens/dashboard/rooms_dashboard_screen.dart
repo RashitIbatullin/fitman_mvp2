@@ -12,8 +12,8 @@ import '../room/rooms_list_screen.dart';
 import '../room/room_detail_screen.dart';
 import '../../utils/room_utils.dart';
 
-class InfrastructureDashboardScreen extends ConsumerWidget {
-  const InfrastructureDashboardScreen({super.key});
+class RoomsDashboardScreen extends ConsumerWidget {
+  const RoomsDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

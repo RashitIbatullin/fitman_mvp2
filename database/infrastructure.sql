@@ -9,7 +9,11 @@
 
 -- Удаляем в обратном порядке (сначала дочерние таблицы, затем родительские)
 
-
+-- Таблицы бронирования и оборудования
+DROP TABLE IF EXISTS equipment_bookings CASCADE;
+DROP TABLE IF EXISTS equipment_items CASCADE;
+DROP TABLE IF EXISTS rooms CASCADE;
+DROP TABLE IF EXISTS buildings CASCADE;
 
 -- Таблицы индивидуальных назначений
 DROP TABLE IF EXISTS client_exercises CASCADE;
@@ -133,6 +137,39 @@ CREATE TABLE kinds_exercis (
   note VARCHAR(100)
 );
 
+-- Таблица типов оборудования (для связи с упражнениями)
+CREATE TABLE equipment_types (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  
+  -- Классификация
+  category SMALLINT NOT NULL,      -- EquipmentCategory enum (0:cardio, 1:strength, 2:freeWeights, 3:functional, 4:accessories, 5:measurement, 6:other)
+  sub_type SMALLINT,               -- EquipmentSubType enum
+  
+  -- Характеристики
+  weight_range VARCHAR(50),
+  dimensions VARCHAR(100),
+  power_requirements VARCHAR(100),
+  is_mobile BOOLEAN DEFAULT true,
+  
+  -- Медиа
+  photo_url TEXT,
+  manual_url TEXT,
+  
+  -- Статус
+  is_active BOOLEAN DEFAULT true,
+  
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id),
+  note VARCHAR(100)
+);
 
 -- Каталог "Типы Упражнений"
 CREATE TABLE types_exercis (
@@ -353,6 +390,158 @@ CREATE TABLE client_exercises (
   note VARCHAR(100)
 );
 
+-- ============================================
+-- 3. ТАБЛИЦЫ ПОМЕЩЕНИЙ И ОБОРУДОВАНИЯ
+-- ============================================
+
+-- Здания
+CREATE TABLE buildings (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  address TEXT,
+  
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id),
+  note VARCHAR(100)
+);
+
+-- Помещения (залы)
+CREATE TABLE rooms (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  room_number VARCHAR(50), -- New field for room/cabinet number
+  type SMALLINT NOT NULL,  -- RoomType enum (0:groupHall, 1:cardioZone, 2:strengthZone, 3:mixedZone, 4:studio, 5:boxingRing, 6:pool, 7:lockerRoom, 8:reception, 9:office, 10:other)
+  
+  -- Локация
+  floor INT,
+  building_id BIGINT REFERENCES buildings(id),
+  
+  -- Характеристики
+  max_capacity INT NOT NULL DEFAULT 30,
+  area DECIMAL(5,2),
+  
+  -- Расписание доступности
+  open_time TIME,
+  close_time TIME,
+  working_days JSONB,  -- Массив дней недели [1,2,3,4,5,6,7]
+  
+  -- Статус
+  is_active BOOLEAN DEFAULT true,
+  deactivate_reason TEXT,
+  deactivate_at TIMESTAMPTZ,
+  deactivate_by BIGINT REFERENCES users(id),
+  
+  -- Файлы
+  photo_urls JSONB,
+  floor_plan_url TEXT,
+  
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id),
+  archived_reason TEXT,
+  note VARCHAR(100)
+);
+-- Экземпляры оборудования
+CREATE TABLE equipment_items (
+  id BIGSERIAL PRIMARY KEY,
+  
+  -- Тип оборудования
+  type_id BIGINT NOT NULL REFERENCES equipment_types(id),
+  
+  -- Идентификация
+  inventory_number VARCHAR(50) NOT NULL UNIQUE,
+  serial_number VARCHAR(100),
+  model VARCHAR(100),
+  manufacturer VARCHAR(255),
+  
+  -- Локация
+  room_id BIGINT REFERENCES rooms(id),
+  placement_note TEXT,
+  
+  -- Состояние
+  status SMALLINT DEFAULT 0,  -- EquipmentStatus enum (0:available, 1:inUse, 2:reserved, 3:maintenance, 4:outOfOrder, 5:storage)
+  condition_rating INT CHECK (condition_rating >= 1 AND condition_rating <= 5),
+  condition_notes TEXT,
+  
+  -- Обслуживание
+  last_maintenance_date DATE,
+  next_maintenance_date DATE,
+  maintenance_notes TEXT,
+  
+  -- Учёт
+  purchase_date DATE,
+  purchase_price DECIMAL(10,2),
+  supplier VARCHAR(255),
+  warranty_months INT,
+  
+  -- Использование
+  usage_hours INT DEFAULT 0,
+  last_used_date DATE,
+  
+  -- Фотографии
+  photo_urls JSONB,
+  
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id),
+  archived_reason TEXT,
+  note VARCHAR(100)
+);
+
+-- Бронирование оборудования
+CREATE TABLE equipment_bookings (
+  id BIGSERIAL PRIMARY KEY,
+  
+  -- Что бронируем
+  equipment_item_id BIGINT NOT NULL REFERENCES equipment_items(id),
+  
+  -- Кто бронирует
+  booked_by BIGINT NOT NULL REFERENCES users(id),
+  
+  -- Время
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ NOT NULL,
+  
+  -- Контекст
+  lesson_id BIGINT,  -- Ссылка будет добавлена позже
+  training_group_id BIGINT,  -- Ссылка будет добавлена позже
+  purpose VARCHAR(255) NOT NULL,
+  
+  -- Статус
+  status SMALLINT DEFAULT 0,  -- BookingStatus enum
+  
+  -- Дополнительно
+  notes TEXT,
+  
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id),
+  
+  -- Ограничения
+  CONSTRAINT valid_booking_time CHECK (end_time > start_time)
+);
 
 -- ============================================
 -- 4. СОЗДАНИЕ ИНДЕКСОВ ДЛЯ ПРОИЗВОДИТЕЛЬНОСТИ
@@ -377,6 +566,10 @@ CREATE INDEX idx_types_body_build_active ON types_body_build(company_id) WHERE a
 -- Индексы для kinds_exercis
 CREATE INDEX idx_kinds_exercis_name ON kinds_exercis(name);
 CREATE INDEX idx_kinds_exercis_active ON kinds_exercis(company_id) WHERE archived_at IS NULL;
+
+-- Индексы для equipment_types
+CREATE INDEX idx_equipment_types_category ON equipment_types(category) WHERE is_active = true;
+CREATE INDEX idx_equipment_types_active ON equipment_types(company_id) WHERE archived_at IS NULL;
 
 -- Индексы для types_exercis
 CREATE INDEX idx_types_exercis_kind ON types_exercis(kind_exercis_id);
@@ -416,6 +609,29 @@ CREATE INDEX idx_client_exercises_set ON client_exercises(client_set_exercise_id
 CREATE INDEX idx_client_exercises_template ON client_exercises(exercise_template_id);
 CREATE INDEX idx_client_exercises_active ON client_exercises(company_id) WHERE archived_at IS NULL;
 
+-- Индексы для rooms
+CREATE INDEX idx_rooms_type ON rooms(type) WHERE is_active = true;
+CREATE INDEX idx_rooms_building ON rooms(building_id) WHERE building_id IS NOT NULL;
+CREATE INDEX idx_rooms_active ON rooms(company_id) WHERE archived_at IS NULL AND is_active = true;
+
+-- Индексы для buildings
+CREATE INDEX idx_buildings_name ON buildings(name);
+CREATE INDEX idx_buildings_active ON buildings(company_id) WHERE archived_at IS NULL;
+
+
+-- Индексы для equipment_items
+CREATE INDEX idx_equipment_items_type ON equipment_items(type_id);
+CREATE INDEX idx_equipment_items_room ON equipment_items(room_id) WHERE room_id IS NOT NULL;
+CREATE INDEX idx_equipment_items_status ON equipment_items(status) WHERE status = 0;
+CREATE INDEX idx_equipment_items_inventory ON equipment_items(inventory_number);
+CREATE INDEX idx_equipment_items_active ON equipment_items(company_id) WHERE archived_at IS NULL;
+
+-- Индексы для equipment_bookings
+CREATE INDEX idx_equipment_bookings_item ON equipment_bookings(equipment_item_id);
+CREATE INDEX idx_equipment_bookings_user ON equipment_bookings(booked_by);
+CREATE INDEX idx_equipment_bookings_time ON equipment_bookings(equipment_item_id, start_time, end_time) WHERE status IN (0, 1);
+CREATE INDEX idx_equipment_bookings_active ON equipment_bookings(company_id) WHERE archived_at IS NULL;
+CREATE INDEX idx_equipment_bookings_time_status ON equipment_bookings(equipment_item_id, start_time, end_time, status);
 
 -- Индексы для таблиц связей
 CREATE INDEX idx_set_exercises_link_set ON set_exercises_templates_exercis_templates(set_exercises_template_id);
@@ -473,6 +689,135 @@ INSERT INTO kinds_exercis (name, note) VALUES
 ('Плиометрика', 'Взрывные упражнения для развития мощности'),
 ('Изометрика', 'Статические упражнения без движения в суставах');
 
+-- 5.6. Заполняем типы оборудования
+INSERT INTO equipment_types (name, description, category, sub_type, weight_range, dimensions, is_mobile, photo_url, note) VALUES
+('Беговая дорожка', 'Кардио тренажер для бега и ходьбы', 0, 0, NULL, '180x80x140 см', false, '/equipment/treadmill.jpg', 'Электрическая, с наклоном'),
+('Эллиптический тренажер', 'Кардио тренажер для низкоударной тренировки', 0, 1, NULL, '160x70x170 см', true, '/equipment/elliptical.jpg', 'Орбитрек'),
+('Велотренажер', 'Кардио тренажер для тренировки ног', 0, 2, NULL, '120x60x140 см', true, '/equipment/bike.jpg', 'С вертикальной посадкой'),
+('Гантели', 'Свободные веса для силовых упражнений', 2, 0, '1-30 кг', NULL, true, '/equipment/dumbbells.jpg', 'Резиновое покрытие'),
+('Штанга', 'Свободный вес для базовых упражнений', 2, 1, '20 кг (гриф)', '220 см', false, '/equipment/barbell.jpg', 'Олимпийский гриф'),
+('Скамья для жима', 'Силовой тренажер для жима лежа', 1, 0, NULL, '120x30x45 см', true, '/equipment/bench.jpg', 'Регулируемый наклон'),
+('Тренажер для жима ногами', 'Силовой тренажер для ног', 1, 1, NULL, '200x120x150 см', false, '/equipment/leg_press.jpg', 'Под углом 45°'),
+('Фитбол', 'Мяч для функциональных упражнений', 3, 0, NULL, 'Диаметр 65 см', true, '/equipment/fitball.jpg', 'Антиразрывный'),
+('Коврик для йоги', 'Аксессуар для растяжки и йоги', 4, 0, NULL, '180x60x0.5 см', true, '/equipment/yoga_mat.jpg', 'ПВХ, 5 мм'),
+('Весы напольные', 'Измерительное оборудование', 5, 0, NULL, '30x30x3 см', true, '/equipment/scales.jpg', 'Электронные, до 200 кг');
+
+-- 5.7. Заполняем типы упражнений
+INSERT INTO types_exercis (name, kind_exercis_id, equipment_type_id, note) VALUES
+('Бег на дорожке', 1, 1, 'Кардио упражнение'),
+('Ходьба на эллипсе', 1, 2, 'Низкоударное кардио'),
+('Езда на велотренажере', 1, 3, 'Кардио для ног'),
+('Жим гантелей лежа', 2, 4, 'Упражнение на грудные мышцы'),
+('Приседания со штангой', 2, 5, 'Базовое упражнение на ноги'),
+('Жим ногами в тренажере', 2, 7, 'Упражнение на квадрицепсы'),
+('Отжимания на брусьях', 2, NULL, 'Упражнение на трицепсы и грудные'),
+('Подтягивания', 2, NULL, 'Упражнение на спину и бицепсы'),
+('Планка', 6, NULL, 'Статическое упражнение на пресс'),
+('Растяжка мышц ног', 4, 9, 'Упражнение на гибкость'),
+('Упражнения с фитболом', 3, 8, 'Функциональная тренировка');
+
+-- 5.8. Заполняем шаблоны упражнений
+INSERT INTO exercises_templates (name, repeat_qty, duration_exec, duration_rest, calories_out, is_group, type_exercis_id, note) VALUES
+('Бег на дорожке', NULL, 30.0, 1.0, 300.0, false, 1, 'Умеренный темп, 10 км/ч'),
+('Ходьба на эллипсе', NULL, 45.0, 1.0, 250.0, false, 2, 'Среднее сопротивление'),
+('Езда на велотренажере', NULL, 40.0, 1.0, 280.0, false, 3, 'Интервальная тренировка'),
+('Жим гантелей лежа', 12, NULL, 60.0, 80.0, false, 4, '3 подхода, средний вес'),
+('Приседания со штангой', 10, NULL, 90.0, 120.0, false, 5, '4 подхода, рабочий вес'),
+('Жим ногами', 15, NULL, 60.0, 100.0, false, 6, '3 подхода, умеренный вес'),
+('Отжимания на брусьях', 15, NULL, 60.0, 70.0, false, 7, '3 подхода, с весом или без'),
+('Подтягивания', 10, NULL, 90.0, 90.0, false, 8, '4 подхода, широкий хват'),
+('Планка', NULL, 60.0, 30.0, 40.0, false, 9, '3 подхода по 60 секунд'),
+('Растяжка ног', NULL, 15.0, 0.0, 50.0, false, 10, 'Статическая растяжка'),
+('Упражнения с фитболом', 20, NULL, 30.0, 60.0, true, 11, 'Групповое занятие');
+
+-- 5.9. Заполняем шаблоны наборов упражнений
+INSERT INTO sets_exercises_templates (name, level_training_id, note) VALUES
+('Кардио для начинающих', 1, 'Базовый кардио-комплекс для новичков'),
+('Силовая тренировка на все тело', 2, 'Базовая силовая для среднего уровня'),
+('Интенсивное кардио', 3, 'Интервальная тренировка для продвинутых'),
+('Силовая на ноги', 2, 'Акцент на нижнюю часть тела'),
+('Верх тела', 2, 'Тренировка груди, спины и рук'),
+('Функциональная тренировка', 1, 'Упражнения с собственным весом'),
+('Растяжка и мобильность', 1, 'Комплекс на гибкость');
+
+-- 5.10. Заполняем связи наборов и упражнений
+INSERT INTO set_exercises_templates_exercis_templates (set_exercises_template_id, exercis_template_id) VALUES
+(1, 1), (1, 2),  -- Кардио для начинающих
+(2, 4), (2, 5), (2, 8),  -- Силовая на все тело
+(3, 1), (3, 3),  -- Интенсивное кардио
+(4, 5), (4, 6),  -- Силовая на ноги
+(5, 4), (5, 7), (5, 8),  -- Верх тела
+(6, 9), (6, 11),  -- Функциональная тренировка
+(7, 10);  -- Растяжка
+
+-- 5.11. Заполняем шаблоны планов тренировок
+INSERT INTO training_plan_templates (name, goal_training_id, note) VALUES
+('Похудение для начинающих', 1, 'План для снижения веса, новички'),
+('Набор массы для среднего уровня', 2, 'План для роста мышц, средний уровень'),
+('Поддержание формы', 3, 'План для сохранения результатов'),
+('Рельеф для продвинутых', 4, 'Сушка для опытных тренирующихся'),
+('Силовая программа', 6, 'Развитие максимальной силы');
+
+-- 5.12. Заполняем связи планов и наборов упражнений
+INSERT INTO training_plan__templates_set_exercises_templates (training_plan_template_id, set_exercises_template_id) VALUES
+(1, 1), (1, 6), (1, 7),  -- Похудение: кардио, функциональная, растяжка
+(2, 2), (2, 4), (2, 5),  -- Набор массы: силовая все тело, ноги, верх
+(3, 1), (3, 2), (3, 7),  -- Поддержание: кардио, силовая, растяжка
+(4, 3), (4, 2), (4, 7),  -- Рельеф: интенсивное кардио, силовая, растяжка
+(5, 2), (5, 4), (5, 5);  -- Силовая: все тело, ноги, верх
+
+-- 5.13. Заполняем рекомендации по тренировкам
+INSERT INTO training_recommendations (body_type, goal_training_id, level_trainig_id, recommendation_text_trainer, recommendation_text_client, note) VALUES
+('Яблоко', 1, 1, 'Акцент на кардио тренировки для снижения жира в области талии. Силовые тренировки на все группы мышц с умеренными весами. Избегать упражнений, создающих осевую нагрузку на позвоночник при наличии большого живота.', 'Рекомендуется больше кардио тренировок (бег, ходьба, велосипед) и упражнения на все группы мышц. Обратите внимание на питание - снизьте простые углеводы.', 'Для похудения при типе "Яблоко"'),
+('Груша', 1, 1, 'Кардио тренировки для общего жиросжигания. Силовые тренировки с акцентом на верхнюю часть тела для балансировки фигуры. Умеренная нагрузка на ноги без увеличения объемов.', 'Делайте упор на тренировку верхней части тела (руки, плечи, спина) и кардио. Упражнения на ноги выполняйте с умеренной интенсивностью.', 'Для похудения при типе "Груша"'),
+('Песочные часы', 2, 2, 'Сбалансированные силовые тренировки на все группы мышц для гармоничного развития. Кардио для поддержания формы. Можно использовать средние и тяжелые веса.', 'Идеальное телосложение для силовых тренировок! Тренируйте все группы мышц равномерно, используйте разнообразные упражнения.', 'Для набора массы при типе "Песочные часы"'),
+('Прямоугольник', 2, 2, 'Создание иллюзии изгибов через развитие плеч и ягодиц. Тренировки с акцентом на дельтовидные мышцы и ягодицы. Кардио умеренное.', 'Сосредоточьтесь на упражнениях для плеч и ягодиц, чтобы создать более выраженную талию. Используйте различные углы нагрузки.', 'Для набора массы при типе "Прямоугольник"');
+
+-- 5.14. Заполняем формулы расчета BMR
+INSERT INTO bmr_formulas (name, formula, for_men, for_women, is_active, note) VALUES
+('Миффлина-Сан Жеора', '10 × вес(кг) + 6.25 × рост(см) - 5 × возраст(лет) + 5', true, false, true, 'Стандартная формула для мужчин'),
+('Миффлина-Сан Жеора', '10 × вес(кг) + 6.25 × рост(см) - 5 × возраст(лет) - 161', false, true, true, 'Стандартная формула для женщин'),
+('Харриса-Бенедикта', '88.362 + (13.397 × вес[кг]) + (4.799 × рост[см]) - (5.677 × возраст[лет])', true, false, true, 'Классическая формула для мужчин'),
+('Харриса-Бенедикта', '447.593 + (9.247 × вес[кг]) + (3.098 × рост[см]) - (4.330 × возраст[лет])', false, true, true, 'Классическая формула для женщин'),
+('Кетча-МакАрдла', '370 + (21.6 × LBM)', true, true, true, 'LBM = масса тела × (100 - %жира) / 100');
+
+-- 5.15. Заполняем Здания
+INSERT INTO buildings (name, address, note) VALUES
+('Основной корпус', 'г. Москва, ул. Центральная, 1', 'Главное здание фитнес-центра'),
+('Водный комплекс', 'г. Москва, ул. Центральная, 2', 'Здание с бассейном и спа');
+
+-- 5.16. Заполняем помещения (залы)
+INSERT INTO rooms (name, description, type, floor, building_id, max_capacity, area, open_time, close_time, working_days, note) VALUES
+('Зал групповых занятий', 'Основной зал для групповых тренировок, йоги, аэробики', 0, '1', 1, 25, 120.0, '08:00', '22:00', '[1,2,3,4,5,6]', 'Основной зал, паркетное покрытие'),
+('Кардио-зона', 'Зона с кардио оборудованием', 1, '1', 1, 15, 80.0, '06:00', '23:00', '[1,2,3,4,5,6,7]', '24/7 для членов клуба'),
+('Силовая зона', 'Зона со свободными весами и силовыми тренажерами', 2, '1', 1, 20, 100.0, '06:00', '23:00', '[1,2,3,4,5,6,7]', 'Олимпийские платформы'),
+('Йога-студия', 'Зал для йоги и пилатеса', 4, '2', 1, 12, 60.0, '07:00', '21:00', '[1,2,3,4,5,6]', 'Бамбуковое покрытие, оборудование для йоги'),
+('Боксерский зал', 'Зал для единоборств и функционального тренинга', 5, '2', 1, 10, 70.0, '09:00', '20:00', '[1,2,3,4,5]', 'Боксерские груши, татами'),
+('Бассейн', 'Плавание', 6, '1', 2, 30, 250.0, '07:00', '22:00', '[1,2,3,4,5,6,7]', '25-метровый бассейн, 4 дорожки'),
+('Сауна', 'Зона отдыха с сауной', 7, '1', 2, 8, 20.0, '10:00', '21:00', '[1,2,3,4,5,6,7]', 'Финская сауна'),
+('Сауна 2', 'Дополнительная зона отдыха с сауной', 7, '1', 2, 8, 20.0, '10:00', '21:00', '[1,2,3,4,5,6,7]', 'Вторая финская сауна');
+
+-- 5.17. Заполняем экземпляры оборудования
+INSERT INTO equipment_items (type_id, inventory_number, serial_number, model, manufacturer, room_id, placement_note, status, condition_rating, purchase_date, purchase_price, note) VALUES
+(1, 'ТРЕД-001', 'SN123456', 'T8.5', 'Matrix', 2, 'У окна, левая сторона', 0, 5, '2023-01-15', 250000.00, 'Основная беговая дорожка'),
+(1, 'ТРЕД-002', 'SN123457', 'T8.5', 'Matrix', 2, 'У окна, правая сторона', 0, 5, '2023-01-15', 250000.00, 'Запасная беговая дорожка'),
+(2, 'ЭЛЛ-001', 'SN123458', 'E7Xi', 'Matrix', 2, 'Центр зала', 0, 4, '2023-02-20', 180000.00, 'Эллиптический тренажер'),
+(3, 'ВЕЛ-001', 'SN123459', 'R7xe', 'Matrix', 2, 'У стены', 0, 5, '2023-02-20', 150000.00, 'Велотренажер вертикальный'),
+(4, 'ГАН-001', NULL, 'Резиновые', 'Kettler', 3, 'Стеллаж №1', 0, 4, '2022-11-10', 5000.00, 'Гантели 5 кг, пара'),
+(4, 'ГАН-002', NULL, 'Резиновые', 'Kettler', 3, 'Стеллаж №1', 0, 4, '2022-11-10', 7000.00, 'Гантели 10 кг, пара'),
+(5, 'ШТАН-001', 'SN123460', 'Олимпийская', 'Rogue', 3, 'Стойка для штанги', 0, 5, '2023-03-05', 30000.00, 'Олимпийский гриф 20 кг'),
+(6, 'СКАМ-001', 'SN123461', 'Adjustable', 'Body Solid', 3, 'Возле зеркала', 0, 4, '2022-12-15', 45000.00, 'Скамья регулируемая'),
+(7, 'НОГИ-001', 'SN123462', 'Leg Press', 'Hammer Strength', 3, 'Угол зала', 0, 5, '2023-01-10', 320000.00, 'Тренажер для жима ногами'),
+(8, 'ФИТ-001', NULL, 'Anti-Burst', 'Ledraplastik', 4, 'Корзина с мячами', 0, 5, '2023-04-01', 3000.00, 'Фитбол 65 см'),
+(9, 'КОВ-001', NULL, 'Professional', 'Manduka', 4, 'Стеллаж для ковриков', 0, 5, '2023-04-01', 2500.00, 'Коврик для йоги 5мм'),
+(10, 'ВЕС-001', 'SN123463', 'BF-350', 'Beurer', 5, 'У входа', 0, 5, '2023-05-10', 8000.00, 'Электронные весы');
+
+-- 5.19. Создаем несколько бронирований оборудования (пример)
+INSERT INTO equipment_bookings (equipment_item_id, booked_by, start_time, end_time, purpose, notes) VALUES
+(1, 1, '2024-01-15 10:00:00+03', '2024-01-15 11:00:00+03', 'Индивидуальная тренировка', 'Клиент: Иванов И.И.'),
+(2, 1, '2024-01-15 11:00:00+03', '2024-01-15 12:00:00+03', 'Групповое занятие', 'Группа "Кардио для начинающих"'),
+(5, 2, '2024-01-15 14:00:00+03', '2024-01-15 15:00:00+03', 'Силовая тренировка', 'Клиент: Петров П.П.'),
+(8, 2, '2024-01-15 16:00:00+03', '2024-01-15 17:00:00+03', 'Тренировка грудных', 'Собственный вес + гантели');
 
 
 -- ============================================
@@ -482,9 +827,9 @@ INSERT INTO kinds_exercis (name, note) VALUES
 DO $$
 BEGIN
     RAISE NOTICE '============================================';
-    RAISE NOTICE 'Создание таблиц упражнений и планов тренировок завершено!';
-    RAISE NOTICE 'Создано таблиц: 15'; -- Approximate count after removing 5 tables
-    RAISE NOTICE 'Создано индексов: 25+'; -- Approximate count after removing some indexes
-    RAISE NOTICE 'Загружено начальных данных: ~50 записей'; -- Approximate count after removing some inserts
+    RAISE NOTICE 'Создание таблиц упражнений, помещений и оборудования завершено!';
+    RAISE NOTICE 'Создано таблиц: 20';
+    RAISE NOTICE 'Создано индексов: 40+';
+    RAISE NOTICE 'Загружено начальных данных: ~80 записей';
     RAISE NOTICE '============================================';
 END $$;
