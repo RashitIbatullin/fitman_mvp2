@@ -60,7 +60,7 @@ class _RoomEditScreenState extends ConsumerState<RoomEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final buildingsAsync = ref.watch(allBuildingsProvider(false));
+    final buildingsAsync = ref.watch(allBuildingsProvider);
 
     return Scaffold(
       appBar: AppBar(

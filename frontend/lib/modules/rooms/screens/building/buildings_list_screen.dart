@@ -65,7 +65,7 @@ class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
   @override
   Widget build(BuildContext context) {
     final isArchivedFilter = ref.watch(buildingIsArchivedFilterProvider);
-    final buildingsAsync = ref.watch(allBuildingsProvider(isArchivedFilter));
+    final buildingsAsync = ref.watch(allBuildingsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -150,12 +150,17 @@ class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
         ),
       ),
       body: buildingsAsync.when(
-        data: (buildings) {
+        data: (allBuildings) {
+          final buildings = allBuildings.where((building) {
+            if (isArchivedFilter == null) return true; // Show all
+            return (building.archivedAt != null) == isArchivedFilter;
+          }).toList();
+
           if (buildings.isEmpty) {
             return const Center(child: Text('Здания не найдены.'));
           }
           return RefreshIndicator(
-            onRefresh: () => ref.refresh(allBuildingsProvider(isArchivedFilter).future),
+            onRefresh: () => ref.refresh(allBuildingsProvider.future),
             child: ListView.builder(
               itemCount: buildings.length,
               itemBuilder: (context, index) {

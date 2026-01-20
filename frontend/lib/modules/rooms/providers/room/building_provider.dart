@@ -4,10 +4,9 @@ import 'package:fitman_app/modules/rooms/models/building/building.model.dart';
 
 // --- Building Providers ---
 
-// All buildings provider with filter
-final allBuildingsProvider =
-    FutureProvider.family<List<Building>, bool?>((ref, isArchived) async {
-  return ApiService.getAllBuildings(isArchived: isArchived);
+// All buildings provider
+final allBuildingsProvider = FutureProvider<List<Building>>((ref) async {
+  return ApiService.getAllBuildings();
 });
 
 // Building by ID provider
