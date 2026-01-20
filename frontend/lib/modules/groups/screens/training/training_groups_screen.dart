@@ -286,50 +286,22 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
           if (groups.isEmpty) {
             return const Center(child: Text('Нет групп, соответствующих фильтру.'));
           }
-          return ListView.builder(
-            itemCount: groups.length,
-            itemBuilder: (context, index) {
-              final group = groups[index];
-              return TrainingGroupCard(
-                group: group,
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => TrainingGroupEditScreen(groupId: group.id?.toString()),
-                    ),
-                  );
-                  // Refresh the list after editing
-                  ref.invalidate(trainingGroupsProvider(
-                    searchQuery: _searchQuery,
-                    groupTypeId: _selectedGroupTypeId,
-                    isActive: _isActiveFilter,
-                    isArchived: _isArchivedFilter,
-                    trainerId: _selectedTrainerId,
-                    instructorId: _selectedInstructorId,
-                    managerId: _selectedManagerId,
-                  ));
-                },
-                onDelete: () async {
-                  if (group.id == null) return;
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Подтвердите архивацию'),
-                      content: Text('Вы уверены, что хотите архивировать группу "${group.name}"?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Отмена'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Архивировать'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirmed == true) {
-                    await ref.read(trainingGroupsProvider(
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 80.0),
+            child: ListView.builder(
+              itemCount: groups.length,
+              itemBuilder: (context, index) {
+                final group = groups[index];
+                return TrainingGroupCard(
+                  group: group,
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TrainingGroupEditScreen(groupId: group.id?.toString()),
+                      ),
+                    );
+                    // Refresh the list after editing
+                    ref.invalidate(trainingGroupsProvider(
                       searchQuery: _searchQuery,
                       groupTypeId: _selectedGroupTypeId,
                       isActive: _isActiveFilter,
@@ -337,11 +309,42 @@ class _TrainingGroupsScreenState extends ConsumerState<TrainingGroupsScreen> {
                       trainerId: _selectedTrainerId,
                       instructorId: _selectedInstructorId,
                       managerId: _selectedManagerId,
-                    ).notifier).deleteTrainingGroup(group.id!);
-                  }
-                },
-              );
-            },
+                    ));
+                  },
+                  onDelete: () async {
+                    if (group.id == null) return;
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Подтвердите архивацию'),
+                        content: Text('Вы уверены, что хотите архивировать группу "${group.name}"?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Отмена'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Архивировать'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      await ref.read(trainingGroupsProvider(
+                        searchQuery: _searchQuery,
+                        groupTypeId: _selectedGroupTypeId,
+                        isActive: _isActiveFilter,
+                        isArchived: _isArchivedFilter,
+                        trainerId: _selectedTrainerId,
+                        instructorId: _selectedInstructorId,
+                        managerId: _selectedManagerId,
+                      ).notifier).deleteTrainingGroup(group.id!);
+                    }
+                  },
+                );
+              },
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -92,9 +92,25 @@ class TrainingGroupCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.archive, color: Colors.blueGrey),
-                    onPressed: onDelete,
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        onTap();
+                      } else if (value == 'archive') {
+                        onDelete();
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
+                        value: 'edit',
+                        child: Text('Редактировать'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'archive',
+                        child: Text('Архивировать'),
+                      ),
+                    ],
+                    icon: const Icon(Icons.more_vert),
                   ),
                 ],
               ),

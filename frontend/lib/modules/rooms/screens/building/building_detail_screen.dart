@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
 import '../../providers/room/building_provider.dart';
 import 'building_edit_screen.dart';
 
@@ -10,38 +11,42 @@ class BuildingDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final buildingAsync = ref.watch(buildingByIdProvider(buildingId));
+    final buildingsAsync = ref.watch(allBuildingsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: buildingAsync.when(
-          data: (building) => Text(building.name),
-          loading: () => const Text('Детали здания'),
-          error: (e, s) => const Text('Ошибка'),
-        ),
+        title: const Text('Детали здания'),
         actions: [
-          buildingAsync.when(
-            data: (building) => IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        BuildingEditScreen(building: building),
-                  ),
-                );
-              },
-            ),
+          buildingsAsync.when(
+            data: (buildings) {
+              final building = buildings.firstWhereOrNull((b) => b.id == buildingId);
+              if (building == null) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          BuildingEditScreen(building: building),
+                    ),
+                  );
+                },
+              );
+            },
             loading: () => const SizedBox.shrink(),
             error: (e, s) => const SizedBox.shrink(),
           )
         ],
       ),
-      body: buildingAsync.when(
-        data: (building) {
+      body: buildingsAsync.when(
+        data: (buildings) {
+           final building = buildings.firstWhereOrNull((b) => b.id == buildingId);
+           if (building == null) {
+            return const Center(child: Text('Здание не найдено.'));
+           }
           return RefreshIndicator(
-            onRefresh: () => ref.refresh(buildingByIdProvider(buildingId).future),
+            onRefresh: () => ref.refresh(allBuildingsProvider.future),
             child: ListView(
               padding: const EdgeInsets.all(16.0),
               children: [

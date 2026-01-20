@@ -27,6 +27,7 @@ mixin _$Building {
   String? get note => throw _privateConstructorUsedError;
   @NullableDateTimeConverter()
   DateTime? get archivedAt => throw _privateConstructorUsedError;
+  int? get archivedBy => throw _privateConstructorUsedError;
 
   /// Serializes this Building to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -49,6 +50,7 @@ abstract class $BuildingCopyWith<$Res> {
     String address,
     String? note,
     @NullableDateTimeConverter() DateTime? archivedAt,
+    int? archivedBy,
   });
 }
 
@@ -72,6 +74,7 @@ class _$BuildingCopyWithImpl<$Res, $Val extends Building>
     Object? address = null,
     Object? note = freezed,
     Object? archivedAt = freezed,
+    Object? archivedBy = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -95,6 +98,10 @@ class _$BuildingCopyWithImpl<$Res, $Val extends Building>
                 ? _value.archivedAt
                 : archivedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            archivedBy: freezed == archivedBy
+                ? _value.archivedBy
+                : archivedBy // ignore: cast_nullable_to_non_nullable
+                      as int?,
           )
           as $Val,
     );
@@ -116,6 +123,7 @@ abstract class _$$BuildingImplCopyWith<$Res>
     String address,
     String? note,
     @NullableDateTimeConverter() DateTime? archivedAt,
+    int? archivedBy,
   });
 }
 
@@ -138,6 +146,7 @@ class __$$BuildingImplCopyWithImpl<$Res>
     Object? address = null,
     Object? note = freezed,
     Object? archivedAt = freezed,
+    Object? archivedBy = freezed,
   }) {
     return _then(
       _$BuildingImpl(
@@ -161,6 +170,10 @@ class __$$BuildingImplCopyWithImpl<$Res>
             ? _value.archivedAt
             : archivedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        archivedBy: freezed == archivedBy
+            ? _value.archivedBy
+            : archivedBy // ignore: cast_nullable_to_non_nullable
+                  as int?,
       ),
     );
   }
@@ -175,6 +188,7 @@ class _$BuildingImpl implements _Building {
     required this.address,
     this.note,
     @NullableDateTimeConverter() this.archivedAt,
+    this.archivedBy,
   });
 
   factory _$BuildingImpl.fromJson(Map<String, dynamic> json) =>
@@ -191,10 +205,12 @@ class _$BuildingImpl implements _Building {
   @override
   @NullableDateTimeConverter()
   final DateTime? archivedAt;
+  @override
+  final int? archivedBy;
 
   @override
   String toString() {
-    return 'Building(id: $id, name: $name, address: $address, note: $note, archivedAt: $archivedAt)';
+    return 'Building(id: $id, name: $name, address: $address, note: $note, archivedAt: $archivedAt, archivedBy: $archivedBy)';
   }
 
   @override
@@ -207,13 +223,15 @@ class _$BuildingImpl implements _Building {
             (identical(other.address, address) || other.address == address) &&
             (identical(other.note, note) || other.note == note) &&
             (identical(other.archivedAt, archivedAt) ||
-                other.archivedAt == archivedAt));
+                other.archivedAt == archivedAt) &&
+            (identical(other.archivedBy, archivedBy) ||
+                other.archivedBy == archivedBy));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, name, address, note, archivedAt);
+      Object.hash(runtimeType, id, name, address, note, archivedAt, archivedBy);
 
   /// Create a copy of Building
   /// with the given fields replaced by the non-null parameter values.
@@ -236,6 +254,7 @@ abstract class _Building implements Building {
     required final String address,
     final String? note,
     @NullableDateTimeConverter() final DateTime? archivedAt,
+    final int? archivedBy,
   }) = _$BuildingImpl;
 
   factory _Building.fromJson(Map<String, dynamic> json) =
@@ -252,6 +271,8 @@ abstract class _Building implements Building {
   @override
   @NullableDateTimeConverter()
   DateTime? get archivedAt;
+  @override
+  int? get archivedBy;
 
   /// Create a copy of Building
   /// with the given fields replaced by the non-null parameter values.

@@ -21,6 +21,7 @@ class Building with _$Building {
     required String address,
     String? note,
     @NullableDateTimeConverter() DateTime? archivedAt,
+    int? archivedBy,
   }) = _Building;
 
   factory Building.fromJson(Map<String, dynamic> json) => _$BuildingFromJson(json);

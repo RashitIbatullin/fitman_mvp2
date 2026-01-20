@@ -77,7 +77,15 @@ class BuildingController {
   }
 
   Future<Response> _deleteBuilding(Request request, String id) async {
-    await _buildingService.deleteBuilding(id);
-    return Response(204);
+    try {
+      final userId = request.context['user_id'] as int?;
+      if (userId == null) {
+        return Response(401, body: jsonEncode({'error': 'Not authenticated.'}));
+      }
+      await _buildingService.deleteBuilding(id, userId);
+      return Response(204);
+    } catch (e) {
+      return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
+    }
   }
 }

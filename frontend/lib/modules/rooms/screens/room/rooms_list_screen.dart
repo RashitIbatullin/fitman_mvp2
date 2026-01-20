@@ -18,7 +18,6 @@ class RoomsListViewScreen extends ConsumerStatefulWidget {
 }
 
 class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
-  Room? _selectedRoom;
   final TextEditingController _searchQueryController = TextEditingController();
   final TextEditingController _archiveReasonController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -49,13 +48,11 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
     }).toList();
   }
 
-  Future<void> _performArchive(String reason) async {
-    final selectedRoom = _selectedRoom;
-    if (selectedRoom == null) return;
+  Future<void> _performArchive(Room room, String reason) async {
     try {
       await ApiService.updateRoom(
-          selectedRoom.id,
-          selectedRoom.copyWith(
+          room.id,
+          room.copyWith(
               isActive: false,
               archivedAt: DateTime.now(),
               archivedReason: reason,
@@ -63,7 +60,6 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
               deactivateAt: DateTime.now()));
       ref.invalidate(allRoomsProvider);
       if (mounted) {
-        setState(() => _selectedRoom = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Помещение архивировано')),
         );
@@ -77,10 +73,7 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
     }
   }
 
-  void _showArchiveRoomDialog() async {
-    final roomToArchive = _selectedRoom;
-    if (roomToArchive == null) return;
-
+  void _showArchiveRoomDialog(Room room) async {
     _archiveReasonController.clear();
 
     final confirmed = await showDialog<bool>(
@@ -92,7 +85,7 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Вы уверены, что хотите архивировать помещение "${roomToArchive.name}"?'),
+              Text('Вы уверены, что хотите архивировать помещение "${room.name}"?'),
               TextFormField(
                 controller: _archiveReasonController,
                 decoration: const InputDecoration(
@@ -127,17 +120,15 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
     );
 
     if (confirmed == true) {
-      await _performArchive(_archiveReasonController.text.trim());
+      await _performArchive(room, _archiveReasonController.text.trim());
     }
   }
 
-  Future<void> _unarchiveRoom() async {
-    final selectedRoom = _selectedRoom;
-    if (selectedRoom == null) return;
+  Future<void> _unarchiveRoom(Room room) async {
     try {
       await ApiService.updateRoom(
-          selectedRoom.id,
-          selectedRoom.copyWith(
+          room.id,
+          room.copyWith(
               isActive: true,
               archivedAt: null,
               archivedReason: null,
@@ -145,7 +136,6 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
               deactivateAt: null));
       ref.invalidate(allRoomsProvider);
       if (mounted) {
-        setState(() => _selectedRoom = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Помещение восстановлено из архива')),
         );
@@ -192,57 +182,6 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    FilterPopupMenuButton<String>(
-                      tooltip: 'Действия',
-                      allOptionText: 'Действия',
-                      showAllOption: false,
-                      initialValue: null,
-                      avatar: const Icon(Icons.more_vert),
-                      onSelected: (value) async {
-                        switch (value) {
-                          case 'add':
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const RoomCreateScreen()),
-                            );
-                            ref.invalidate(allRoomsProvider);
-                            break;
-                          case 'edit':
-                            final selectedRoom = _selectedRoom;
-                            if (selectedRoom != null && selectedRoom.archivedAt == null) {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RoomEditScreen(room: selectedRoom),
-                                ),
-                              );
-                              ref.invalidate(allRoomsProvider);
-                            }
-                            break;
-                          case 'archive':
-                            _showArchiveRoomDialog();
-                            break;
-                          case 'unarchive':
-                            _unarchiveRoom();
-                            break;
-                        }
-                      },
-                      options: [
-                        const FilterOption(label: 'Добавить', value: 'add'),
-                        FilterOption(
-                            label: 'Изменить',
-                            value: 'edit',
-                            enabled: _selectedRoom != null && _selectedRoom!.archivedAt == null),
-                        FilterOption(
-                            label: 'Архивировать',
-                            value: 'archive',
-                            enabled: _selectedRoom != null && _selectedRoom!.archivedAt == null),
-                        FilterOption(
-                            label: 'Деархивировать',
-                            value: 'unarchive',
-                            enabled: _selectedRoom != null && _selectedRoom!.archivedAt != null),
-                      ],
-                    ),
                     const SizedBox(width: 8),
                     FilterPopupMenuButton<RoomType?>(
                       tooltip: 'Тип помещения',
@@ -300,18 +239,17 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
             return const Center(child: Text('Помещения не найдены.'));
           }
 
-          return ListView.builder(
-            itemCount: filteredRooms.length,
-            itemBuilder: (context, index) {
-              final room = filteredRooms[index];
-              final isSelected = _selectedRoom?.id == room.id;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 80.0),
+            child: ListView.builder(
+              itemCount: filteredRooms.length,
+              itemBuilder: (context, index) {
+                final room = filteredRooms[index];
 
               return Card(
                 color: room.archivedAt != null ? Colors.grey[200] : null,
                 margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 child: ListTile(
-                  selected: isSelected,
-                  selectedTileColor: Theme.of(context).primaryColorLight,
                   leading: Icon(room.type.icon, size: 40),
                   title: Text(room.name),
                   subtitle: Column(
@@ -353,18 +291,60 @@ class _RoomsListViewScreenState extends ConsumerState<RoomsListViewScreen> {
                       ),
                     );
                   },
-                  onLongPress: () {
-                    setState(() {
-                      _selectedRoom = isSelected ? null : room;
-                    });
-                  },
+                   trailing: PopupMenuButton<String>(
+                    onSelected: (value) async {
+                      if (value == 'edit') {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RoomEditScreen(room: room),
+                          ),
+                        );
+                        ref.invalidate(allRoomsProvider);
+                      } else if (value == 'archive') {
+                        _showArchiveRoomDialog(room);
+                      } else if (value == 'unarchive') {
+                        _unarchiveRoom(room);
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                      if (room.archivedAt == null) ...[
+                        const PopupMenuItem<String>(
+                          value: 'edit',
+                          child: Text('Изменить'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'archive',
+                          child: Text('Архивировать'),
+                        ),
+                      ] else ...[
+                        const PopupMenuItem<String>(
+                          value: 'unarchive',
+                          child: Text('Деархивировать'),
+                        ),
+                      ],
+                    ],
+                    icon: const Icon(Icons.more_vert),
+                  ),
                 ),
               );
             },
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Ошибка: $err')),
+      ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'add_room_fab',
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const RoomCreateScreen()),
+          );
+          ref.invalidate(allRoomsProvider);
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

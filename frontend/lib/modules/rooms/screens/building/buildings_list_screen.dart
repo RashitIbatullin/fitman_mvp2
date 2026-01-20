@@ -19,15 +19,25 @@ class BuildingsListScreen extends ConsumerStatefulWidget {
 }
 
 class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
-  Building? _selectedBuilding;
+  Future<void> _archiveBuilding(Building building) async {
+    // Confirmation dialog is a good practice
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Подтвердите архивацию'),
+        content: Text('Вы уверены, что хотите архивировать здание "${building.name}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Отмена')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Архивировать')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
 
-  Future<void> _archiveBuilding() async {
-    if (_selectedBuilding == null) return;
     try {
-      await ApiService.deleteBuilding(_selectedBuilding!.id);
+      await ApiService.deleteBuilding(building.id);
       ref.invalidate(allBuildingsProvider);
       if (mounted) {
-        setState(() => _selectedBuilding = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Здание архивировано'), backgroundColor: Colors.orange),
         );
@@ -41,14 +51,26 @@ class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
     }
   }
 
-  Future<void> _unarchiveBuilding() async {
-    if (_selectedBuilding == null) return;
+  Future<void> _unarchiveBuilding(Building building) async {
+    // Confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Подтвердите восстановление'),
+        content: Text('Вы уверены, что хотите восстановить здание "${building.name}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Отмена')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Восстановить')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
-      final building = _selectedBuilding!.copyWith(archivedAt: null);
-      await ApiService.updateBuilding(_selectedBuilding!.id, building);
+      final updatedBuilding = building.copyWith(archivedAt: null);
+      await ApiService.updateBuilding(building.id, updatedBuilding);
       ref.invalidate(allBuildingsProvider);
       if (mounted) {
-        setState(() => _selectedBuilding = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Здание восстановлено из архива'), backgroundColor: Colors.green),
         );
@@ -64,141 +86,118 @@ class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isArchivedFilter = ref.watch(buildingIsArchivedFilterProvider);
     final buildingsAsync = ref.watch(allBuildingsProvider);
+    final isArchivedFilter = ref.watch(buildingIsArchivedFilterProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Здания'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                FilterPopupMenuButton<String>(
-                  tooltip: 'Действия',
-                  allOptionText: 'Действия',
-                  showAllOption: false,
-                  initialValue: null,
-                  avatar: const Icon(Icons.more_vert),
-                  onSelected: (value) async {
-                    switch (value) {
-                      case 'add':
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const BuildingCreateScreen()),
-                        );
-                        ref.invalidate(allBuildingsProvider);
-                        break;
-                      case 'edit':
-                        if (_selectedBuilding != null) {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  BuildingEditScreen(building: _selectedBuilding!),
-                            ),
-                          );
-                          ref.invalidate(allBuildingsProvider);
-                        }
-                        break;
-                      case 'archive':
-                        _archiveBuilding();
-                        break;
-                      case 'unarchive':
-                        _unarchiveBuilding();
-                        break;
-                    }
-                  },
-                  options: [
-                    const FilterOption(label: 'Добавить', value: 'add'),
-                    FilterOption(
-                        label: 'Изменить',
-                        value: 'edit',
-                        enabled: _selectedBuilding != null && _selectedBuilding?.archivedAt == null),
-                    FilterOption(
-                        label: 'Архивировать',
-                        value: 'archive',
-                        enabled: _selectedBuilding != null && _selectedBuilding?.archivedAt == null),
-                    FilterOption(
-                        label: 'Деархивировать',
-                        value: 'unarchive',
-                        enabled: _selectedBuilding != null && _selectedBuilding?.archivedAt != null),
-                  ],
-                ),
-                const SizedBox(width: 8),
-                FilterPopupMenuButton<bool?>(
-                  tooltip: 'Статус',
-                  allOptionText: 'Статус: Все',
-                  initialValue: isArchivedFilter,
-                  avatar: const Icon(Icons.archive_outlined),
-                  onSelected: (value) {
-                    ref.read(buildingIsArchivedFilterProvider.notifier).state = value;
-                  },
-                  options: const [
-                    FilterOption(label: 'Не в архиве', value: false),
-                    FilterOption(label: 'В архиве', value: true),
-                  ],
-                  showAllOption: true,
-                ),
-              ],
-            ),
+        actions: [
+          FilterPopupMenuButton<bool?>(
+            tooltip: 'Статус',
+            allOptionText: 'Статус: Все',
+            initialValue: isArchivedFilter,
+            avatar: const Icon(Icons.archive_outlined),
+            onSelected: (value) {
+              ref.read(buildingIsArchivedFilterProvider.notifier).state = value;
+            },
+            options: const [
+              FilterOption(label: 'Не в архиве', value: false),
+              FilterOption(label: 'В архиве', value: true),
+            ],
+            showAllOption: true,
           ),
-        ),
+        ],
       ),
       body: buildingsAsync.when(
-        data: (allBuildings) {
-          final buildings = allBuildings.where((building) {
-            if (isArchivedFilter == null) return true; // Show all
-            return (building.archivedAt != null) == isArchivedFilter;
-          }).toList();
-
+        data: (buildings) {
           if (buildings.isEmpty) {
             return const Center(child: Text('Здания не найдены.'));
           }
           return RefreshIndicator(
             onRefresh: () => ref.refresh(allBuildingsProvider.future),
-            child: ListView.builder(
-              itemCount: buildings.length,
-              itemBuilder: (context, index) {
-                final building = buildings[index];
-                final isSelected = _selectedBuilding?.id == building.id;
-
-                return Card(
-                  color: building.archivedAt != null ? Colors.grey[200] : null,
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  child: ListTile(
-                    selected: isSelected,
-                    selectedTileColor: Theme.of(context).primaryColorLight,
-                    title: Text(building.name),
-                    subtitle: Text(building.address),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              BuildingDetailScreen(buildingId: building.id),
-                        ),
-                      );
-                    },
-                    onLongPress: () {
-                      setState(() {
-                        _selectedBuilding = isSelected ? null : building;
-                      });
-                    },
-                  ),
-                );
-              },
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 80.0),
+              child: ListView.builder(
+                itemCount: buildings.length,
+                itemBuilder: (context, index) {
+                  final building = buildings[index];
+                  return Card(
+                    color: building.archivedAt != null ? Colors.grey[200] : null,
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    child: ListTile(
+                      title: Text(building.name),
+                      subtitle: Text(building.address),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                BuildingDetailScreen(buildingId: building.id),
+                          ),
+                        );
+                      },
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (value) async {
+                          if (value == 'edit') {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    BuildingEditScreen(building: building),
+                              ),
+                            );
+                            ref.read(allBuildingsProvider.notifier).refresh();
+                          } else if (value == 'archive') {
+                            _archiveBuilding(building);
+                          } else if (value == 'unarchive') {
+                            _unarchiveBuilding(building);
+                          }
+                        },
+                        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                          if (building.archivedAt == null) ...[
+                            const PopupMenuItem<String>(
+                              value: 'edit',
+                              child: Text('Изменить'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'archive',
+                              child: Text('Архивировать'),
+                            ),
+                          ] else ...[
+                            const PopupMenuItem<String>(
+                              value: 'unarchive',
+                              child: Text('Деархивировать'),
+                            ),
+                          ],
+                        ],
+                        icon: const Icon(Icons.more_vert),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Ошибка: $err')),
       ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'add_building_fab',
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const BuildingCreateScreen()),
+          );
+          ref.read(allBuildingsProvider.notifier).refresh();
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
+
+

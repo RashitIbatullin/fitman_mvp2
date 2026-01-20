@@ -1,16 +1,22 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/services/api_service.dart';
-import 'package:fitman_app/modules/rooms/models/building/building.model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/building/building.model.dart';
+import '../../screens/building/buildings_list_screen.dart';
 
-// --- Building Providers ---
+class BuildingsNotifier extends AsyncNotifier<List<Building>> {
+  @override
+  Future<List<Building>> build() async {
+    final isArchived = ref.watch(buildingIsArchivedFilterProvider);
+    return ApiService.getAllBuildings(isArchived: isArchived);
+  }
 
-// All buildings provider
-final allBuildingsProvider = FutureProvider<List<Building>>((ref) async {
-  return ApiService.getAllBuildings();
-});
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => build());
+  }
+}
 
-// Building by ID provider
-final buildingByIdProvider =
-    FutureProvider.family<Building, String>((ref, id) async {
-  return ApiService.getBuildingById(id);
+final allBuildingsProvider =
+    AsyncNotifierProvider<BuildingsNotifier, List<Building>>(() {
+  return BuildingsNotifier();
 });

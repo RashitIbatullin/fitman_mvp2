@@ -474,7 +474,7 @@ class _TrainingGroupsProviderElement
   int? get managerId => (origin as TrainingGroupsProvider).managerId;
 }
 
-String _$groupSchedulesHash() => r'd2821a0c16c95e30999ea7e0b0560ecd8960fa69';
+String _$groupSchedulesHash() => r'4e263b5e213fcadcbc3edc7e8775e09fd0495102';
 
 abstract class _$GroupSchedules
     extends BuildlessAsyncNotifier<List<GroupSchedule>> {

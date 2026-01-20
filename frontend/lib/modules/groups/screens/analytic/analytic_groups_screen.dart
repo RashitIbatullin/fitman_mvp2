@@ -108,52 +108,55 @@ class _AnalyticGroupsScreenState extends ConsumerState<AnalyticGroupsScreen> {
           if (groups.isEmpty) {
             return const Center(child: Text('Нет аналитических групп, соответствующих фильтру.'));
           }
-          return ListView.builder(
-            itemCount: groups.length,
-            itemBuilder: (context, index) {
-              final group = groups[index];
-              return AnalyticGroupCard(
-                group: group,
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => AnalyticGroupEditScreen(groupId: group.id?.toString()),
-                    ),
-                  );
-                  // Refresh the list after editing
-                  ref.invalidate(analyticGroupsProvider(
-                    searchQuery: _searchQuery,
-                    isArchived: _isArchivedFilter,
-                  ));
-                },
-                onDelete: () async {
-                  if (group.id == null) return;
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Подтвердите удаление'),
-                      content: Text('Вы уверены, что хотите удалить группу "${group.name}"?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Отмена'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Удалить'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirmed == true) {
-                    await ref.read(analyticGroupsProvider(
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 80.0),
+            child: ListView.builder(
+              itemCount: groups.length,
+              itemBuilder: (context, index) {
+                final group = groups[index];
+                return AnalyticGroupCard(
+                  group: group,
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AnalyticGroupEditScreen(groupId: group.id?.toString()),
+                      ),
+                    );
+                    // Refresh the list after editing
+                    ref.invalidate(analyticGroupsProvider(
                       searchQuery: _searchQuery,
                       isArchived: _isArchivedFilter,
-                    ).notifier).deleteAnalyticGroup(group.id!);
-                  }
-                },
-              );
-            },
+                    ));
+                  },
+                  onDelete: () async {
+                    if (group.id == null) return;
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Подтвердите удаление'),
+                        content: Text('Вы уверены, что хотите удалить группу "${group.name}"?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Отмена'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Удалить'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      await ref.read(analyticGroupsProvider(
+                        searchQuery: _searchQuery,
+                        isArchived: _isArchivedFilter,
+                      ).notifier).deleteAnalyticGroup(group.id!);
+                    }
+                  },
+                );
+              },
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

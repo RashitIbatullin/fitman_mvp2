@@ -15,6 +15,7 @@ _$BuildingImpl _$$BuildingImplFromJson(Map<String, dynamic> json) =>
       archivedAt: const NullableDateTimeConverter().fromJson(
         json['archivedAt'] as String?,
       ),
+      archivedBy: (json['archivedBy'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$$BuildingImplToJson(
@@ -25,4 +26,5 @@ Map<String, dynamic> _$$BuildingImplToJson(
   'address': instance.address,
   'note': instance.note,
   'archivedAt': const NullableDateTimeConverter().toJson(instance.archivedAt),
+  'archivedBy': instance.archivedBy,
 };

@@ -65,11 +65,11 @@ class BuildingRepository {
     return Building.fromMap(result.first.toColumnMap());
   }
 
-  Future<void> archive(String id) async {
+  Future<void> archive(String id, int userId) async {
     final conn = await _db.connection;
     await conn.execute(
-      Sql.named('UPDATE buildings SET archived_at = NOW() WHERE id = @id'),
-      parameters: {'id': int.parse(id)},
+      Sql.named('UPDATE buildings SET archived_at = NOW(), archived_by = @userId WHERE id = @id'),
+      parameters: {'id': int.parse(id), 'userId': userId},
     );
   }
 }
