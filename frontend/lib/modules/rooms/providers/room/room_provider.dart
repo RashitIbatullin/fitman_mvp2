@@ -32,7 +32,8 @@ final roomByIdProvider = FutureProvider.family<Room, String>((ref, id) async {
 });
 
 // Equipment by Room provider (assuming this is used in room detail)
-final equipmentByRoomProvider = FutureProvider.family<List<EquipmentItem>, String>((ref, roomId) async {
-  return ApiService.getEquipmentItemsByRoomId(roomId);
+final equipmentInRoomProvider =
+    FutureProvider.family<List<EquipmentItem>, String>((ref, roomId) async {
+  return ApiService.getAllEquipmentItems(roomId: roomId);
 });
 

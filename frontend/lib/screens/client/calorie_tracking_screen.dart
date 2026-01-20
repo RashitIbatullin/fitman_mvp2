@@ -7,8 +7,11 @@ import 'package:intl/intl.dart';
 final calorieTrackingProvider = FutureProvider<List<CalorieTrackingData>>((
   ref,
 ) async {
-  final data = await ApiService.getCalorieTrackingData();
-  return data.map((item) => CalorieTrackingData.fromJson(item)).toList();
+  final response = await ApiService.getCalorieTrackingData();
+  final data = response['tracking_data'] as List? ?? [];
+  return data
+      .map((item) => CalorieTrackingData.fromJson(item as Map<String, dynamic>))
+      .toList();
 });
 
 class CalorieTrackingScreen extends ConsumerWidget {

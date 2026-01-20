@@ -47,7 +47,11 @@ FutureProvider.family<WhtrProfiles, int?>((ref, clientId) {
       if (user == null) throw Exception('User not authenticated');
 
       final bool isAdmin = user.roles.any((r) => r.name == 'admin');
-      return ApiService.getWhtrProfiles(clientId: clientId, isAdmin: isAdmin);
+      if (isAdmin && clientId != null) {
+        return ApiService.getWhtrProfilesForClient(clientId);
+      } else {
+        return ApiService.getWhtrProfiles();
+      }
     },
     loading: () => Completer<WhtrProfiles>().future,
     error: (e, s) => throw e,
@@ -108,10 +112,12 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
     final bool isAdmin = user.roles.any((r) => r.name == 'admin');
 
     setState(() {
-      _somatotypeProfileFuture = ApiService.getSomatotypeProfile(
-        clientId: widget.clientId,
-        isAdmin: isAdmin,
-      );
+      if (isAdmin && widget.clientId != null) {
+        _somatotypeProfileFuture =
+            ApiService.getSomatotypeProfileForClient(widget.clientId!);
+      } else {
+        _somatotypeProfileFuture = ApiService.getSomatotypeProfile();
+      }
     });
   }
 
@@ -379,12 +385,20 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
       final currentAnkleCirc = int.tryParse(_ankleCircController.text);
 
       try {
-        await ApiService.updateAnthropometryFixed(
-          clientId: widget.clientId,
-          height: currentHeight ?? 0,
-          wristCirc: currentWristCirc ?? 0,
-          ankleCirc: currentAnkleCirc ?? 0,
-        );
+        if (widget.clientId != null) {
+          await ApiService.updateAnthropometryFixedForClient(
+            clientId: widget.clientId!,
+            height: currentHeight ?? 0,
+            wristCirc: currentWristCirc ?? 0,
+            ankleCirc: currentAnkleCirc ?? 0,
+          );
+        } else {
+          await ApiService.updateAnthropometryFixed(
+            height: currentHeight ?? 0,
+            wristCirc: currentWristCirc ?? 0,
+            ankleCirc: currentAnkleCirc ?? 0,
+          );
+        }
         ref.invalidate(anthropometryProvider(widget.clientId));
         ref.invalidate(whtrProfilesProvider(widget.clientId));
         setState(() {
@@ -424,15 +438,26 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
       final currentHipsCirc = int.tryParse(_startHipsCircController.text);
 
       try {
-        await ApiService.updateAnthropometryMeasurements(
-          clientId: widget.clientId,
-          type: 'start',
-          weight: currentWeight ?? 0.0,
-          shouldersCirc: currentShouldersCirc ?? 0,
-          breastCirc: currentBreastCirc ?? 0,
-          waistCirc: currentWaistCirc ?? 0,
-          hipsCirc: currentHipsCirc ?? 0,
-        );
+        if (widget.clientId != null) {
+          await ApiService.updateAnthropometryMeasurementsForClient(
+            clientId: widget.clientId!,
+            type: 'start',
+            weight: currentWeight ?? 0.0,
+            shouldersCirc: currentShouldersCirc ?? 0,
+            breastCirc: currentBreastCirc ?? 0,
+            waistCirc: currentWaistCirc ?? 0,
+            hipsCirc: currentHipsCirc ?? 0,
+          );
+        } else {
+          await ApiService.updateAnthropometryMeasurements(
+            type: 'start',
+            weight: currentWeight ?? 0.0,
+            shouldersCirc: currentShouldersCirc ?? 0,
+            breastCirc: currentBreastCirc ?? 0,
+            waistCirc: currentWaistCirc ?? 0,
+            hipsCirc: currentHipsCirc ?? 0,
+          );
+        }
         ref.invalidate(anthropometryProvider(widget.clientId));
         ref.invalidate(whtrProfilesProvider(widget.clientId));
         setState(() {
@@ -478,15 +503,26 @@ class _AnthropometryScreenState extends ConsumerState<AnthropometryScreen>
       final currentHipsCirc = int.tryParse(_finishHipsCircController.text);
 
       try {
-        await ApiService.updateAnthropometryMeasurements(
-          clientId: widget.clientId,
-          type: 'finish',
-          weight: currentWeight ?? 0.0,
-          shouldersCirc: currentShouldersCirc ?? 0,
-          breastCirc: currentBreastCirc ?? 0,
-          waistCirc: currentWaistCirc ?? 0,
-          hipsCirc: currentHipsCirc ?? 0,
-        );
+        if (widget.clientId != null) {
+          await ApiService.updateAnthropometryMeasurementsForClient(
+            clientId: widget.clientId!,
+            type: 'finish',
+            weight: currentWeight ?? 0.0,
+            shouldersCirc: currentShouldersCirc ?? 0,
+            breastCirc: currentBreastCirc ?? 0,
+            waistCirc: currentWaistCirc ?? 0,
+            hipsCirc: currentHipsCirc ?? 0,
+          );
+        } else {
+          await ApiService.updateAnthropometryMeasurements(
+            type: 'finish',
+            weight: currentWeight ?? 0.0,
+            shouldersCirc: currentShouldersCirc ?? 0,
+            breastCirc: currentBreastCirc ?? 0,
+            waistCirc: currentWaistCirc ?? 0,
+            hipsCirc: currentHipsCirc ?? 0,
+          );
+        }
         ref.invalidate(anthropometryProvider(widget.clientId));
         ref.invalidate(whtrProfilesProvider(widget.clientId));
         setState(() {

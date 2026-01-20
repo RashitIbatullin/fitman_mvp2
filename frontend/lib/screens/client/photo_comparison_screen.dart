@@ -113,13 +113,24 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
 
         if (fileBytes != null) {
           try {
-            final responseData = await ApiService.uploadAnthropometryPhoto(
-              fileBytes,
-              fileName,
-              photoType,
-              clientId: widget.clientId,
-              photoDateTime: null,
-            );
+            final Map<String, dynamic> responseData;
+            if (widget.clientId != null) {
+              responseData =
+                  await ApiService.uploadAnthropometryPhotoForClient(
+                clientId: widget.clientId!,
+                photoBytes: fileBytes,
+                fileName: fileName,
+                type: photoType,
+                photoDateTime: null,
+              );
+            } else {
+              responseData = await ApiService.uploadAnthropometryPhoto(
+                photoBytes: fileBytes,
+                fileName: fileName,
+                type: photoType,
+                photoDateTime: null,
+              );
+            }
             final newUrl = responseData['url'];
             final newDateTime = responseData['photo_date_time'] != null
                 ? DateTime.parse(responseData['photo_date_time'])
@@ -524,13 +535,23 @@ class _PhotoViewState extends State<_PhotoView> {
       final String fileName =
           'photo_${DateTime.now().millisecondsSinceEpoch}.png';
 
-      final responseData = await ApiService.uploadAnthropometryPhoto(
-        pngBytes,
-        fileName,
-        widget.type,
-        clientId: widget.clientId,
-        photoDateTime: DateTime.now(),
-      );
+      final Map<String, dynamic> responseData;
+      if (widget.clientId != null) {
+        responseData = await ApiService.uploadAnthropometryPhotoForClient(
+          clientId: widget.clientId!,
+          photoBytes: pngBytes,
+          fileName: fileName,
+          type: widget.type,
+          photoDateTime: DateTime.now(),
+        );
+      } else {
+        responseData = await ApiService.uploadAnthropometryPhoto(
+          photoBytes: pngBytes,
+          fileName: fileName,
+          type: widget.type,
+          photoDateTime: DateTime.now(),
+        );
+      }
 
       final newUrl = responseData['url'];
       final newDateTime = responseData['photo_date_time'] != null

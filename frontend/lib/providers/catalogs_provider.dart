@@ -4,9 +4,9 @@ import '../models/level_training.dart';
 import '../services/api_service.dart';
 
 final goalsTrainingProvider = FutureProvider<List<GoalTraining>>((ref) async {
-  return ApiService.getGoalsTraining();
+  return ApiService.getTrainingGoals();
 });
 
 final levelsTrainingProvider = FutureProvider<List<LevelTraining>>((ref) async {
-  return ApiService.getLevelsTraining();
+  return ApiService.getTrainingLevels();
 });

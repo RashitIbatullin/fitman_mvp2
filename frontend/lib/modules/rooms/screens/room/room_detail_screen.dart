@@ -89,7 +89,7 @@ class RoomDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildEquipmentTab(BuildContext context, WidgetRef ref, String roomId) {
-    final equipmentAsync = ref.watch(equipmentByRoomProvider(roomId));
+    final equipmentAsync = ref.watch(equipmentInRoomProvider(roomId));
 
     return equipmentAsync.when(
       data: (equipmentList) {

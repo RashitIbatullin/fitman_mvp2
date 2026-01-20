@@ -228,11 +228,15 @@ class ChatNotifier extends Notifier<ChatState> {
     String? attachmentUrl;
     String? attachmentType;
 
-    if (fileBytes != null && fileName != null && mimeType != null) {
+    if (fileBytes != null && fileName != null) {
       try {
-        final uploadResult = await ApiService.uploadChatAttachment(fileBytes, fileName, mimeType);
-        attachmentUrl = uploadResult['attachment_url'] as String?;
-        attachmentType = uploadResult['attachment_type'] as String?;
+        final uploadResult = await ApiService.uploadChatAttachment(
+          chatId: state.activeChatId!,
+          fileBytes: fileBytes,
+          fileName: fileName,
+        );
+        attachmentUrl = uploadResult.attachmentUrl;
+        attachmentType = uploadResult.attachmentType;
       } catch (e) {
         state = state.copyWith(error: e.toString(), isLoading: false);
         return;

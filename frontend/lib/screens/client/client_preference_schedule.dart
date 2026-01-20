@@ -31,13 +31,22 @@ class _ClientPreferenceScheduleState
   Future<void> _fetchClientPreferences() async {
     _clientPreferences = const AsyncValue.loading();
     try {
-      final preferences = await ApiService.getClientPreferences();
+      final response = await ApiService.getClientPreferences();
+      final preferencesData = response['preferences'] as List? ?? [];
+      final preferences = preferencesData
+          .map((data) =>
+              ClientSchedulePreference.fromJson(data as Map<String, dynamic>))
+          .toList();
       setState(() {
         _clientPreferences = AsyncValue.data(preferences);
         // Populate controllers with fetched preferences
         for (var pref in preferences) {
-          _preferredStartTimes[pref.dayOfWeek]?.text = pref.preferredStartTime;
-          _preferredEndTimes[pref.dayOfWeek]?.text = pref.preferredEndTime;
+          _preferredStartTimes
+              .putIfAbsent(pref.dayOfWeek, () => TextEditingController())
+              .text = pref.preferredStartTime;
+          _preferredEndTimes
+              .putIfAbsent(pref.dayOfWeek, () => TextEditingController())
+              .text = pref.preferredEndTime;
         }
       });
     } catch (e, st) {
@@ -239,7 +248,11 @@ class _ClientPreferenceScheduleState
             final messenger = ScaffoldMessenger.of(context);
 
             try {
-              await ApiService.saveClientPreferences(preferencesToSave);
+              final payload = {
+                'preferences':
+                    preferencesToSave.map((p) => p.toJson()).toList()
+              };
+              await ApiService.saveClientPreferences(payload);
               messenger.showSnackBar(
                 SnackBar(
                   content: const Text('Предпочтения сохранены!'),

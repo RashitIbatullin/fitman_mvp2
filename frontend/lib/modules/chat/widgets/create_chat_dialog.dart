@@ -76,7 +76,8 @@ class _CreateChatDialogState extends ConsumerState<CreateChatDialog> {
         newChatId = await ApiService.createOrGetPrivateChat(selectedUserIds.first);
       } else {
         // Group chat
-        newChatId = await ApiService.createGroupChat(selectedUserIds, name: _groupNameController.text.trim());
+        final newChat = await ApiService.createGroupChat(_groupNameController.text.trim(), selectedUserIds);
+        newChatId = newChat.id;
       }
       
       if (!mounted) return; // Guard against context use after dispose

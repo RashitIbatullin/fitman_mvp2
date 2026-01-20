@@ -18,7 +18,10 @@ class WorkScheduleNotifier
 
   Future<void> _fetchWorkSchedules() async {
     try {
-      final schedules = await ApiService.getWorkSchedules();
+      final schedulesJson = await ApiService.getWorkSchedules();
+      final schedules = schedulesJson
+          .map((json) => WorkSchedule.fromJson(json as Map<String, dynamic>))
+          .toList();
       state = AsyncValue.data(schedules);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -27,7 +30,7 @@ class WorkScheduleNotifier
 
   Future<void> updateWorkSchedule(WorkSchedule schedule) async {
     try {
-      await ApiService.updateWorkSchedule(schedule);
+      await ApiService.updateWorkSchedule(schedule.toJson());
       _fetchWorkSchedules();
     } catch (e) {
       // Handle error

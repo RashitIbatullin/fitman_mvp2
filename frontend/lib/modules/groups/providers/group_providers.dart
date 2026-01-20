@@ -163,13 +163,13 @@ Future<List<TrainingGroupType>> trainingGroupTypes(Ref ref) async {
 class GroupSchedules extends _$GroupSchedules {
   @override
   Future<List<GroupSchedule>> build(int groupId) async {
-    return ApiService.getGroupScheduleSlots(groupId);
+    return ApiService.getGroupSchedules(groupId);
   }
 
   Future<void> createGroupSchedule(GroupSchedule slot) async {
     state = const AsyncValue.loading();
     try {
-      await ApiService.createGroupScheduleSlot(slot.groupId, slot);
+      await ApiService.createGroupSchedule(slot.groupId, slot);
       ref.invalidateSelf();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -179,7 +179,7 @@ class GroupSchedules extends _$GroupSchedules {
   Future<void> updateGroupSchedule(GroupSchedule slot) async {
     state = const AsyncValue.loading();
     try {
-      await ApiService.updateGroupScheduleSlot(slot);
+      await ApiService.updateGroupSchedule(slot);
       ref.invalidateSelf();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -189,7 +189,7 @@ class GroupSchedules extends _$GroupSchedules {
   Future<void> deleteGroupSchedule(int id) async {
     state = const AsyncValue.loading();
     try {
-      await ApiService.deleteGroupScheduleSlot(id);
+      await ApiService.deleteGroupSchedule(id);
       ref.invalidateSelf();
     } catch (e, st) {
       state = AsyncValue.error(e, st);

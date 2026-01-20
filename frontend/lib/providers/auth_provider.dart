@@ -151,14 +151,14 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     state = const AsyncValue.loading();
     try {
       final authResponse = await ApiService.register(
-        email,
-        password,
-        firstName,
-        lastName,
-        roles,
-        phone,
-        gender,
-        dateOfBirth,
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        roles: roles,
+        phone: phone,
+        gender: gender,
+        dateOfBirth: dateOfBirth,
       );
       await _storeAuthData(authResponse);
 

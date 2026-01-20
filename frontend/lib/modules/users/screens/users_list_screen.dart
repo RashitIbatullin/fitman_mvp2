@@ -380,7 +380,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return ResetPasswordDialog(userLogin: _selectedUser!.email, userName: _selectedUser!.fullName);
+        return ResetPasswordDialog(userId: _selectedUser!.id, userName: _selectedUser!.fullName);
       },
     );
   }

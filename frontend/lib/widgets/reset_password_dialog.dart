@@ -4,10 +4,10 @@ import 'dart:math';
 import '../services/api_service.dart';
 
 class ResetPasswordDialog extends StatefulWidget {
-  final String userLogin;
+  final int userId;
   final String userName; // New property
 
-  const ResetPasswordDialog({super.key, required this.userLogin, required this.userName});
+  const ResetPasswordDialog({super.key, required this.userId, required this.userName});
 
   @override
   State<ResetPasswordDialog> createState() => _ResetPasswordDialogState();
@@ -63,7 +63,7 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
 
     try {
       await ApiService.resetUserPassword(
-        widget.userLogin,
+        widget.userId,
         _passwordController.text,
       );
       if (mounted) {
