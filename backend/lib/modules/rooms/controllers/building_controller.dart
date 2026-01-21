@@ -67,13 +67,60 @@ class BuildingController {
   }
 
   Future<Response> _updateBuilding(Request request, String id) async {
-    final body = await request.readAsString();
-    final building = Building.fromJson(jsonDecode(body));
-    final updatedBuilding = await _buildingService.updateBuilding(id, building);
-    return Response.ok(
-      jsonEncode(updatedBuilding.toJson()),
-      headers: {'Content-Type': 'application/json'},
-    );
+    try {
+      final userPayload = request.context['user'] as Map<String, dynamic>?;
+      if (userPayload == null) {
+        return Response.forbidden('{"error": "Authorization required. User payload missing."}');
+      }
+      final userId = userPayload['userId']?.toString();
+      if (userId == null) {
+        return Response.forbidden('{"error": "Authorization required. User ID missing."}');
+      }
+
+      final body = await request.readAsString();
+      final initialBuilding = Building.fromJson(jsonDecode(body));
+
+      final Building finalBuilding;
+      final isArchiving = initialBuilding.archivedAt != null;
+
+      if (isArchiving) {
+        finalBuilding = Building(
+          id: initialBuilding.id,
+          name: initialBuilding.name,
+          address: initialBuilding.address,
+          note: initialBuilding.note,
+          createdAt: initialBuilding.createdAt,
+          updatedAt: initialBuilding.updatedAt,
+          createdBy: initialBuilding.createdBy,
+          updatedBy: userId,
+          archivedAt: initialBuilding.archivedAt,
+          archivedBy: userId,
+          archivedByName: initialBuilding.archivedByName,
+        );
+      } else {
+        finalBuilding = Building(
+          id: initialBuilding.id,
+          name: initialBuilding.name,
+          address: initialBuilding.address,
+          note: initialBuilding.note,
+          createdAt: initialBuilding.createdAt,
+          updatedAt: initialBuilding.updatedAt,
+          createdBy: initialBuilding.createdBy,
+          updatedBy: userId,
+          archivedAt: initialBuilding.archivedAt,
+          archivedBy: initialBuilding.archivedBy,
+          archivedByName: initialBuilding.archivedByName,
+        );
+      }
+
+      final updatedBuilding = await _buildingService.updateBuilding(id, finalBuilding, userId);
+      return Response.ok(
+        jsonEncode(updatedBuilding.toJson()),
+        headers: {'Content-Type': 'application/json'},
+      );
+    } on Exception catch (e) {
+      return Response.internalServerError(body: '{"error": "$e"}');
+    }
   }
 
   Future<Response> _deleteBuilding(Request request, String id) async {

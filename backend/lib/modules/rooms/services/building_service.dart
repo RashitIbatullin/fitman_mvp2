@@ -22,8 +22,8 @@ class BuildingService {
     return _buildingRepository.insert(building);
   }
 
-  Future<Building> updateBuilding(String id, Building building) {
-    return _buildingRepository.update(id, building);
+  Future<Building> updateBuilding(String id, Building building, String userId) {
+    return _buildingRepository.update(id, building, userId);
   }
 
   Future<void> deleteBuilding(String id, int userId) {

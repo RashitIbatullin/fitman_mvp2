@@ -6,7 +6,11 @@ class Building {
     this.note,
     this.createdAt,
     this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
     this.archivedAt,
+    this.archivedBy,
+    this.archivedByName,
   });
 
   final String? id;
@@ -15,7 +19,11 @@ class Building {
   final String? note;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? createdBy;
+  final String? updatedBy;
   final DateTime? archivedAt;
+  final String? archivedBy;
+  final String? archivedByName;
 
   factory Building.fromMap(Map<String, dynamic> map) {
     return Building(
@@ -33,11 +41,15 @@ class Building {
           : (map['updated_at'] == null
               ? null
               : DateTime.parse(map['updated_at'] as String)),
+      createdBy: map['created_by']?.toString(),
+      updatedBy: map['updated_by']?.toString(),
       archivedAt: map['archived_at'] is DateTime
           ? map['archived_at'] as DateTime
           : (map['archived_at'] == null
               ? null
               : DateTime.parse(map['archived_at'] as String)),
+      archivedBy: map['archived_by']?.toString(),
+      archivedByName: map['archived_by_name'] as String?,
     );
   }
 
@@ -53,9 +65,13 @@ class Building {
       updatedAt: json['updated_at'] == null
           ? null
           : DateTime.parse(json['updated_at'] as String),
+      createdBy: json['created_by'] as String?,
+      updatedBy: json['updated_by'] as String?,
       archivedAt: json['archived_at'] == null
           ? null
           : DateTime.parse(json['archived_at'] as String),
+      archivedBy: json['archived_by'] as String?,
+      archivedByName: json['archived_by_name'] as String?,
     );
   }
 
@@ -67,7 +83,11 @@ class Building {
       'note': note,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'created_by': createdBy,
+      'updated_by': updatedBy,
       'archived_at': archivedAt?.toIso8601String(),
+      'archived_by': archivedBy,
+      'archived_by_name': archivedByName,
     };
   }
 }

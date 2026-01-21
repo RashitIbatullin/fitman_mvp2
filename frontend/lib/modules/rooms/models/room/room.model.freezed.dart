@@ -62,6 +62,10 @@ mixin _$Room {
   DateTime? get archivedAt => throw _privateConstructorUsedError;
   @JsonKey(name: 'archived_reason')
   String? get archivedReason => throw _privateConstructorUsedError;
+  @JsonKey(name: 'archived_by')
+  String? get archivedBy => throw _privateConstructorUsedError;
+  @JsonKey(name: 'archived_by_name')
+  String? get archivedByName => throw _privateConstructorUsedError;
 
   /// Serializes this Room to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -100,6 +104,8 @@ abstract class $RoomCopyWith<$Res> {
     String? note,
     @JsonKey(name: 'archived_at') DateTime? archivedAt,
     @JsonKey(name: 'archived_reason') String? archivedReason,
+    @JsonKey(name: 'archived_by') String? archivedBy,
+    @JsonKey(name: 'archived_by_name') String? archivedByName,
   });
 }
 
@@ -140,6 +146,8 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
     Object? note = freezed,
     Object? archivedAt = freezed,
     Object? archivedReason = freezed,
+    Object? archivedBy = freezed,
+    Object? archivedByName = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -231,6 +239,14 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
                 ? _value.archivedReason
                 : archivedReason // ignore: cast_nullable_to_non_nullable
                       as String?,
+            archivedBy: freezed == archivedBy
+                ? _value.archivedBy
+                : archivedBy // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            archivedByName: freezed == archivedByName
+                ? _value.archivedByName
+                : archivedByName // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -268,6 +284,8 @@ abstract class _$$RoomImplCopyWith<$Res> implements $RoomCopyWith<$Res> {
     String? note,
     @JsonKey(name: 'archived_at') DateTime? archivedAt,
     @JsonKey(name: 'archived_reason') String? archivedReason,
+    @JsonKey(name: 'archived_by') String? archivedBy,
+    @JsonKey(name: 'archived_by_name') String? archivedByName,
   });
 }
 
@@ -305,6 +323,8 @@ class __$$RoomImplCopyWithImpl<$Res>
     Object? note = freezed,
     Object? archivedAt = freezed,
     Object? archivedReason = freezed,
+    Object? archivedBy = freezed,
+    Object? archivedByName = freezed,
   }) {
     return _then(
       _$RoomImpl(
@@ -396,6 +416,14 @@ class __$$RoomImplCopyWithImpl<$Res>
             ? _value.archivedReason
             : archivedReason // ignore: cast_nullable_to_non_nullable
                   as String?,
+        archivedBy: freezed == archivedBy
+            ? _value.archivedBy
+            : archivedBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        archivedByName: freezed == archivedByName
+            ? _value.archivedByName
+            : archivedByName // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -427,6 +455,8 @@ class _$RoomImpl implements _Room {
     this.note,
     @JsonKey(name: 'archived_at') this.archivedAt,
     @JsonKey(name: 'archived_reason') this.archivedReason,
+    @JsonKey(name: 'archived_by') this.archivedBy,
+    @JsonKey(name: 'archived_by_name') this.archivedByName,
   }) : _workingDays = workingDays,
        _photoUrls = photoUrls;
 
@@ -509,10 +539,16 @@ class _$RoomImpl implements _Room {
   @override
   @JsonKey(name: 'archived_reason')
   final String? archivedReason;
+  @override
+  @JsonKey(name: 'archived_by')
+  final String? archivedBy;
+  @override
+  @JsonKey(name: 'archived_by_name')
+  final String? archivedByName;
 
   @override
   String toString() {
-    return 'Room(id: $id, name: $name, description: $description, roomNumber: $roomNumber, type: $type, floor: $floor, buildingId: $buildingId, buildingName: $buildingName, maxCapacity: $maxCapacity, area: $area, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, deactivateReason: $deactivateReason, deactivateAt: $deactivateAt, deactivateBy: $deactivateBy, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note, archivedAt: $archivedAt, archivedReason: $archivedReason)';
+    return 'Room(id: $id, name: $name, description: $description, roomNumber: $roomNumber, type: $type, floor: $floor, buildingId: $buildingId, buildingName: $buildingName, maxCapacity: $maxCapacity, area: $area, openTime: $openTime, closeTime: $closeTime, workingDays: $workingDays, isActive: $isActive, deactivateReason: $deactivateReason, deactivateAt: $deactivateAt, deactivateBy: $deactivateBy, photoUrls: $photoUrls, floorPlanUrl: $floorPlanUrl, note: $note, archivedAt: $archivedAt, archivedReason: $archivedReason, archivedBy: $archivedBy, archivedByName: $archivedByName)';
   }
 
   @override
@@ -561,7 +597,11 @@ class _$RoomImpl implements _Room {
             (identical(other.archivedAt, archivedAt) ||
                 other.archivedAt == archivedAt) &&
             (identical(other.archivedReason, archivedReason) ||
-                other.archivedReason == archivedReason));
+                other.archivedReason == archivedReason) &&
+            (identical(other.archivedBy, archivedBy) ||
+                other.archivedBy == archivedBy) &&
+            (identical(other.archivedByName, archivedByName) ||
+                other.archivedByName == archivedByName));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -590,6 +630,8 @@ class _$RoomImpl implements _Room {
     note,
     archivedAt,
     archivedReason,
+    archivedBy,
+    archivedByName,
   ]);
 
   /// Create a copy of Room
@@ -632,6 +674,8 @@ abstract class _Room implements Room {
     final String? note,
     @JsonKey(name: 'archived_at') final DateTime? archivedAt,
     @JsonKey(name: 'archived_reason') final String? archivedReason,
+    @JsonKey(name: 'archived_by') final String? archivedBy,
+    @JsonKey(name: 'archived_by_name') final String? archivedByName,
   }) = _$RoomImpl;
 
   factory _Room.fromJson(Map<String, dynamic> json) = _$RoomImpl.fromJson;
@@ -699,6 +743,12 @@ abstract class _Room implements Room {
   @override
   @JsonKey(name: 'archived_reason')
   String? get archivedReason;
+  @override
+  @JsonKey(name: 'archived_by')
+  String? get archivedBy;
+  @override
+  @JsonKey(name: 'archived_by_name')
+  String? get archivedByName;
 
   /// Create a copy of Room
   /// with the given fields replaced by the non-null parameter values.

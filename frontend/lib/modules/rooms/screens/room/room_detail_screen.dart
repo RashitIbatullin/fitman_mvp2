@@ -2,6 +2,7 @@ import 'package:fitman_app/modules/equipment/models/equipment/equipment_status.e
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitman_app/modules/rooms/providers/room/room_provider.dart';
+import 'package:intl/intl.dart'; // Added for DateFormat
 import '../../models/room/room.model.dart';
 import '../../utils/room_utils.dart';
 import 'room_edit_screen.dart'; // Import the edit screen
@@ -174,10 +175,13 @@ class RoomDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInfoRow(context, 'Статус:', room.isActive ? 'Активно' : 'Неактивно'),
-                if (!room.isActive)
-                  _buildInfoRow(context, 'Причина:', room.deactivateReason ?? 'Не указана'),
-                if (room.archivedAt != null)
-                  _buildInfoRow(context, 'Архивировано:', room.archivedAt!.toIso8601String()),
+                if (!room.isActive && room.deactivateReason?.isNotEmpty == true)
+                  _buildInfoRow(context, 'Причина деактивации:', room.deactivateReason!),
+                if (room.archivedAt != null) ...[
+                  _buildInfoRow(context, 'Архивировано:', DateFormat('dd.MM.yyyy HH:mm').format(room.archivedAt!.toLocal())),
+                  if (room.archivedByName?.isNotEmpty == true)
+                    _buildInfoRow(context, 'Кем архивировано:', room.archivedByName!),
+                ],
               ],
             ),
           ),
@@ -193,7 +197,7 @@ class RoomDetailScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 220,
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -207,4 +211,5 @@ class RoomDetailScreen extends ConsumerWidget {
     );
   }
 }
+
 

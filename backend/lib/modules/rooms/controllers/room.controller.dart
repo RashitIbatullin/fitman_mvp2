@@ -68,9 +68,85 @@ class RoomController {
 
   Future<Response> _updateRoom(Request request, String id) async {
     try {
+      // 1. Get user ID from context
+      final userPayload = request.context['user'] as Map<String, dynamic>?;
+      if (userPayload == null) {
+        return Response.forbidden('{"error": "Authorization required. User payload missing."}');
+      }
+      final userId = userPayload['userId']?.toString();
+      if (userId == null) {
+        return Response.forbidden('{"error": "Authorization required. User ID missing."}');
+      }
+
+      // 2. Get initial Room object from request body
       final body = await request.readAsString();
-      final room = Room.fromJson(jsonDecode(body));
-      final updatedRoom = await _roomService.updateRoom(id, room);
+      final initialRoom = Room.fromJson(jsonDecode(body));
+
+      // 3. Create the final Room object with updated logic
+      final Room finalRoom;
+      final isArchiving = initialRoom.archivedAt != null;
+
+      if (isArchiving) {
+        // If archiving, set isActive to false and record who archived it
+        finalRoom = Room(
+          id: initialRoom.id,
+          name: initialRoom.name,
+          description: initialRoom.description,
+          roomNumber: initialRoom.roomNumber,
+          type: initialRoom.type,
+          floor: initialRoom.floor,
+          buildingId: initialRoom.buildingId,
+          buildingName: initialRoom.buildingName,
+          maxCapacity: initialRoom.maxCapacity,
+          area: initialRoom.area,
+          openTime: initialRoom.openTime,
+          closeTime: initialRoom.closeTime,
+          workingDays: initialRoom.workingDays,
+          isActive: false, // Explicitly set to false on archive
+          deactivateReason: initialRoom.deactivateReason,
+          deactivateAt: initialRoom.deactivateAt,
+          deactivateBy: initialRoom.deactivateBy,
+          photoUrls: initialRoom.photoUrls,
+          floorPlanUrl: initialRoom.floorPlanUrl,
+          note: initialRoom.note,
+          archivedAt: initialRoom.archivedAt,
+          archivedReason: initialRoom.archivedReason,
+          updatedBy: userId, // Record who updated
+          archivedBy: userId, // Record who archived
+        );
+      } else {
+        // If not archiving, just record who updated
+        finalRoom = Room(
+          id: initialRoom.id,
+          name: initialRoom.name,
+          description: initialRoom.description,
+          roomNumber: initialRoom.roomNumber,
+          type: initialRoom.type,
+          floor: initialRoom.floor,
+          buildingId: initialRoom.buildingId,
+          buildingName: initialRoom.buildingName,
+          maxCapacity: initialRoom.maxCapacity,
+          area: initialRoom.area,
+          openTime: initialRoom.openTime,
+          closeTime: initialRoom.closeTime,
+          workingDays: initialRoom.workingDays,
+          isActive: initialRoom.isActive,
+          deactivateReason: initialRoom.deactivateReason,
+          deactivateAt: initialRoom.deactivateAt,
+          deactivateBy: initialRoom.deactivateBy,
+          photoUrls: initialRoom.photoUrls,
+          floorPlanUrl: initialRoom.floorPlanUrl,
+          note: initialRoom.note,
+          archivedAt: initialRoom.archivedAt,
+          archivedReason: initialRoom.archivedReason,
+          updatedBy: userId, // Record who updated
+          archivedBy: initialRoom.archivedBy, // Keep original value
+        );
+      }
+      
+      // 4. Call the service with the final Room object
+      final updatedRoom = await _roomService.updateRoom(id, finalRoom);
+      
       return Response.ok(
         jsonEncode(updatedRoom.toJson()),
         headers: {'Content-Type': 'application/json'},
@@ -82,7 +158,16 @@ class RoomController {
 
   Future<Response> _archiveRoom(Request request, String id) async {
     try {
-      await _roomService.archiveRoom(id);
+      final userPayload = request.context['user'] as Map<String, dynamic>?;
+      if (userPayload == null) {
+        return Response.forbidden('{"error": "Authorization required. User payload missing."}');
+      }
+      final userId = userPayload['userId']?.toString();
+       if (userId == null) {
+        return Response.forbidden('{"error": "Authorization required. User ID missing."}');
+      }
+      
+      await _roomService.archiveRoom(id, userId);
       return Response(204);
     } on Exception catch (e) {
       return Response.internalServerError(body: '{"error": "$e"}');

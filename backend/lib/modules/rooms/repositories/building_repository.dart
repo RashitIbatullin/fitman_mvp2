@@ -9,11 +9,17 @@ class BuildingRepository {
 
   Future<List<Building>> selectAll({bool? isArchived}) async {
     final conn = await _db.connection;
-    var query = 'SELECT * FROM buildings';
+    var query = '''
+      SELECT 
+        b.*, 
+        (archiver.last_name || ' ' || archiver.first_name) AS archived_by_name
+      FROM buildings b
+      LEFT JOIN users archiver ON b.archived_by = archiver.id
+    ''';
     if (isArchived != null) {
       query += isArchived
-          ? ' WHERE archived_at IS NOT NULL'
-          : ' WHERE archived_at IS NULL';
+          ? ' WHERE b.archived_at IS NOT NULL'
+          : ' WHERE b.archived_at IS NULL';
     }
     final result = await conn.execute(query);
     return result.map((row) => Building.fromMap(row.toColumnMap())).toList();
@@ -22,7 +28,14 @@ class BuildingRepository {
   Future<Building?> selectById(String id) async {
     final conn = await _db.connection;
     final result = await conn.execute(
-      Sql.named('SELECT * FROM buildings WHERE id = @id AND archived_at IS NULL'),
+      Sql.named('''
+        SELECT 
+          b.*, 
+          (archiver.last_name || ' ' || archiver.first_name) AS archived_by_name
+        FROM buildings b
+        LEFT JOIN users archiver ON b.archived_by = archiver.id
+        WHERE b.id = @id
+      '''),
       parameters: {'id': int.parse(id)},
     );
     return result.isEmpty ? null : Building.fromMap(result.first.toColumnMap());
@@ -31,7 +44,14 @@ class BuildingRepository {
   Future<Building?> selectByName(String name) async {
     final conn = await _db.connection;
     final result = await conn.execute(
-      Sql.named('SELECT * FROM buildings WHERE name = @name AND archived_at IS NULL'),
+      Sql.named('''
+        SELECT 
+          b.*, 
+          (archiver.last_name || ' ' || archiver.first_name) AS archived_by_name
+        FROM buildings b
+        LEFT JOIN users archiver ON b.archived_by = archiver.id
+        WHERE b.name = @name
+      '''),
       parameters: {'name': name},
     );
     return result.isEmpty ? null : Building.fromMap(result.first.toColumnMap());
@@ -50,16 +70,18 @@ class BuildingRepository {
     return Building.fromMap(result.first.toColumnMap());
   }
 
-  Future<Building> update(String id, Building building) async {
+  Future<Building> update(String id, Building building, String userId) async {
     final conn = await _db.connection;
     final result = await conn.execute(
-      Sql.named('UPDATE buildings SET name = @name, address = @address, note = @note, updated_at = NOW(), archived_at = @archived_at WHERE id = @id RETURNING *'),
+      Sql.named('UPDATE buildings SET name = @name, address = @address, note = @note, updated_at = NOW(), updated_by = @updated_by, archived_at = @archived_at, archived_by = @archived_by WHERE id = @id RETURNING *'),
       parameters: {
         'id': int.parse(id),
         'name': building.name,
         'address': building.address,
         'note': building.note,
         'archived_at': building.archivedAt,
+        'updated_by': building.updatedBy != null ? int.parse(building.updatedBy!) : int.parse(userId), // Use userId if not provided in building object
+        'archived_by': building.archivedBy != null ? int.parse(building.archivedBy!) : int.parse(userId), // Use userId if not provided in building object
       },
     );
     return Building.fromMap(result.first.toColumnMap());

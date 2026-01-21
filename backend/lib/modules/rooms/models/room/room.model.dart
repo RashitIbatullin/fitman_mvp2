@@ -31,6 +31,7 @@ class Room {
     this.archivedAt,
     this.archivedBy,
     this.archivedReason,
+    this.archivedByName,
   });
 
   final String? id;
@@ -60,6 +61,7 @@ class Room {
   final DateTime? archivedAt;
   final String? archivedBy;
   final String? archivedReason;
+  final String? archivedByName;
 
   factory Room.fromMap(Map<String, dynamic> map) {
     // Handle area conversion
@@ -148,6 +150,7 @@ class Room {
               : DateTime.parse(map['archived_at'] as String)),
       archivedBy: map['archived_by']?.toString(),
       archivedReason: map['archived_reason'] as String?,
+      archivedByName: map['archived_by_name'] as String?,
     );
   }
 
@@ -212,6 +215,7 @@ class Room {
           : DateTime.parse(json['archived_at'] as String),
       archivedBy: json['archived_by'] as String?,
       archivedReason: json['archived_reason'] as String?,
+      archivedByName: json['archived_by_name'] as String?,
     );
   }
 
@@ -244,6 +248,7 @@ class Room {
       'archived_at': archivedAt?.toIso8601String(),
       'archived_by': archivedBy,
       'archived_reason': archivedReason,
+      'archived_by_name': archivedByName,
     };
   }
 }

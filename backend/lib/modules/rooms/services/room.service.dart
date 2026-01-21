@@ -22,7 +22,7 @@ class RoomService {
     return _roomRepository.update(id, room);
   }
 
-  Future<void> archiveRoom(String id) {
-    return _roomRepository.archive(id);
+  Future<void> archiveRoom(String id, String userId) {
+    return _roomRepository.archive(id, userId);
   }
 }

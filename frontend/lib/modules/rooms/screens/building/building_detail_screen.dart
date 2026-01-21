@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:collection/collection.dart';
+import 'package:intl/intl.dart'; // Add this import
 import '../../providers/room/building_provider.dart';
 import 'building_edit_screen.dart';
 
@@ -62,11 +63,17 @@ class BuildingDetailScreen extends ConsumerWidget {
                   title: const Text('Заметка'),
                   subtitle: Text(building.note ?? 'Нет'),
                 ),
-                if (building.archivedAt != null)
+                if (building.archivedAt != null) ...[
                   ListTile(
-                    title: const Text('Дата архивации'),
-                    subtitle: Text(building.archivedAt.toString()),
+                    title: const Text('Архивировано:'),
+                    subtitle: Text(DateFormat('dd.MM.yyyy HH:mm').format(building.archivedAt!.toLocal())),
                   ),
+                  if (building.archivedByName?.isNotEmpty == true)
+                    ListTile(
+                      title: const Text('Кем архивировано:'),
+                      subtitle: Text(building.archivedByName!),
+                    ),
+                ],
               ],
             ),
           );
