@@ -175,13 +175,17 @@ class RoomDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInfoRow(context, 'Статус:', room.isActive ? 'Активно' : 'Неактивно'),
-                if (!room.isActive && room.deactivateReason?.isNotEmpty == true)
-                  _buildInfoRow(context, 'Причина деактивации:', room.deactivateReason!),
+                
+                // Дата, Кто (from archive)
                 if (room.archivedAt != null) ...[
                   _buildInfoRow(context, 'Архивировано:', DateFormat('dd.MM.yyyy HH:mm').format(room.archivedAt!.toLocal())),
                   if (room.archivedByName?.isNotEmpty == true)
                     _buildInfoRow(context, 'Кем архивировано:', room.archivedByName!),
                 ],
+
+                // Причина (from deactivation)
+                if (!room.isActive && room.deactivateReason?.isNotEmpty == true)
+                  _buildInfoRow(context, 'Причина деактивации:', room.deactivateReason!),
               ],
             ),
           ),
@@ -211,5 +215,3 @@ class RoomDetailScreen extends ConsumerWidget {
     );
   }
 }
-
-
