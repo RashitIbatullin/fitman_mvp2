@@ -42,44 +42,96 @@ class BuildingDetailScreen extends ConsumerWidget {
       ),
       body: buildingsAsync.when(
         data: (buildings) {
-           final building = buildings.firstWhereOrNull((b) => b.id == buildingId);
-           if (building == null) {
+          final building = buildings.firstWhereOrNull((b) => b.id == buildingId);
+          if (building == null) {
             return const Center(child: Text('Здание не найдено.'));
-           }
+          }
           return RefreshIndicator(
             onRefresh: () => ref.refresh(allBuildingsProvider.future),
-            child: ListView(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
-              children: [
-                ListTile(
-                  title: const Text('Название'),
-                  subtitle: Text(building.name, style: Theme.of(context).textTheme.titleLarge),
-                ),
-                ListTile(
-                  title: const Text('Адрес'),
-                  subtitle: Text(building.address),
-                ),
-                ListTile(
-                  title: const Text('Заметка'),
-                  subtitle: Text(building.note ?? 'Нет'),
-                ),
-                if (building.archivedAt != null) ...[
-                  ListTile(
-                    title: const Text('Архивировано:'),
-                    subtitle: Text(DateFormat('dd.MM.yyyy HH:mm').format(building.archivedAt!.toLocal())),
-                  ),
-                  if (building.archivedByName?.isNotEmpty == true)
-                    ListTile(
-                      title: const Text('Кем архивировано:'),
-                      subtitle: Text(building.archivedByName!),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(context, 'Название:', building.name),
+                  _buildInfoRow(context, 'Адрес:', building.address),
+                  _buildInfoRow(context, 'Заметка:', building.note ?? 'Нет'),
+                  const SizedBox(height: 16.0),
+                  if (building.archivedAt != null)
+                    Container(
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Theme.of(context).dividerColor),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildInfoRow(
+                            context,
+                            'Статус:',
+                            'В архиве',
+                            valueColor: Colors.orange,
+                          ),
+                          _buildInfoRow(
+                            context,
+                            'Архивировано:',
+                            DateFormat('dd.MM.yyyy HH:mm')
+                                .format(building.archivedAt!.toLocal()),
+                          ),
+                          if (building.archivedByName?.isNotEmpty == true)
+                            _buildInfoRow(
+                              context,
+                              'Кем архивировано:',
+                              building.archivedByName!,
+                            ),
+                          if (building.archivedReason?.isNotEmpty == true)
+                            _buildInfoRow(
+                              context,
+                              'Причина архивации:',
+                              building.archivedReason!,
+                            ),
+                        ],
+                      ),
                     ),
                 ],
-              ],
+              ),
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Ошибка: $err')),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value,
+      {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 150, // Adjusted width for better spacing
+            child: Text(
+              label,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: valueColor),
+            ),
+          ),
+        ],
       ),
     );
   }

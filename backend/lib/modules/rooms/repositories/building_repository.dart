@@ -73,7 +73,7 @@ class BuildingRepository {
   Future<Building> update(String id, Building building, String userId) async {
     final conn = await _db.connection;
     final result = await conn.execute(
-      Sql.named('UPDATE buildings SET name = @name, address = @address, note = @note, updated_at = NOW(), updated_by = @updated_by, archived_at = @archived_at, archived_by = @archived_by WHERE id = @id RETURNING *'),
+      Sql.named('UPDATE buildings SET name = @name, address = @address, note = @note, updated_at = NOW(), updated_by = @updated_by, archived_at = @archived_at, archived_by = @archived_by, archived_reason = @archived_reason WHERE id = @id RETURNING *'),
       parameters: {
         'id': int.parse(id),
         'name': building.name,
@@ -82,6 +82,7 @@ class BuildingRepository {
         'archived_at': building.archivedAt,
         'updated_by': building.updatedBy != null ? int.parse(building.updatedBy!) : int.parse(userId), // Use userId if not provided in building object
         'archived_by': building.archivedBy != null ? int.parse(building.archivedBy!) : int.parse(userId), // Use userId if not provided in building object
+        'archived_reason': building.archivedReason,
       },
     );
     return Building.fromMap(result.first.toColumnMap());

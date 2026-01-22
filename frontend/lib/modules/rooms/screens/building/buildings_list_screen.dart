@@ -19,23 +19,22 @@ class BuildingsListScreen extends ConsumerStatefulWidget {
 }
 
 class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
-  Future<void> _archiveBuilding(Building building) async {
-    // Confirmation dialog is a good practice
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Подтвердите архивацию'),
-        content: Text('Вы уверены, что хотите архивировать здание "${building.name}"?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Отмена')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Архивировать')),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
+  final TextEditingController _archiveReasonController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
+  @override
+  void dispose() {
+    _archiveReasonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _performArchive(Building building, String reason) async {
     try {
-      await ApiService.deleteBuilding(building.id);
+      final updatedBuilding = building.copyWith(
+        archivedAt: DateTime.now(),
+        archivedReason: reason,
+      );
+      await ApiService.updateBuilding(building.id, updatedBuilding);
       ref.invalidate(allBuildingsProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -48,6 +47,53 @@ class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
           SnackBar(content: Text('Ошибка архивации: $e'), backgroundColor: Colors.red),
         );
       }
+    }
+  }
+
+  void _showArchiveBuildingDialog(Building building) async {
+    _archiveReasonController.clear();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Архивировать здание'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Вы уверены, что хотите архивировать здание "${building.name}"?'),
+              TextFormField(
+                controller: _archiveReasonController,
+                decoration: const InputDecoration(
+                  hintText: 'Причина архивации (не менее 5 символов)*',
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().length < 5) {
+                    return 'Причина должна содержать не менее 5 символов.';
+                  }
+                  return null;
+                },
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Отмена')),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                Navigator.of(context).pop(true);
+              }
+            },
+            child: const Text('Архивировать'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _performArchive(building, _archiveReasonController.text.trim());
     }
   }
 
@@ -67,7 +113,10 @@ class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
     if (confirmed != true) return;
 
     try {
-      final updatedBuilding = building.copyWith(archivedAt: null);
+      final updatedBuilding = building.copyWith(
+        archivedAt: null,
+        archivedReason: null, // Clear the reason when unarchiving
+      );
       await ApiService.updateBuilding(building.id, updatedBuilding);
       ref.invalidate(allBuildingsProvider);
       if (mounted) {
@@ -150,7 +199,7 @@ class _BuildingsListScreenState extends ConsumerState<BuildingsListScreen> {
                             );
                             ref.read(allBuildingsProvider.notifier).refresh();
                           } else if (value == 'archive') {
-                            _archiveBuilding(building);
+                            _showArchiveBuildingDialog(building);
                           } else if (value == 'unarchive') {
                             _unarchiveBuilding(building);
                           }

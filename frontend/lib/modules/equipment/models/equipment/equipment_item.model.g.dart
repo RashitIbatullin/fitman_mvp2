@@ -9,35 +9,35 @@ part of 'equipment_item.model.dart';
 _$EquipmentItemImpl _$$EquipmentItemImplFromJson(Map<String, dynamic> json) =>
     _$EquipmentItemImpl(
       id: json['id'] as String,
-      typeId: json['typeId'] as String,
-      inventoryNumber: json['inventoryNumber'] as String,
-      serialNumber: json['serialNumber'] as String?,
+      typeId: json['type_id'] as String,
+      inventoryNumber: json['inventory_number'] as String,
+      serialNumber: json['serial_number'] as String?,
       model: json['model'] as String?,
       manufacturer: json['manufacturer'] as String?,
-      roomId: json['roomId'] as String?,
-      placementNote: json['placementNote'] as String?,
+      roomId: json['room_id'] as String?,
+      placementNote: json['placement_note'] as String?,
       status: $enumDecode(_$EquipmentStatusEnumMap, json['status']),
-      conditionRating: (json['conditionRating'] as num).toInt(),
-      conditionNotes: json['conditionNotes'] as String?,
-      lastMaintenanceDate: json['lastMaintenanceDate'] == null
+      conditionRating: (json['condition_rating'] as num).toInt(),
+      conditionNotes: json['condition_notes'] as String?,
+      lastMaintenanceDate: json['last_maintenance_date'] == null
           ? null
-          : DateTime.parse(json['lastMaintenanceDate'] as String),
-      nextMaintenanceDate: json['nextMaintenanceDate'] == null
+          : DateTime.parse(json['last_maintenance_date'] as String),
+      nextMaintenanceDate: json['next_maintenance_date'] == null
           ? null
-          : DateTime.parse(json['nextMaintenanceDate'] as String),
-      maintenanceNotes: json['maintenanceNotes'] as String?,
-      purchaseDate: json['purchaseDate'] == null
+          : DateTime.parse(json['next_maintenance_date'] as String),
+      maintenanceNotes: json['maintenance_notes'] as String?,
+      purchaseDate: json['purchase_date'] == null
           ? null
-          : DateTime.parse(json['purchaseDate'] as String),
-      purchasePrice: (json['purchasePrice'] as num?)?.toDouble(),
+          : DateTime.parse(json['purchase_date'] as String),
+      purchasePrice: (json['purchase_price'] as num?)?.toDouble(),
       supplier: json['supplier'] as String?,
-      warrantyMonths: (json['warrantyMonths'] as num?)?.toInt(),
-      usageHours: (json['usageHours'] as num?)?.toInt() ?? 0,
-      lastUsedDate: json['lastUsedDate'] == null
+      warrantyMonths: (json['warranty_months'] as num?)?.toInt(),
+      usageHours: (json['usage_hours'] as num?)?.toInt() ?? 0,
+      lastUsedDate: json['last_used_date'] == null
           ? null
-          : DateTime.parse(json['lastUsedDate'] as String),
+          : DateTime.parse(json['last_used_date'] as String),
       photoUrls:
-          (json['photoUrls'] as List<dynamic>?)
+          (json['photo_urls'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
@@ -46,26 +46,26 @@ _$EquipmentItemImpl _$$EquipmentItemImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$EquipmentItemImplToJson(_$EquipmentItemImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'typeId': instance.typeId,
-      'inventoryNumber': instance.inventoryNumber,
-      'serialNumber': instance.serialNumber,
+      'type_id': instance.typeId,
+      'inventory_number': instance.inventoryNumber,
+      'serial_number': instance.serialNumber,
       'model': instance.model,
       'manufacturer': instance.manufacturer,
-      'roomId': instance.roomId,
-      'placementNote': instance.placementNote,
+      'room_id': instance.roomId,
+      'placement_note': instance.placementNote,
       'status': _$EquipmentStatusEnumMap[instance.status]!,
-      'conditionRating': instance.conditionRating,
-      'conditionNotes': instance.conditionNotes,
-      'lastMaintenanceDate': instance.lastMaintenanceDate?.toIso8601String(),
-      'nextMaintenanceDate': instance.nextMaintenanceDate?.toIso8601String(),
-      'maintenanceNotes': instance.maintenanceNotes,
-      'purchaseDate': instance.purchaseDate?.toIso8601String(),
-      'purchasePrice': instance.purchasePrice,
+      'condition_rating': instance.conditionRating,
+      'condition_notes': instance.conditionNotes,
+      'last_maintenance_date': instance.lastMaintenanceDate?.toIso8601String(),
+      'next_maintenance_date': instance.nextMaintenanceDate?.toIso8601String(),
+      'maintenance_notes': instance.maintenanceNotes,
+      'purchase_date': instance.purchaseDate?.toIso8601String(),
+      'purchase_price': instance.purchasePrice,
       'supplier': instance.supplier,
-      'warrantyMonths': instance.warrantyMonths,
-      'usageHours': instance.usageHours,
-      'lastUsedDate': instance.lastUsedDate?.toIso8601String(),
-      'photoUrls': instance.photoUrls,
+      'warranty_months': instance.warrantyMonths,
+      'usage_hours': instance.usageHours,
+      'last_used_date': instance.lastUsedDate?.toIso8601String(),
+      'photo_urls': instance.photoUrls,
     };
 
 const _$EquipmentStatusEnumMap = {

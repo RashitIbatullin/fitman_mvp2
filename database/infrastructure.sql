@@ -408,6 +408,7 @@ CREATE TABLE buildings (
   updated_by BIGINT REFERENCES users(id),
   archived_at TIMESTAMPTZ,
   archived_by BIGINT REFERENCES users(id),
+  archived_reason TEXT,
   note VARCHAR(100)
 );
 

@@ -96,6 +96,7 @@ class BuildingController {
           archivedAt: initialBuilding.archivedAt,
           archivedBy: userId,
           archivedByName: initialBuilding.archivedByName,
+          archivedReason: initialBuilding.archivedReason,
         );
       } else {
         finalBuilding = Building(
@@ -110,6 +111,7 @@ class BuildingController {
           archivedAt: initialBuilding.archivedAt,
           archivedBy: initialBuilding.archivedBy,
           archivedByName: initialBuilding.archivedByName,
+          archivedReason: initialBuilding.archivedReason,
         );
       }
 
@@ -125,10 +127,15 @@ class BuildingController {
 
   Future<Response> _deleteBuilding(Request request, String id) async {
     try {
-      final userId = request.context['user_id'] as int?;
-      if (userId == null) {
-        return Response(401, body: jsonEncode({'error': 'Not authenticated.'}));
+      final userPayload = request.context['user'] as Map<String, dynamic>?;
+      if (userPayload == null) {
+        return Response(401, body: jsonEncode({'error': 'Not authenticated: User payload missing.'}));
       }
+      final userId = userPayload['userId'] as int?;
+      if (userId == null) {
+        return Response(401, body: jsonEncode({'error': 'Not authenticated: User ID missing in token.'}));
+      }
+
       await _buildingService.deleteBuilding(id, userId);
       return Response(204);
     } catch (e) {

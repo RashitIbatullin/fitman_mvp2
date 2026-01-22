@@ -21,31 +21,21 @@ Building _$BuildingFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Building {
-  @JsonKey(name: 'id')
   String get id => throw _privateConstructorUsedError;
-  @JsonKey(name: 'name')
   String get name => throw _privateConstructorUsedError;
-  @JsonKey(name: 'address')
   String get address => throw _privateConstructorUsedError;
-  @JsonKey(name: 'note')
   String? get note => throw _privateConstructorUsedError;
   @NullableDateTimeConverter()
-  @JsonKey(name: 'created_at')
   DateTime? get createdAt => throw _privateConstructorUsedError;
   @NullableDateTimeConverter()
-  @JsonKey(name: 'updated_at')
   DateTime? get updatedAt => throw _privateConstructorUsedError;
-  @JsonKey(name: 'created_by')
   String? get createdBy => throw _privateConstructorUsedError;
-  @JsonKey(name: 'updated_by')
   String? get updatedBy => throw _privateConstructorUsedError;
   @NullableDateTimeConverter()
-  @JsonKey(name: 'archived_at')
   DateTime? get archivedAt => throw _privateConstructorUsedError;
-  @JsonKey(name: 'archived_by')
   String? get archivedBy => throw _privateConstructorUsedError;
-  @JsonKey(name: 'archived_by_name')
   String? get archivedByName => throw _privateConstructorUsedError;
+  String? get archivedReason => throw _privateConstructorUsedError;
 
   /// Serializes this Building to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -63,23 +53,18 @@ abstract class $BuildingCopyWith<$Res> {
       _$BuildingCopyWithImpl<$Res, Building>;
   @useResult
   $Res call({
-    @JsonKey(name: 'id') String id,
-    @JsonKey(name: 'name') String name,
-    @JsonKey(name: 'address') String address,
-    @JsonKey(name: 'note') String? note,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'created_at')
-    DateTime? createdAt,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'updated_at')
-    DateTime? updatedAt,
-    @JsonKey(name: 'created_by') String? createdBy,
-    @JsonKey(name: 'updated_by') String? updatedBy,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'archived_at')
-    DateTime? archivedAt,
-    @JsonKey(name: 'archived_by') String? archivedBy,
-    @JsonKey(name: 'archived_by_name') String? archivedByName,
+    String id,
+    String name,
+    String address,
+    String? note,
+    @NullableDateTimeConverter() DateTime? createdAt,
+    @NullableDateTimeConverter() DateTime? updatedAt,
+    String? createdBy,
+    String? updatedBy,
+    @NullableDateTimeConverter() DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedByName,
+    String? archivedReason,
   });
 }
 
@@ -109,6 +94,7 @@ class _$BuildingCopyWithImpl<$Res, $Val extends Building>
     Object? archivedAt = freezed,
     Object? archivedBy = freezed,
     Object? archivedByName = freezed,
+    Object? archivedReason = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -156,6 +142,10 @@ class _$BuildingCopyWithImpl<$Res, $Val extends Building>
                 ? _value.archivedByName
                 : archivedByName // ignore: cast_nullable_to_non_nullable
                       as String?,
+            archivedReason: freezed == archivedReason
+                ? _value.archivedReason
+                : archivedReason // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -172,23 +162,18 @@ abstract class _$$BuildingImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    @JsonKey(name: 'id') String id,
-    @JsonKey(name: 'name') String name,
-    @JsonKey(name: 'address') String address,
-    @JsonKey(name: 'note') String? note,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'created_at')
-    DateTime? createdAt,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'updated_at')
-    DateTime? updatedAt,
-    @JsonKey(name: 'created_by') String? createdBy,
-    @JsonKey(name: 'updated_by') String? updatedBy,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'archived_at')
-    DateTime? archivedAt,
-    @JsonKey(name: 'archived_by') String? archivedBy,
-    @JsonKey(name: 'archived_by_name') String? archivedByName,
+    String id,
+    String name,
+    String address,
+    String? note,
+    @NullableDateTimeConverter() DateTime? createdAt,
+    @NullableDateTimeConverter() DateTime? updatedAt,
+    String? createdBy,
+    String? updatedBy,
+    @NullableDateTimeConverter() DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedByName,
+    String? archivedReason,
   });
 }
 
@@ -217,6 +202,7 @@ class __$$BuildingImplCopyWithImpl<$Res>
     Object? archivedAt = freezed,
     Object? archivedBy = freezed,
     Object? archivedByName = freezed,
+    Object? archivedReason = freezed,
   }) {
     return _then(
       _$BuildingImpl(
@@ -264,6 +250,10 @@ class __$$BuildingImplCopyWithImpl<$Res>
             ? _value.archivedByName
             : archivedByName // ignore: cast_nullable_to_non_nullable
                   as String?,
+        archivedReason: freezed == archivedReason
+            ? _value.archivedReason
+            : archivedReason // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -273,62 +263,54 @@ class __$$BuildingImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$BuildingImpl implements _Building {
   const _$BuildingImpl({
-    @JsonKey(name: 'id') required this.id,
-    @JsonKey(name: 'name') required this.name,
-    @JsonKey(name: 'address') required this.address,
-    @JsonKey(name: 'note') this.note,
-    @NullableDateTimeConverter() @JsonKey(name: 'created_at') this.createdAt,
-    @NullableDateTimeConverter() @JsonKey(name: 'updated_at') this.updatedAt,
-    @JsonKey(name: 'created_by') this.createdBy,
-    @JsonKey(name: 'updated_by') this.updatedBy,
-    @NullableDateTimeConverter() @JsonKey(name: 'archived_at') this.archivedAt,
-    @JsonKey(name: 'archived_by') this.archivedBy,
-    @JsonKey(name: 'archived_by_name') this.archivedByName,
+    required this.id,
+    required this.name,
+    required this.address,
+    this.note,
+    @NullableDateTimeConverter() this.createdAt,
+    @NullableDateTimeConverter() this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
+    @NullableDateTimeConverter() this.archivedAt,
+    this.archivedBy,
+    this.archivedByName,
+    this.archivedReason,
   });
 
   factory _$BuildingImpl.fromJson(Map<String, dynamic> json) =>
       _$$BuildingImplFromJson(json);
 
   @override
-  @JsonKey(name: 'id')
   final String id;
   @override
-  @JsonKey(name: 'name')
   final String name;
   @override
-  @JsonKey(name: 'address')
   final String address;
   @override
-  @JsonKey(name: 'note')
   final String? note;
   @override
   @NullableDateTimeConverter()
-  @JsonKey(name: 'created_at')
   final DateTime? createdAt;
   @override
   @NullableDateTimeConverter()
-  @JsonKey(name: 'updated_at')
   final DateTime? updatedAt;
   @override
-  @JsonKey(name: 'created_by')
   final String? createdBy;
   @override
-  @JsonKey(name: 'updated_by')
   final String? updatedBy;
   @override
   @NullableDateTimeConverter()
-  @JsonKey(name: 'archived_at')
   final DateTime? archivedAt;
   @override
-  @JsonKey(name: 'archived_by')
   final String? archivedBy;
   @override
-  @JsonKey(name: 'archived_by_name')
   final String? archivedByName;
+  @override
+  final String? archivedReason;
 
   @override
   String toString() {
-    return 'Building(id: $id, name: $name, address: $address, note: $note, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, updatedBy: $updatedBy, archivedAt: $archivedAt, archivedBy: $archivedBy, archivedByName: $archivedByName)';
+    return 'Building(id: $id, name: $name, address: $address, note: $note, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, updatedBy: $updatedBy, archivedAt: $archivedAt, archivedBy: $archivedBy, archivedByName: $archivedByName, archivedReason: $archivedReason)';
   }
 
   @override
@@ -353,7 +335,9 @@ class _$BuildingImpl implements _Building {
             (identical(other.archivedBy, archivedBy) ||
                 other.archivedBy == archivedBy) &&
             (identical(other.archivedByName, archivedByName) ||
-                other.archivedByName == archivedByName));
+                other.archivedByName == archivedByName) &&
+            (identical(other.archivedReason, archivedReason) ||
+                other.archivedReason == archivedReason));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -371,6 +355,7 @@ class _$BuildingImpl implements _Building {
     archivedAt,
     archivedBy,
     archivedByName,
+    archivedReason,
   );
 
   /// Create a copy of Building
@@ -389,64 +374,50 @@ class _$BuildingImpl implements _Building {
 
 abstract class _Building implements Building {
   const factory _Building({
-    @JsonKey(name: 'id') required final String id,
-    @JsonKey(name: 'name') required final String name,
-    @JsonKey(name: 'address') required final String address,
-    @JsonKey(name: 'note') final String? note,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'created_at')
-    final DateTime? createdAt,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'updated_at')
-    final DateTime? updatedAt,
-    @JsonKey(name: 'created_by') final String? createdBy,
-    @JsonKey(name: 'updated_by') final String? updatedBy,
-    @NullableDateTimeConverter()
-    @JsonKey(name: 'archived_at')
-    final DateTime? archivedAt,
-    @JsonKey(name: 'archived_by') final String? archivedBy,
-    @JsonKey(name: 'archived_by_name') final String? archivedByName,
+    required final String id,
+    required final String name,
+    required final String address,
+    final String? note,
+    @NullableDateTimeConverter() final DateTime? createdAt,
+    @NullableDateTimeConverter() final DateTime? updatedAt,
+    final String? createdBy,
+    final String? updatedBy,
+    @NullableDateTimeConverter() final DateTime? archivedAt,
+    final String? archivedBy,
+    final String? archivedByName,
+    final String? archivedReason,
   }) = _$BuildingImpl;
 
   factory _Building.fromJson(Map<String, dynamic> json) =
       _$BuildingImpl.fromJson;
 
   @override
-  @JsonKey(name: 'id')
   String get id;
   @override
-  @JsonKey(name: 'name')
   String get name;
   @override
-  @JsonKey(name: 'address')
   String get address;
   @override
-  @JsonKey(name: 'note')
   String? get note;
   @override
   @NullableDateTimeConverter()
-  @JsonKey(name: 'created_at')
   DateTime? get createdAt;
   @override
   @NullableDateTimeConverter()
-  @JsonKey(name: 'updated_at')
   DateTime? get updatedAt;
   @override
-  @JsonKey(name: 'created_by')
   String? get createdBy;
   @override
-  @JsonKey(name: 'updated_by')
   String? get updatedBy;
   @override
   @NullableDateTimeConverter()
-  @JsonKey(name: 'archived_at')
   DateTime? get archivedAt;
   @override
-  @JsonKey(name: 'archived_by')
   String? get archivedBy;
   @override
-  @JsonKey(name: 'archived_by_name')
   String? get archivedByName;
+  @override
+  String? get archivedReason;
 
   /// Create a copy of Building
   /// with the given fields replaced by the non-null parameter values.
