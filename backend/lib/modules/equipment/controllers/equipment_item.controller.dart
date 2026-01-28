@@ -2,22 +2,35 @@ import 'dart:convert';
 import 'package:fitman_backend/config/database.dart';
 import 'package:fitman_backend/modules/equipment/models/equipment/equipment_item.model.dart';
 import 'package:shelf/shelf.dart';
+import 'package:shelf_router/shelf_router.dart';
 
 class EquipmentItemController {
-  EquipmentItemController(this._db);
+  EquipmentItemController(this._db) {
+    _router
+      ..get('/', _getAllEquipmentItems)
+      ..put('/<id>/archive', _archive)
+      ..put('/<id>/unarchive', _unarchive);
+  }
 
   final Database _db;
+  final _router = Router();
 
-  Future<Response> getAllEquipmentItems(Request request) async {
+  Handler get handler => _router;
+
+  Future<Response> _getAllEquipmentItems(Request request) async {
     try {
       final roomId = request.url.queryParameters['roomId'];
+      final includeArchived =
+          request.url.queryParameters['includeArchived'] == 'true';
 
       late final List<EquipmentItem> equipmentItems;
 
       if (roomId != null && roomId.isNotEmpty) {
-        equipmentItems = await _db.equipmentItems.getByRoomId(roomId);
+        equipmentItems = await _db.equipmentItems
+            .getByRoomId(roomId, includeArchived: includeArchived);
       } else {
-        equipmentItems = await _db.equipmentItems.getAll();
+        equipmentItems =
+            await _db.equipmentItems.getAll(includeArchived: includeArchived);
       }
 
       final equipmentItemsJson =
@@ -26,6 +39,45 @@ class EquipmentItemController {
     } catch (e) {
       return Response.internalServerError(
           body: '{"error": "Error fetching equipment items: $e"}');
+    }
+  }
+
+  Future<Response> _archive(Request request, String id) async {
+    try {
+      final body = await request.readAsString();
+      final params = jsonDecode(body) as Map<String, dynamic>;
+      final reason = params['reason'] as String?;
+      final userPayload = request.context['user'] as Map<String, dynamic>?;
+      if (userPayload == null) {
+        return Response.unauthorized('{"error": "Authentication required"}');
+      }
+      final userId = userPayload['userId']?.toString();
+      if (userId == null) {
+        return Response.internalServerError(body: '{"error": "User ID not found in token payload"}');
+      }
+
+      if (reason == null || reason.length < 5) {
+        return Response.badRequest(
+          body: '{"error": "Archival reason must be at least 5 characters long."}',
+        );
+      }
+
+      await _db.equipmentItems.archive(id, reason, userId);
+
+      return Response.ok('{"status": "success"}');
+    } catch (e) {
+      return Response.internalServerError(
+          body: '{"error": "Error archiving equipment item: $e"}');
+    }
+  }
+
+  Future<Response> _unarchive(Request request, String id) async {
+    try {
+      await _db.equipmentItems.unarchive(id);
+      return Response.ok('{"status": "success"}');
+    } catch (e) {
+      return Response.internalServerError(
+          body: '{"error": "Error unarchiving equipment item: $e"}');
     }
   }
 }

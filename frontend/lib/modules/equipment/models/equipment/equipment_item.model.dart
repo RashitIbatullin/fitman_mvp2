@@ -28,6 +28,9 @@ class EquipmentItem with _$EquipmentItem {
     @Default(0) int usageHours,
     DateTime? lastUsedDate,
     @Default([]) List<String> photoUrls,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   }) = _EquipmentItem;
 
   factory EquipmentItem.fromJson(Map<String, dynamic> json) =>

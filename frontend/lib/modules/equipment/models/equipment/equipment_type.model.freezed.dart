@@ -34,6 +34,9 @@ mixin _$EquipmentType {
   String? get photoUrl => throw _privateConstructorUsedError;
   String? get manualUrl => throw _privateConstructorUsedError;
   bool get isActive => throw _privateConstructorUsedError;
+  DateTime? get archivedAt => throw _privateConstructorUsedError;
+  String? get archivedBy => throw _privateConstructorUsedError;
+  String? get archivedReason => throw _privateConstructorUsedError;
 
   /// Serializes this EquipmentType to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -65,6 +68,9 @@ abstract class $EquipmentTypeCopyWith<$Res> {
     String? photoUrl,
     String? manualUrl,
     bool isActive,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   });
 }
 
@@ -95,6 +101,9 @@ class _$EquipmentTypeCopyWithImpl<$Res, $Val extends EquipmentType>
     Object? photoUrl = freezed,
     Object? manualUrl = freezed,
     Object? isActive = null,
+    Object? archivedAt = freezed,
+    Object? archivedBy = freezed,
+    Object? archivedReason = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -146,6 +155,18 @@ class _$EquipmentTypeCopyWithImpl<$Res, $Val extends EquipmentType>
                 ? _value.isActive
                 : isActive // ignore: cast_nullable_to_non_nullable
                       as bool,
+            archivedAt: freezed == archivedAt
+                ? _value.archivedAt
+                : archivedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            archivedBy: freezed == archivedBy
+                ? _value.archivedBy
+                : archivedBy // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            archivedReason: freezed == archivedReason
+                ? _value.archivedReason
+                : archivedReason // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -174,6 +195,9 @@ abstract class _$$EquipmentTypeImplCopyWith<$Res>
     String? photoUrl,
     String? manualUrl,
     bool isActive,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   });
 }
 
@@ -203,6 +227,9 @@ class __$$EquipmentTypeImplCopyWithImpl<$Res>
     Object? photoUrl = freezed,
     Object? manualUrl = freezed,
     Object? isActive = null,
+    Object? archivedAt = freezed,
+    Object? archivedBy = freezed,
+    Object? archivedReason = freezed,
   }) {
     return _then(
       _$EquipmentTypeImpl(
@@ -254,6 +281,18 @@ class __$$EquipmentTypeImplCopyWithImpl<$Res>
             ? _value.isActive
             : isActive // ignore: cast_nullable_to_non_nullable
                   as bool,
+        archivedAt: freezed == archivedAt
+            ? _value.archivedAt
+            : archivedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        archivedBy: freezed == archivedBy
+            ? _value.archivedBy
+            : archivedBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        archivedReason: freezed == archivedReason
+            ? _value.archivedReason
+            : archivedReason // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -275,6 +314,9 @@ class _$EquipmentTypeImpl implements _EquipmentType {
     this.photoUrl,
     this.manualUrl,
     this.isActive = true,
+    this.archivedAt,
+    this.archivedBy,
+    this.archivedReason,
   });
 
   factory _$EquipmentTypeImpl.fromJson(Map<String, dynamic> json) =>
@@ -308,10 +350,16 @@ class _$EquipmentTypeImpl implements _EquipmentType {
   @override
   @JsonKey()
   final bool isActive;
+  @override
+  final DateTime? archivedAt;
+  @override
+  final String? archivedBy;
+  @override
+  final String? archivedReason;
 
   @override
   String toString() {
-    return 'EquipmentType(id: $id, name: $name, description: $description, category: $category, weightRange: $weightRange, dimensions: $dimensions, powerRequirements: $powerRequirements, isMobile: $isMobile, exerciseTypeId: $exerciseTypeId, photoUrl: $photoUrl, manualUrl: $manualUrl, isActive: $isActive)';
+    return 'EquipmentType(id: $id, name: $name, description: $description, category: $category, weightRange: $weightRange, dimensions: $dimensions, powerRequirements: $powerRequirements, isMobile: $isMobile, exerciseTypeId: $exerciseTypeId, photoUrl: $photoUrl, manualUrl: $manualUrl, isActive: $isActive, archivedAt: $archivedAt, archivedBy: $archivedBy, archivedReason: $archivedReason)';
   }
 
   @override
@@ -340,7 +388,13 @@ class _$EquipmentTypeImpl implements _EquipmentType {
             (identical(other.manualUrl, manualUrl) ||
                 other.manualUrl == manualUrl) &&
             (identical(other.isActive, isActive) ||
-                other.isActive == isActive));
+                other.isActive == isActive) &&
+            (identical(other.archivedAt, archivedAt) ||
+                other.archivedAt == archivedAt) &&
+            (identical(other.archivedBy, archivedBy) ||
+                other.archivedBy == archivedBy) &&
+            (identical(other.archivedReason, archivedReason) ||
+                other.archivedReason == archivedReason));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -359,6 +413,9 @@ class _$EquipmentTypeImpl implements _EquipmentType {
     photoUrl,
     manualUrl,
     isActive,
+    archivedAt,
+    archivedBy,
+    archivedReason,
   );
 
   /// Create a copy of EquipmentType
@@ -389,6 +446,9 @@ abstract class _EquipmentType implements EquipmentType {
     final String? photoUrl,
     final String? manualUrl,
     final bool isActive,
+    final DateTime? archivedAt,
+    final String? archivedBy,
+    final String? archivedReason,
   }) = _$EquipmentTypeImpl;
 
   factory _EquipmentType.fromJson(Map<String, dynamic> json) =
@@ -419,6 +479,12 @@ abstract class _EquipmentType implements EquipmentType {
   String? get manualUrl;
   @override
   bool get isActive;
+  @override
+  DateTime? get archivedAt;
+  @override
+  String? get archivedBy;
+  @override
+  String? get archivedReason;
 
   /// Create a copy of EquipmentType
   /// with the given fields replaced by the non-null parameter values.

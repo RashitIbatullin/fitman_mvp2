@@ -41,6 +41,11 @@ _$EquipmentItemImpl _$$EquipmentItemImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      archivedAt: json['archived_at'] == null
+          ? null
+          : DateTime.parse(json['archived_at'] as String),
+      archivedBy: json['archived_by'] as String?,
+      archivedReason: json['archived_reason'] as String?,
     );
 
 Map<String, dynamic> _$$EquipmentItemImplToJson(_$EquipmentItemImpl instance) =>
@@ -66,6 +71,9 @@ Map<String, dynamic> _$$EquipmentItemImplToJson(_$EquipmentItemImpl instance) =>
       'usage_hours': instance.usageHours,
       'last_used_date': instance.lastUsedDate?.toIso8601String(),
       'photo_urls': instance.photoUrls,
+      'archived_at': instance.archivedAt?.toIso8601String(),
+      'archived_by': instance.archivedBy,
+      'archived_reason': instance.archivedReason,
     };
 
 const _$EquipmentStatusEnumMap = {

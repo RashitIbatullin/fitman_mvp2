@@ -42,6 +42,9 @@ mixin _$EquipmentItem {
   int get usageHours => throw _privateConstructorUsedError;
   DateTime? get lastUsedDate => throw _privateConstructorUsedError;
   List<String> get photoUrls => throw _privateConstructorUsedError;
+  DateTime? get archivedAt => throw _privateConstructorUsedError;
+  String? get archivedBy => throw _privateConstructorUsedError;
+  String? get archivedReason => throw _privateConstructorUsedError;
 
   /// Serializes this EquipmentItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -82,6 +85,9 @@ abstract class $EquipmentItemCopyWith<$Res> {
     int usageHours,
     DateTime? lastUsedDate,
     List<String> photoUrls,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   });
 }
 
@@ -121,6 +127,9 @@ class _$EquipmentItemCopyWithImpl<$Res, $Val extends EquipmentItem>
     Object? usageHours = null,
     Object? lastUsedDate = freezed,
     Object? photoUrls = null,
+    Object? archivedAt = freezed,
+    Object? archivedBy = freezed,
+    Object? archivedReason = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -208,6 +217,18 @@ class _$EquipmentItemCopyWithImpl<$Res, $Val extends EquipmentItem>
                 ? _value.photoUrls
                 : photoUrls // ignore: cast_nullable_to_non_nullable
                       as List<String>,
+            archivedAt: freezed == archivedAt
+                ? _value.archivedAt
+                : archivedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            archivedBy: freezed == archivedBy
+                ? _value.archivedBy
+                : archivedBy // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            archivedReason: freezed == archivedReason
+                ? _value.archivedReason
+                : archivedReason // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -245,6 +266,9 @@ abstract class _$$EquipmentItemImplCopyWith<$Res>
     int usageHours,
     DateTime? lastUsedDate,
     List<String> photoUrls,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   });
 }
 
@@ -283,6 +307,9 @@ class __$$EquipmentItemImplCopyWithImpl<$Res>
     Object? usageHours = null,
     Object? lastUsedDate = freezed,
     Object? photoUrls = null,
+    Object? archivedAt = freezed,
+    Object? archivedBy = freezed,
+    Object? archivedReason = freezed,
   }) {
     return _then(
       _$EquipmentItemImpl(
@@ -370,6 +397,18 @@ class __$$EquipmentItemImplCopyWithImpl<$Res>
             ? _value._photoUrls
             : photoUrls // ignore: cast_nullable_to_non_nullable
                   as List<String>,
+        archivedAt: freezed == archivedAt
+            ? _value.archivedAt
+            : archivedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        archivedBy: freezed == archivedBy
+            ? _value.archivedBy
+            : archivedBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        archivedReason: freezed == archivedReason
+            ? _value.archivedReason
+            : archivedReason // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -400,6 +439,9 @@ class _$EquipmentItemImpl implements _EquipmentItem {
     this.usageHours = 0,
     this.lastUsedDate,
     final List<String> photoUrls = const [],
+    this.archivedAt,
+    this.archivedBy,
+    this.archivedReason,
   }) : _photoUrls = photoUrls;
 
   factory _$EquipmentItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -456,8 +498,15 @@ class _$EquipmentItemImpl implements _EquipmentItem {
   }
 
   @override
+  final DateTime? archivedAt;
+  @override
+  final String? archivedBy;
+  @override
+  final String? archivedReason;
+
+  @override
   String toString() {
-    return 'EquipmentItem(id: $id, typeId: $typeId, inventoryNumber: $inventoryNumber, serialNumber: $serialNumber, model: $model, manufacturer: $manufacturer, roomId: $roomId, placementNote: $placementNote, status: $status, conditionRating: $conditionRating, conditionNotes: $conditionNotes, lastMaintenanceDate: $lastMaintenanceDate, nextMaintenanceDate: $nextMaintenanceDate, maintenanceNotes: $maintenanceNotes, purchaseDate: $purchaseDate, purchasePrice: $purchasePrice, supplier: $supplier, warrantyMonths: $warrantyMonths, usageHours: $usageHours, lastUsedDate: $lastUsedDate, photoUrls: $photoUrls)';
+    return 'EquipmentItem(id: $id, typeId: $typeId, inventoryNumber: $inventoryNumber, serialNumber: $serialNumber, model: $model, manufacturer: $manufacturer, roomId: $roomId, placementNote: $placementNote, status: $status, conditionRating: $conditionRating, conditionNotes: $conditionNotes, lastMaintenanceDate: $lastMaintenanceDate, nextMaintenanceDate: $nextMaintenanceDate, maintenanceNotes: $maintenanceNotes, purchaseDate: $purchaseDate, purchasePrice: $purchasePrice, supplier: $supplier, warrantyMonths: $warrantyMonths, usageHours: $usageHours, lastUsedDate: $lastUsedDate, photoUrls: $photoUrls, archivedAt: $archivedAt, archivedBy: $archivedBy, archivedReason: $archivedReason)';
   }
 
   @override
@@ -503,7 +552,13 @@ class _$EquipmentItemImpl implements _EquipmentItem {
             const DeepCollectionEquality().equals(
               other._photoUrls,
               _photoUrls,
-            ));
+            ) &&
+            (identical(other.archivedAt, archivedAt) ||
+                other.archivedAt == archivedAt) &&
+            (identical(other.archivedBy, archivedBy) ||
+                other.archivedBy == archivedBy) &&
+            (identical(other.archivedReason, archivedReason) ||
+                other.archivedReason == archivedReason));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -531,6 +586,9 @@ class _$EquipmentItemImpl implements _EquipmentItem {
     usageHours,
     lastUsedDate,
     const DeepCollectionEquality().hash(_photoUrls),
+    archivedAt,
+    archivedBy,
+    archivedReason,
   ]);
 
   /// Create a copy of EquipmentItem
@@ -570,6 +628,9 @@ abstract class _EquipmentItem implements EquipmentItem {
     final int usageHours,
     final DateTime? lastUsedDate,
     final List<String> photoUrls,
+    final DateTime? archivedAt,
+    final String? archivedBy,
+    final String? archivedReason,
   }) = _$EquipmentItemImpl;
 
   factory _EquipmentItem.fromJson(Map<String, dynamic> json) =
@@ -617,6 +678,12 @@ abstract class _EquipmentItem implements EquipmentItem {
   DateTime? get lastUsedDate;
   @override
   List<String> get photoUrls;
+  @override
+  DateTime? get archivedAt;
+  @override
+  String? get archivedBy;
+  @override
+  String? get archivedReason;
 
   /// Create a copy of EquipmentItem
   /// with the given fields replaced by the non-null parameter values.

@@ -22,6 +22,11 @@ _$EquipmentTypeImpl _$$EquipmentTypeImplFromJson(Map<String, dynamic> json) =>
       photoUrl: json['photo_url'] as String?,
       manualUrl: json['manual_url'] as String?,
       isActive: json['is_active'] as bool? ?? true,
+      archivedAt: json['archived_at'] == null
+          ? null
+          : DateTime.parse(json['archived_at'] as String),
+      archivedBy: json['archived_by'] as String?,
+      archivedReason: json['archived_reason'] as String?,
     );
 
 Map<String, dynamic> _$$EquipmentTypeImplToJson(_$EquipmentTypeImpl instance) =>
@@ -38,4 +43,7 @@ Map<String, dynamic> _$$EquipmentTypeImplToJson(_$EquipmentTypeImpl instance) =>
       'photo_url': instance.photoUrl,
       'manual_url': instance.manualUrl,
       'is_active': instance.isActive,
+      'archived_at': instance.archivedAt?.toIso8601String(),
+      'archived_by': instance.archivedBy,
+      'archived_reason': instance.archivedReason,
     };

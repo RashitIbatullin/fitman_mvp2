@@ -2,6 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user.dart';
 import '../../../services/api_service.dart';
 
+// --- Provider to fetch a single user by their ID ---
+final userByIdProvider = FutureProvider.family<User, int>((ref, userId) async {
+  return ApiService.getUserById(userId);
+});
+
+
 class UsersState {
   const UsersState({
     this.users = const [],

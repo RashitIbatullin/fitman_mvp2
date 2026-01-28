@@ -109,20 +109,35 @@ class ApiService {
       _infrastructureApi.updateBuilding(id, building);
   static Future<void> deleteBuilding(String id) => _infrastructureApi.deleteBuilding(id);
 
-  static Future<List<EquipmentItem>> getAllEquipmentItems({String? roomId}) =>
-      _infrastructureApi.getAllEquipmentItems(roomId: roomId);
+  static Future<List<EquipmentItem>> getAllEquipmentItems(
+          {String? roomId, bool? isArchived}) =>
+      _infrastructureApi.getAllEquipmentItems(
+          roomId: roomId, isArchived: isArchived);
   static Future<EquipmentItem> getEquipmentItemById(String id) =>
       _infrastructureApi.getEquipmentItemById(id);
+  static Future<void> archiveEquipmentItem(String id, String reason) =>
+      _infrastructureApi.archiveEquipmentItem(id, reason);
+  static Future<void> unarchiveEquipmentItem(String id) =>
+      _infrastructureApi.unarchiveEquipmentItem(id);
 
-  static Future<List<EquipmentType>> getAllEquipmentTypes({EquipmentCategory? category}) =>
-      _infrastructureApi.getAllEquipmentTypes(category: category);
+  static Future<List<EquipmentType>> getAllEquipmentTypes(
+          {EquipmentCategory? category, bool? isArchived}) =>
+      _infrastructureApi.getAllEquipmentTypes(
+          category: category, isArchived: isArchived);
   static Future<EquipmentType> getEquipmentTypeById(String id) =>
       _infrastructureApi.getEquipmentTypeById(id);
-  static Future<EquipmentType> createEquipmentType(EquipmentType equipmentType) =>
+  static Future<EquipmentType> createEquipmentType(
+          EquipmentType equipmentType) =>
       _infrastructureApi.createEquipmentType(equipmentType);
-  static Future<EquipmentType> updateEquipmentType(String id, EquipmentType equipmentType) =>
+  static Future<EquipmentType> updateEquipmentType(
+          String id, EquipmentType equipmentType) =>
       _infrastructureApi.updateEquipmentType(id, equipmentType);
-  static Future<void> deleteEquipmentType(String id) => _infrastructureApi.deleteEquipmentType(id);
+  static Future<void> deleteEquipmentType(String id) =>
+      _infrastructureApi.deleteEquipmentType(id);
+  static Future<void> archiveEquipmentType(String id, String reason) =>
+      _infrastructureApi.archiveEquipmentType(id, reason);
+  static Future<void> unarchiveEquipmentType(String id) =>
+      _infrastructureApi.unarchiveEquipmentType(id);
 
 
   // --- Group Methods ---

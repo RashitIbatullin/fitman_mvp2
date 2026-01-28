@@ -223,6 +223,6 @@ final Router router = Router()
 
 // Infrastructure routes
   ..mount('/api/rooms', _adminHandler(_roomController.router.call))
-  ..get('/api/equipment/items', (Request request) => _adminHandler(_equipmentItemController.getAllEquipmentItems)(request))
-  ..get('/api/equipment/types', (Request request) => _adminHandler(_equipmentTypeController.getAllEquipmentTypes)(request))
+  ..mount('/api/equipment/items', _adminHandler(_equipmentItemController.handler))
+  ..mount('/api/equipment/types', _adminHandler(_equipmentTypeController.handler))
   ..mount('/api/buildings', _adminHandler(_buildingController.router.call));

@@ -24,6 +24,9 @@ class EquipmentItem {
     this.usageHours = 0,
     this.lastUsedDate,
     this.photoUrls = const [],
+    this.archivedAt,
+    this.archivedBy,
+    this.archivedReason,
   });
 
   final String id;
@@ -60,6 +63,11 @@ class EquipmentItem {
   // Фотографии
   final List<String> photoUrls;
 
+  // Архивация
+  final DateTime? archivedAt;
+  final String? archivedBy;
+  final String? archivedReason;
+
   factory EquipmentItem.fromMap(Map<String, dynamic> map) {
     final purchasePriceValue = map['purchase_price'];
     return EquipmentItem(
@@ -78,7 +86,9 @@ class EquipmentItem {
       nextMaintenanceDate: map['next_maintenance_date'] as DateTime?,
       maintenanceNotes: map['maintenance_notes'] as String?,
       purchaseDate: map['purchase_date'] as DateTime?,
-      purchasePrice: purchasePriceValue is String ? double.tryParse(purchasePriceValue) : (purchasePriceValue as num?)?.toDouble(),
+      purchasePrice: purchasePriceValue is String
+          ? double.tryParse(purchasePriceValue)
+          : (purchasePriceValue as num?)?.toDouble(),
       supplier: map['supplier'] as String?,
       warrantyMonths: map['warranty_months'] as int?,
       usageHours: map['usage_hours'] as int,
@@ -87,7 +97,11 @@ class EquipmentItem {
               ? (jsonDecode(map['photo_urls']) as List<dynamic>)
               : (map['photo_urls'] as List<dynamic>?))
           ?.map((e) => e.toString())
-          .toList() ?? const [],
+          .toList() ??
+          const [],
+      archivedAt: map['archived_at'] as DateTime?,
+      archivedBy: map['archived_by']?.toString(),
+      archivedReason: map['archived_reason'] as String?,
     );
   }
 
@@ -114,6 +128,9 @@ class EquipmentItem {
       'usage_hours': usageHours,
       'last_used_date': lastUsedDate?.toIso8601String(),
       'photo_urls': photoUrls,
+      'archived_at': archivedAt?.toIso8601String(),
+      'archived_by': archivedBy,
+      'archived_reason': archivedReason,
     };
   }
 }

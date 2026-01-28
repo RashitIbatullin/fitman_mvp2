@@ -16,6 +16,9 @@ class EquipmentType {
     this.photoUrl,
     this.manualUrl,
     this.isActive = true,
+    this.archivedAt,
+    this.archivedBy,
+    this.archivedReason,
   });
 
   final String id;
@@ -41,6 +44,11 @@ class EquipmentType {
 
   // Статус
   final bool isActive;
+
+  // Архивация
+  final DateTime? archivedAt;
+  final String? archivedBy;
+  final String? archivedReason;
 
   factory EquipmentType.fromMap(Map<String, dynamic> map) {
     final category = EquipmentCategory.values[map['category'] as int];
@@ -103,6 +111,9 @@ class EquipmentType {
       photoUrl: map['photo_url'] as String?,
       manualUrl: map['manual_url'] as String?,
       isActive: map['is_active'] as bool,
+      archivedAt: map['archived_at'] as DateTime?,
+      archivedBy: map['archived_by']?.toString(),
+      archivedReason: map['archived_reason'] as String?,
     );
   }
 
@@ -111,16 +122,19 @@ class EquipmentType {
       'id': id,
       'name': name,
       'description': description,
-      'category': category.index, // Revert to index
-      'subType': subType?.index, // Revert to index
-      'weightRange': weightRange,
+      'category': category.index,
+      'sub_type': subType?.index,
+      'weight_range': weightRange,
       'dimensions': dimensions,
-      'powerRequirements': powerRequirements,
-      'isMobile': isMobile,
-      'exerciseTypeId': exerciseTypeId,
-      'photoUrl': photoUrl,
-      'manualUrl': manualUrl,
-      'isActive': isActive,
+      'power_requirements': powerRequirements,
+      'is_mobile': isMobile,
+      'exercise_type_id': exerciseTypeId,
+      'photo_url': photoUrl,
+      'manual_url': manualUrl,
+      'is_active': isActive,
+      'archived_at': archivedAt?.toIso8601String(),
+      'archived_by': archivedBy,
+      'archived_reason': archivedReason,
     };
   }
 }

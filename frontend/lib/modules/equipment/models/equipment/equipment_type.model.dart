@@ -22,6 +22,9 @@ class EquipmentType with _$EquipmentType {
     String? photoUrl,
     String? manualUrl,
     @Default(true) bool isActive,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   }) = _EquipmentType;
 
   factory EquipmentType.fromJson(Map<String, dynamic> json) =>

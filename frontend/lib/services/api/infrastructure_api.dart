@@ -11,14 +11,16 @@ class InfrastructureApiService extends BaseApiService {
 
   // --- Room Methods ---
 
-  Future<List<Room>> getAllRooms({String? buildingId, int? roomType, bool? isActive, bool? isArchived}) async {
+  Future<List<Room>> getAllRooms(
+      {String? buildingId, int? roomType, bool? isActive, bool? isArchived}) async {
     final queryParams = <String, String>{};
     if (buildingId != null) queryParams['buildingId'] = buildingId;
     if (roomType != null) queryParams['roomType'] = roomType.toString();
     if (isActive != null) queryParams['isActive'] = isActive.toString();
     if (isArchived != null) queryParams['isArchived'] = isArchived.toString();
 
-    final data = await get('/api/rooms', queryParams: queryParams.isNotEmpty ? queryParams : null);
+    final data = await get('/api/rooms',
+        queryParams: queryParams.isNotEmpty ? queryParams : null);
     return (data as List).map((json) => Room.fromJson(json)).toList();
   }
 
@@ -47,7 +49,8 @@ class InfrastructureApiService extends BaseApiService {
     final queryParams = <String, String>{};
     if (isArchived != null) queryParams['isArchived'] = isArchived.toString();
 
-    final data = await get('/api/buildings', queryParams: queryParams.isNotEmpty ? queryParams : null);
+    final data = await get('/api/buildings',
+        queryParams: queryParams.isNotEmpty ? queryParams : null);
     return (data as List).map((json) => Building.fromJson(json)).toList();
   }
 
@@ -72,11 +75,16 @@ class InfrastructureApiService extends BaseApiService {
 
   // --- Equipment Item Methods ---
 
-  Future<List<EquipmentItem>> getAllEquipmentItems({String? roomId}) async {
+  Future<List<EquipmentItem>> getAllEquipmentItems(
+      {String? roomId, bool? isArchived}) async {
     final queryParams = <String, String>{};
     if (roomId != null) queryParams['roomId'] = roomId;
+    if (isArchived != null) {
+      queryParams['includeArchived'] = isArchived.toString();
+    }
 
-    final data = await get('/api/equipment/items', queryParams: queryParams.isNotEmpty ? queryParams : null);
+    final data = await get('/api/equipment/items',
+        queryParams: queryParams.isNotEmpty ? queryParams : null);
     return (data as List).map((json) => EquipmentItem.fromJson(json)).toList();
   }
 
@@ -85,13 +93,27 @@ class InfrastructureApiService extends BaseApiService {
     return EquipmentItem.fromJson(data);
   }
 
+  Future<void> archiveEquipmentItem(String id, String reason) async {
+    await put('/api/equipment/items/$id/archive',
+        body: {'reason': reason});
+  }
+
+  Future<void> unarchiveEquipmentItem(String id) async {
+    await put('/api/equipment/items/$id/unarchive', body: {});
+  }
+
   // --- Equipment Type Methods ---
 
-  Future<List<EquipmentType>> getAllEquipmentTypes({EquipmentCategory? category}) async {
+  Future<List<EquipmentType>> getAllEquipmentTypes(
+      {EquipmentCategory? category, bool? isArchived}) async {
     final queryParams = <String, String>{};
     if (category != null) queryParams['category'] = category.index.toString();
-    
-    final data = await get('/api/equipment/types', queryParams: queryParams.isNotEmpty ? queryParams : null);
+    if (isArchived != null) {
+      queryParams['includeArchived'] = isArchived.toString();
+    }
+
+    final data = await get('/api/equipment/types',
+        queryParams: queryParams.isNotEmpty ? queryParams : null);
     return (data as List).map((json) => EquipmentType.fromJson(json)).toList();
   }
 
@@ -100,17 +122,30 @@ class InfrastructureApiService extends BaseApiService {
     return EquipmentType.fromJson(data);
   }
 
-  Future<EquipmentType> createEquipmentType(EquipmentType equipmentType) async {
-    final data = await post('/api/equipment/types', body: equipmentType.toJson());
+  Future<EquipmentType> createEquipmentType(
+      EquipmentType equipmentType) async {
+    final data =
+        await post('/api/equipment/types', body: equipmentType.toJson());
     return EquipmentType.fromJson(data);
   }
 
-  Future<EquipmentType> updateEquipmentType(String id, EquipmentType equipmentType) async {
-    final data = await put('/api/equipment/types/$id', body: equipmentType.toJson());
+  Future<EquipmentType> updateEquipmentType(
+      String id, EquipmentType equipmentType) async {
+    final data =
+        await put('/api/equipment/types/$id', body: equipmentType.toJson());
     return EquipmentType.fromJson(data);
   }
 
   Future<void> deleteEquipmentType(String id) async {
     await delete('/api/equipment/types/$id');
+  }
+
+  Future<void> archiveEquipmentType(String id, String reason) async {
+    await put('/api/equipment/types/$id/archive',
+        body: {'reason': reason});
+  }
+
+  Future<void> unarchiveEquipmentType(String id) async {
+    await put('/api/equipment/types/$id/unarchive', body: {});
   }
 }
