@@ -18,7 +18,8 @@ final equipmentFilterRoomIdProvider = StateProvider<String?>((ref) => null);
 final equipmentFilterConditionRatingProvider = StateProvider<int?>((ref) => null);
 final equipmentFilterCategoryProvider =
     StateProvider<EquipmentCategory?>((ref) => null);
-final equipmentFilterIncludeArchivedProvider = StateProvider<bool>((ref) => false);
+final equipmentItemFilterIncludeArchivedProvider = StateProvider<bool>((ref) => false);
+final equipmentTypeFilterIncludeArchivedProvider = StateProvider<bool>((ref) => false);
 
 // --- Main Equipment Notifier Provider ---
 
@@ -68,7 +69,7 @@ class Equipment extends _$Equipment {
 final allEquipmentTypesProvider =
     FutureProvider<List<EquipmentType>>((ref) async {
   final category = ref.watch(equipmentFilterCategoryProvider);
-  final isArchived = ref.watch(equipmentFilterIncludeArchivedProvider);
+  final isArchived = ref.watch(equipmentTypeFilterIncludeArchivedProvider); // Use specific filter for types
   return ApiService.getAllEquipmentTypes(
       category: category, isArchived: isArchived);
 });
@@ -85,7 +86,7 @@ final equipmentTypeByIdProvider =
 final allEquipmentItemsProvider =
     FutureProvider<List<EquipmentItem>>((ref) async {
   final roomId = ref.watch(equipmentFilterRoomIdProvider);
-  final isArchived = ref.watch(equipmentFilterIncludeArchivedProvider);
+  final isArchived = ref.watch(equipmentItemFilterIncludeArchivedProvider); // Use specific filter for items
   return ApiService.getAllEquipmentItems(roomId: roomId, isArchived: isArchived);
 });
 

@@ -79,7 +79,7 @@ class EquipmentTypesListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final equipmentTypesAsyncValue = ref.watch(allEquipmentTypesProvider);
-    final showArchived = ref.watch(equipmentFilterIncludeArchivedProvider);
+    final showArchived = ref.watch(equipmentTypeFilterIncludeArchivedProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -87,12 +87,12 @@ class EquipmentTypesListScreen extends ConsumerWidget {
         actions: [
           Row(
             children: [
-              const Text('Архив'),
+              const Text('Архив'), // Reverted label
               Switch(
                 value: showArchived,
                 onChanged: (value) {
                   ref
-                      .read(equipmentFilterIncludeArchivedProvider.notifier)
+                      .read(equipmentTypeFilterIncludeArchivedProvider.notifier) // Use specific filter
                       .state = value;
                 },
               ),
@@ -126,14 +126,17 @@ class EquipmentTypesListScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) =>
                   const EquipmentTypeEditScreen(), // For creating new
             ),
           );
+          if (result == true) {
+            ref.invalidate(allEquipmentTypesProvider);
+          }
         },
         child: const Icon(Icons.add),
       ),
@@ -145,108 +148,121 @@ class EquipmentTypesListScreen extends ConsumerWidget {
             );
           }
           return ListView.builder(
+            padding: const EdgeInsets.only(bottom: 120.0), // Increased padding for FAB
             itemCount: equipmentTypes.length,
             itemBuilder: (context, index) {
               final equipmentType = equipmentTypes[index];
               final isArchived = equipmentType.archivedAt != null;
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                color: isArchived ? Colors.grey.shade200 : null,
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor:
-                        Theme.of(context).primaryColorLight, // Add a background color for visibility
-                    child: Icon(
-                      equipmentType.category.icon,
-                      color: Theme.of(context)
-                          .primaryColorDark, // Ensure icon color contrasts with background
+              return InkWell(
+                onTap: () {
+                  if (!isArchived) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EquipmentTypeDetailScreen(
+                            equipmentTypeId: equipmentType.id),
+                      ),
+                    );
+                  }
+                },
+                child: Card(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  color: isArchived ? Colors.grey.shade200 : null,
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context)
+                          .primaryColorLight, // Add a background color for visibility
+                      child: Icon(
+                        equipmentType.schematicIcon != null && equipmentType.schematicIcon!.isNotEmpty
+                            ? _getSchematicIcon(equipmentType.schematicIcon!) // Use schematic icon
+                            : equipmentType.category.icon, // Fallback to category icon
+                        color: Theme.of(context)
+                            .primaryColorDark, // Ensure icon color contrasts with background
+                      ),
                     ),
-                  ),
-                  title: Text(equipmentType.name),
-                  subtitle: isArchived
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Архивировано', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.brown)),
-                            _buildInfoRow(context, 'Когда:', equipmentType.archivedAt?.toLocal().toString().substring(0, 10) ?? 'N/A'),
-                            ArchivedByInfo(userId: equipmentType.archivedBy),
-                            _buildInfoRow(context, 'Причина:', equipmentType.archivedReason ?? 'N/A'),
-                          ],
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Категория: ${equipmentType.category.displayName}'),
-                            if (equipmentType.weightRange != null &&
-                                equipmentType.weightRange!.isNotEmpty)
-                              Text('Вес: ${equipmentType.weightRange}'),
-                            if (equipmentType.dimensions != null &&
-                                equipmentType.dimensions!.isNotEmpty)
-                              Text('Габариты: ${equipmentType.dimensions}'),
+                    title: Text(equipmentType.name),
+                    subtitle: isArchived
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Архивировано',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.brown)),
+                              _buildInfoRow(
+                                  context,
+                                  'Когда:',
+                                  equipmentType.archivedAt
+                                          ?.toLocal()
+                                          .toString()
+                                          .substring(0, 10) ??
+                                      'N/A'),
+                              ArchivedByInfo(userId: equipmentType.archivedBy),
+                              _buildInfoRow(context, 'Причина:',
+                                  equipmentType.archivedReason ?? 'N/A'),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  'Категория: ${equipmentType.category.displayName}'),
+                              if (equipmentType.weightRange != null &&
+                                  equipmentType.weightRange!.isNotEmpty)
+                                Text('Вес: ${equipmentType.weightRange}'),
+                              if (equipmentType.dimensions != null &&
+                                  equipmentType.dimensions!.isNotEmpty)
+                                Text('Габариты: ${equipmentType.dimensions}'),
+                            ],
+                          ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+
+                        PopupMenuButton<String>(
+                          onSelected: (value) async {
+                            if (value == 'edit') {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EquipmentTypeEditScreen(
+                                      equipmentTypeId: equipmentType.id),
+                                ),
+                              );
+                              if (result == true) {
+                                ref.invalidate(allEquipmentTypesProvider);
+                              }
+                            } else if (value == 'archive') {
+                              _showArchiveDialog(context, ref, equipmentType);
+                            } else if (value == 'unarchive') {
+                              ref
+                                  .read(equipmentProvider.notifier)
+                                  .unarchiveType(equipmentType.id);
+                            }
+                          },
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<String>>[
+                            if (!isArchived) ...[
+                              const PopupMenuItem<String>(
+                                value: 'edit',
+                                child: Text('Редактировать'),
+                              ),
+                              const PopupMenuItem<String>(
+                                value: 'archive',
+                                child: Text('Архивировать'),
+                              ),
+                            ] else ...[
+                              const PopupMenuItem<String>(
+                                value: 'unarchive',
+                                child: Text('Деархивировать'),
+                              ),
+                            ],
                           ],
                         ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        equipmentType.isActive
-                            ? Icons.check_circle
-                            : Icons.cancel,
-                        color: equipmentType.isActive ? Colors.green : Colors.red,
-                      ),
-                      PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'view') {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    EquipmentTypeDetailScreen(
-                                        equipmentTypeId: equipmentType.id),
-                              ),
-                            );
-                          } else if (value == 'edit') {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EquipmentTypeEditScreen(
-                                    equipmentTypeId: equipmentType.id),
-                              ),
-                            );
-                          } else if (value == 'archive') {
-                            _showArchiveDialog(
-                                context, ref, equipmentType);
-                          } else if (value == 'unarchive') {
-                            ref
-                                .read(equipmentProvider.notifier)
-                                .unarchiveType(equipmentType.id);
-                          }
-                        },
-                        itemBuilder: (BuildContext context) =>
-                            <PopupMenuEntry<String>>[
-                          if (!isArchived) ...[
-                            const PopupMenuItem<String>(
-                              value: 'view',
-                              child: Text('Просмотр'),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'edit',
-                              child: Text('Редактировать'),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'archive',
-                              child: Text('Архивировать'),
-                            ),
-                          ] else ...[
-                            const PopupMenuItem<String>(
-                              value: 'unarchive',
-                              child: Text('Деархивировать'),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -302,4 +318,34 @@ Widget _buildInfoRow(BuildContext context, String label, String value) {
       ],
     ),
   );
+}
+
+IconData _getSchematicIcon(String iconName) {
+  // This is a placeholder. In a real app, you would have a map
+  // or a way to dynamically resolve string names to actual IconData.
+  // For example:
+  switch (iconName) {
+    case 'dumbbell':
+      return Icons.fitness_center;
+    case 'treadmill':
+      return Icons.directions_run;
+    case 'bike':
+      return Icons.pedal_bike;
+    case 'elliptical':
+      return Icons.directions_walk;
+    case 'barbell':
+      return Icons.sports_gymnastics;
+    case 'bench':
+      return Icons.chair; // Placeholder
+    case 'leg_press':
+      return Icons.view_sidebar; // Placeholder
+    case 'fitball':
+      return Icons.sports_basketball; // Placeholder
+    case 'yoga_mat':
+      return Icons.spa; // Placeholder
+    case 'scales':
+      return Icons.scale;
+    default:
+      return Icons.category; // Default icon if not found
+  }
 }

@@ -10,12 +10,13 @@ class EquipmentType {
     this.subType,
     this.weightRange,
     this.dimensions,
-    this.powerRequirements,
+
     this.isMobile = true,
-    this.exerciseTypeId,
-    this.photoUrl,
-    this.manualUrl,
-    this.isActive = true,
+
+
+
+    this.schematicIcon,
+
     this.archivedAt,
     this.archivedBy,
     this.archivedReason,
@@ -32,18 +33,19 @@ class EquipmentType {
   // Базовые характеристики
   final String? weightRange;
   final String? dimensions;
-  final String? powerRequirements;
+
   final bool isMobile;
 
   // Связи
-  final String? exerciseTypeId;
+
 
   // Медиа
-  final String? photoUrl;
-  final String? manualUrl;
+
+
+  final String? schematicIcon;
 
   // Статус
-  final bool isActive;
+
 
   // Архивация
   final DateTime? archivedAt;
@@ -105,17 +107,21 @@ class EquipmentType {
       subType: subType,
       weightRange: map['weight_range'] as String?,
       dimensions: map['dimensions'] as String?,
-      powerRequirements: map['power_requirements'] as String?,
+
       isMobile: map['is_mobile'] as bool,
-      exerciseTypeId: map['exercise_type_id']?.toString(),
-      photoUrl: map['photo_url'] as String?,
-      manualUrl: map['manual_url'] as String?,
-      isActive: map['is_active'] as bool,
+
+
+
+      schematicIcon: map['schematic_icon'] as String?,
+
       archivedAt: map['archived_at'] as DateTime?,
       archivedBy: map['archived_by']?.toString(),
       archivedReason: map['archived_reason'] as String?,
     );
   }
+
+  factory EquipmentType.fromJson(Map<String, dynamic> json) =>
+      EquipmentType.fromMap(json);
 
   Map<String, dynamic> toJson() {
     return {
@@ -126,12 +132,13 @@ class EquipmentType {
       'sub_type': subType?.index,
       'weight_range': weightRange,
       'dimensions': dimensions,
-      'power_requirements': powerRequirements,
+
       'is_mobile': isMobile,
-      'exercise_type_id': exerciseTypeId,
-      'photo_url': photoUrl,
-      'manual_url': manualUrl,
-      'is_active': isActive,
+
+
+
+      'schematic_icon': schematicIcon,
+
       'archived_at': archivedAt?.toIso8601String(),
       'archived_by': archivedBy,
       'archived_reason': archivedReason,

@@ -28,12 +28,13 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
   late EquipmentCategory _selectedCategory;
   late TextEditingController _weightRangeController;
   late TextEditingController _dimensionsController;
-  late TextEditingController _powerRequirementsController;
+
   late bool _isMobile;
-  late TextEditingController _exerciseTypeIdController;
-  late TextEditingController _photoUrlController;
-  late TextEditingController _manualUrlController;
-  late bool _isActive;
+
+
+
+  late String? _selectedSchematicIcon;
+
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -46,12 +47,13 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
     _selectedCategory = EquipmentCategory.other; // Default value
     _weightRangeController = TextEditingController();
     _dimensionsController = TextEditingController();
-    _powerRequirementsController = TextEditingController();
+
     _isMobile = true; // Default value
-    _exerciseTypeIdController = TextEditingController();
-    _photoUrlController = TextEditingController();
-    _manualUrlController = TextEditingController();
-    _isActive = true; // Default value
+
+
+
+    _selectedSchematicIcon = null;
+
 
     if (widget.equipmentType != null) {
       _populateForm(widget.equipmentType!);
@@ -66,10 +68,10 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
     _descriptionController.dispose();
     _weightRangeController.dispose();
     _dimensionsController.dispose();
-    _powerRequirementsController.dispose();
-    _exerciseTypeIdController.dispose();
-    _photoUrlController.dispose();
-    _manualUrlController.dispose();
+
+
+
+
     super.dispose();
   }
 
@@ -79,12 +81,13 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
     _selectedCategory = equipmentType.category;
     _weightRangeController.text = equipmentType.weightRange ?? '';
     _dimensionsController.text = equipmentType.dimensions ?? '';
-    _powerRequirementsController.text = equipmentType.powerRequirements ?? '';
+
     _isMobile = equipmentType.isMobile;
-    _exerciseTypeIdController.text = equipmentType.exerciseTypeId ?? '';
-    _photoUrlController.text = equipmentType.photoUrl ?? '';
-    _manualUrlController.text = equipmentType.manualUrl ?? '';
-    _isActive = equipmentType.isActive;
+
+
+
+    _selectedSchematicIcon = equipmentType.schematicIcon;
+
   }
 
   Future<void> _loadEquipmentType() async {
@@ -121,29 +124,39 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
       category: _selectedCategory,
       weightRange: _weightRangeController.text.isEmpty ? null : _weightRangeController.text,
       dimensions: _dimensionsController.text.isEmpty ? null : _dimensionsController.text,
-      powerRequirements: _powerRequirementsController.text.isEmpty ? null : _powerRequirementsController.text,
+
       isMobile: _isMobile,
-      exerciseTypeId: _exerciseTypeIdController.text.isEmpty ? null : _exerciseTypeIdController.text,
-      photoUrl: _photoUrlController.text.isEmpty ? null : _photoUrlController.text,
-      manualUrl: _manualUrlController.text.isEmpty ? null : _manualUrlController.text,
-      isActive: _isActive,
+
+
+
+      schematicIcon: _selectedSchematicIcon,
+
     );
 
     try {
+      String message;
       if (widget.equipmentTypeId == null) {
         // Create new
         await ApiService.createEquipmentType(newEquipmentType);
+        message = 'Тип оборудования успешно создан!';
       } else {
         // Update existing
         await ApiService.updateEquipmentType(widget.equipmentTypeId!, newEquipmentType);
+        message = 'Тип оборудования успешно обновлен!';
       }
-      ref.invalidate(allEquipmentTypesProvider); // Refresh the list
+      // No need to invalidate here, the list screen will do it.
       if (!mounted) return; // Guard against BuildContext across async gaps
-      Navigator.of(context).pop(); // Go back to the list screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.green),
+      );
+      Navigator.of(context).pop(true); // Go back to the list screen with a result
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка: $_errorMessage'), backgroundColor: Colors.red),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -209,11 +222,7 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
                       controller: _dimensionsController,
                       decoration: const InputDecoration(labelText: 'Габариты'),
                     ),
-                    TextFormField(
-                      controller: _powerRequirementsController,
-                      decoration: const InputDecoration(
-                          labelText: 'Требования к питанию'),
-                    ),
+
                     SwitchListTile(
                       title: const Text('Мобильное'),
                       value: _isMobile,
@@ -223,29 +232,32 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
                         });
                       },
                     ),
-                    TextFormField(
-                      controller: _exerciseTypeIdController,
-                      decoration:
-                          const InputDecoration(labelText: 'ID типа упражнения'),
-                    ),
-                    TextFormField(
-                      controller: _photoUrlController,
-                      decoration: const InputDecoration(labelText: 'URL фото'),
-                    ),
-                    TextFormField(
-                      controller: _manualUrlController,
-                      decoration:
-                          const InputDecoration(labelText: 'URL руководства'),
-                    ),
-                    SwitchListTile(
-                      title: const Text('Активно'),
-                      value: _isActive,
+
+
+
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(labelText: 'Схематичная иконка'),
+                      initialValue: _selectedSchematicIcon,
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('Нет иконки')),
+                        ..._getSchematicIconNames().map((iconName) => DropdownMenuItem(
+                          value: iconName,
+                          child: Row(
+                            children: [
+                              Icon(_getSchematicIcon(iconName)),
+                              const SizedBox(width: 8),
+                              Text(iconName),
+                            ],
+                          ),
+                        )).toList(),
+                      ],
                       onChanged: (value) {
                         setState(() {
-                          _isActive = value;
+                          _selectedSchematicIcon = value;
                         });
                       },
                     ),
+
                     if (_errorMessage != null)
                       Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -269,4 +281,48 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
             ),
     );
   }
+}
+
+// Helper function for schematic icons
+IconData _getSchematicIcon(String iconName) {
+  switch (iconName) {
+    case 'dumbbell':
+      return Icons.fitness_center;
+    case 'treadmill':
+      return Icons.directions_run;
+    case 'bike':
+      return Icons.pedal_bike;
+    case 'elliptical':
+      return Icons.directions_walk;
+    case 'barbell':
+      return Icons.sports_gymnastics;
+    case 'bench':
+      return Icons.chair; // Placeholder
+    case 'leg_press':
+      return Icons.view_sidebar; // Placeholder
+    case 'fitball':
+      return Icons.sports_basketball; // Placeholder
+    case 'yoga_mat':
+      return Icons.spa; // Using spa for yoga mat
+    case 'scales':
+      return Icons.scale;
+    default:
+      return Icons.category; // Default icon if not found
+  }
+}
+
+// Helper function to get schematic icon names
+List<String> _getSchematicIconNames() {
+  return [
+    'dumbbell',
+    'treadmill',
+    'bike',
+    'elliptical',
+    'barbell',
+    'bench',
+    'leg_press',
+    'fitball',
+    'yoga_mat',
+    'scales',
+  ];
 }

@@ -16,12 +16,13 @@ class EquipmentType with _$EquipmentType {
     // EquipmentSubType? subType, // Commented out due to inconsistent DB values
     String? weightRange,
     String? dimensions,
-    String? powerRequirements,
+
     @Default(true) bool isMobile,
-    String? exerciseTypeId,
-    String? photoUrl,
-    String? manualUrl,
-    @Default(true) bool isActive,
+
+
+
+    String? schematicIcon,
+
     DateTime? archivedAt,
     String? archivedBy,
     String? archivedReason,

@@ -52,7 +52,7 @@ class _EquipmentDashboardScreenState
     final selectedStatus = ref.watch(equipmentFilterStatusProvider);
     final selectedRoomId = ref.watch(equipmentFilterRoomIdProvider);
     final selectedCondition = ref.watch(equipmentFilterConditionRatingProvider);
-    final showArchived = ref.watch(equipmentFilterIncludeArchivedProvider);
+    final showArchived = ref.watch(equipmentItemFilterIncludeArchivedProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -99,7 +99,7 @@ class _EquipmentDashboardScreenState
                           decoration: const InputDecoration(
                               labelText: 'Тип оборудования',
                               border: OutlineInputBorder()),
-                          value: selectedType,
+                          initialValue: selectedType,
                           items: [
                             const DropdownMenuItem(
                                 value: null, child: Text('Все')),
@@ -129,7 +129,7 @@ class _EquipmentDashboardScreenState
                       child: DropdownButtonFormField<EquipmentStatus>(
                         decoration: const InputDecoration(
                             labelText: 'Статус', border: OutlineInputBorder()),
-                        value: selectedStatus,
+                        initialValue: selectedStatus,
                         items: [
                           const DropdownMenuItem(
                               value: null, child: Text('Все')),
@@ -162,7 +162,7 @@ class _EquipmentDashboardScreenState
                           decoration: const InputDecoration(
                               labelText: 'Помещение',
                               border: OutlineInputBorder()),
-                          value: selectedRoomId,
+                          initialValue: selectedRoomId,
                           items: [
                             const DropdownMenuItem(
                                 value: null, child: Text('Все')),
@@ -192,7 +192,7 @@ class _EquipmentDashboardScreenState
                         decoration: const InputDecoration(
                             labelText: 'Состояние',
                             border: OutlineInputBorder()),
-                        value: selectedCondition,
+                        initialValue: selectedCondition,
                         items: const [
                           DropdownMenuItem(value: null, child: Text('Все')),
                           DropdownMenuItem(value: 5, child: Text('5 - Отличное')),
@@ -214,11 +214,11 @@ class _EquipmentDashboardScreenState
                  Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const Text('Показать архивные'),
+                    const Text('Архив'), // Renamed label
                     Switch(
                       value: showArchived,
                       onChanged: (value) {
-                        ref.read(equipmentFilterIncludeArchivedProvider.notifier).state = value;
+                        ref.read(equipmentItemFilterIncludeArchivedProvider.notifier).state = value; // Use item-specific filter
                       },
                     ),
                   ],

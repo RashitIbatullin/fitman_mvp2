@@ -5,8 +5,8 @@ import 'package:postgres/postgres.dart';
 abstract class EquipmentTypeRepository {
   Future<EquipmentType> getById(String id);
   Future<List<EquipmentType>> getAll({bool includeArchived = false});
-  Future<EquipmentType> create(EquipmentType equipmentType);
-  Future<EquipmentType> update(EquipmentType equipmentType);
+  Future<EquipmentType> create(EquipmentType equipmentType, String userId);
+  Future<EquipmentType> update(String id, EquipmentType equipmentType, String userId);
   Future<void> delete(String id);
   Future<void> archive(String id, String reason, String userId);
   Future<void> unarchive(String id);
@@ -44,9 +44,34 @@ class EquipmentTypeRepositoryImpl implements EquipmentTypeRepository {
   }
 
   @override
-  Future<EquipmentType> create(EquipmentType equipmentType) {
-    // TODO: implement create
-    throw UnimplementedError();
+  Future<EquipmentType> create(EquipmentType equipmentType, String userId) async {
+    final conn = await _db.connection;
+    final result = await conn.execute(
+      Sql.named('''
+        INSERT INTO equipment_types (
+          name, description, category, sub_type, weight_range, dimensions, is_mobile, schematic_icon,
+          company_id, created_at, updated_at, created_by, updated_by
+        ) VALUES (
+          @name, @description, @category, @subType, @weightRange, @dimensions, @isMobile, @schematicIcon,
+          -1, NOW(), NOW(), @createdBy, @updatedBy
+        ) RETURNING id;
+      '''),
+      parameters: {
+        'name': equipmentType.name,
+        'description': equipmentType.description,
+        'category': equipmentType.category.index,
+        'subType': equipmentType.subType?.index,
+        'weightRange': equipmentType.weightRange,
+        'dimensions': equipmentType.dimensions,
+        'isMobile': equipmentType.isMobile,
+        'schematicIcon': equipmentType.schematicIcon,
+        'createdBy': userId,
+        'updatedBy': userId,
+      },
+    );
+
+    final newId = result.first.first as int;
+    return await getById(newId.toString());
   }
 
   @override
@@ -61,7 +86,7 @@ class EquipmentTypeRepositoryImpl implements EquipmentTypeRepository {
       final conn = await _db.connection;
       final whereClause = includeArchived ? 'WHERE archived_at IS NOT NULL' : 'WHERE archived_at IS NULL';
       final result =
-          await conn.execute(Sql.named('SELECT * FROM equipment_types $whereClause'));
+          await conn.execute(Sql.named('SELECT * FROM equipment_types $whereClause ORDER BY name ASC'));
 
       return result
           .map(
@@ -90,8 +115,42 @@ class EquipmentTypeRepositoryImpl implements EquipmentTypeRepository {
   }
 
   @override
-  Future<EquipmentType> update(EquipmentType equipmentType) {
-    // TODO: implement update
-    throw UnimplementedError();
+  Future<EquipmentType> update(String id, EquipmentType equipmentType, String userId) async {
+    final conn = await _db.connection;
+    await conn.execute(
+      Sql.named('''
+        UPDATE equipment_types SET
+          name = @name,
+          description = @description,
+          category = @category,
+          sub_type = @subType,
+          weight_range = @weightRange,
+          dimensions = @dimensions,
+          is_mobile = @isMobile,
+          schematic_icon = @schematicIcon,
+          updated_at = NOW(),
+          updated_by = @updatedBy,
+          archived_at = @archivedAt,
+          archived_by = @archivedBy,
+          archived_reason = @archivedReason
+        WHERE id = @id;
+      '''),
+      parameters: {
+        'id': id,
+        'name': equipmentType.name,
+        'description': equipmentType.description,
+        'category': equipmentType.category.index,
+        'subType': equipmentType.subType?.index,
+        'weightRange': equipmentType.weightRange,
+        'dimensions': equipmentType.dimensions,
+        'isMobile': equipmentType.isMobile,
+        'schematicIcon': equipmentType.schematicIcon,
+        'updatedBy': userId,
+        'archivedAt': equipmentType.archivedAt,
+        'archivedBy': equipmentType.archivedBy,
+        'archivedReason': equipmentType.archivedReason,
+      },
+    );
+    return await getById(id);
   }
 }

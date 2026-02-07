@@ -28,12 +28,8 @@ mixin _$EquipmentType {
   EquipmentCategory get category => throw _privateConstructorUsedError; // EquipmentSubType? subType, // Commented out due to inconsistent DB values
   String? get weightRange => throw _privateConstructorUsedError;
   String? get dimensions => throw _privateConstructorUsedError;
-  String? get powerRequirements => throw _privateConstructorUsedError;
   bool get isMobile => throw _privateConstructorUsedError;
-  String? get exerciseTypeId => throw _privateConstructorUsedError;
-  String? get photoUrl => throw _privateConstructorUsedError;
-  String? get manualUrl => throw _privateConstructorUsedError;
-  bool get isActive => throw _privateConstructorUsedError;
+  String? get schematicIcon => throw _privateConstructorUsedError;
   DateTime? get archivedAt => throw _privateConstructorUsedError;
   String? get archivedBy => throw _privateConstructorUsedError;
   String? get archivedReason => throw _privateConstructorUsedError;
@@ -62,12 +58,8 @@ abstract class $EquipmentTypeCopyWith<$Res> {
     @EquipmentCategoryConverter() EquipmentCategory category,
     String? weightRange,
     String? dimensions,
-    String? powerRequirements,
     bool isMobile,
-    String? exerciseTypeId,
-    String? photoUrl,
-    String? manualUrl,
-    bool isActive,
+    String? schematicIcon,
     DateTime? archivedAt,
     String? archivedBy,
     String? archivedReason,
@@ -95,12 +87,8 @@ class _$EquipmentTypeCopyWithImpl<$Res, $Val extends EquipmentType>
     Object? category = null,
     Object? weightRange = freezed,
     Object? dimensions = freezed,
-    Object? powerRequirements = freezed,
     Object? isMobile = null,
-    Object? exerciseTypeId = freezed,
-    Object? photoUrl = freezed,
-    Object? manualUrl = freezed,
-    Object? isActive = null,
+    Object? schematicIcon = freezed,
     Object? archivedAt = freezed,
     Object? archivedBy = freezed,
     Object? archivedReason = freezed,
@@ -131,30 +119,14 @@ class _$EquipmentTypeCopyWithImpl<$Res, $Val extends EquipmentType>
                 ? _value.dimensions
                 : dimensions // ignore: cast_nullable_to_non_nullable
                       as String?,
-            powerRequirements: freezed == powerRequirements
-                ? _value.powerRequirements
-                : powerRequirements // ignore: cast_nullable_to_non_nullable
-                      as String?,
             isMobile: null == isMobile
                 ? _value.isMobile
                 : isMobile // ignore: cast_nullable_to_non_nullable
                       as bool,
-            exerciseTypeId: freezed == exerciseTypeId
-                ? _value.exerciseTypeId
-                : exerciseTypeId // ignore: cast_nullable_to_non_nullable
+            schematicIcon: freezed == schematicIcon
+                ? _value.schematicIcon
+                : schematicIcon // ignore: cast_nullable_to_non_nullable
                       as String?,
-            photoUrl: freezed == photoUrl
-                ? _value.photoUrl
-                : photoUrl // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            manualUrl: freezed == manualUrl
-                ? _value.manualUrl
-                : manualUrl // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            isActive: null == isActive
-                ? _value.isActive
-                : isActive // ignore: cast_nullable_to_non_nullable
-                      as bool,
             archivedAt: freezed == archivedAt
                 ? _value.archivedAt
                 : archivedAt // ignore: cast_nullable_to_non_nullable
@@ -189,12 +161,8 @@ abstract class _$$EquipmentTypeImplCopyWith<$Res>
     @EquipmentCategoryConverter() EquipmentCategory category,
     String? weightRange,
     String? dimensions,
-    String? powerRequirements,
     bool isMobile,
-    String? exerciseTypeId,
-    String? photoUrl,
-    String? manualUrl,
-    bool isActive,
+    String? schematicIcon,
     DateTime? archivedAt,
     String? archivedBy,
     String? archivedReason,
@@ -221,12 +189,8 @@ class __$$EquipmentTypeImplCopyWithImpl<$Res>
     Object? category = null,
     Object? weightRange = freezed,
     Object? dimensions = freezed,
-    Object? powerRequirements = freezed,
     Object? isMobile = null,
-    Object? exerciseTypeId = freezed,
-    Object? photoUrl = freezed,
-    Object? manualUrl = freezed,
-    Object? isActive = null,
+    Object? schematicIcon = freezed,
     Object? archivedAt = freezed,
     Object? archivedBy = freezed,
     Object? archivedReason = freezed,
@@ -257,30 +221,14 @@ class __$$EquipmentTypeImplCopyWithImpl<$Res>
             ? _value.dimensions
             : dimensions // ignore: cast_nullable_to_non_nullable
                   as String?,
-        powerRequirements: freezed == powerRequirements
-            ? _value.powerRequirements
-            : powerRequirements // ignore: cast_nullable_to_non_nullable
-                  as String?,
         isMobile: null == isMobile
             ? _value.isMobile
             : isMobile // ignore: cast_nullable_to_non_nullable
                   as bool,
-        exerciseTypeId: freezed == exerciseTypeId
-            ? _value.exerciseTypeId
-            : exerciseTypeId // ignore: cast_nullable_to_non_nullable
+        schematicIcon: freezed == schematicIcon
+            ? _value.schematicIcon
+            : schematicIcon // ignore: cast_nullable_to_non_nullable
                   as String?,
-        photoUrl: freezed == photoUrl
-            ? _value.photoUrl
-            : photoUrl // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        manualUrl: freezed == manualUrl
-            ? _value.manualUrl
-            : manualUrl // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        isActive: null == isActive
-            ? _value.isActive
-            : isActive // ignore: cast_nullable_to_non_nullable
-                  as bool,
         archivedAt: freezed == archivedAt
             ? _value.archivedAt
             : archivedAt // ignore: cast_nullable_to_non_nullable
@@ -308,12 +256,8 @@ class _$EquipmentTypeImpl implements _EquipmentType {
     @EquipmentCategoryConverter() required this.category,
     this.weightRange,
     this.dimensions,
-    this.powerRequirements,
     this.isMobile = true,
-    this.exerciseTypeId,
-    this.photoUrl,
-    this.manualUrl,
-    this.isActive = true,
+    this.schematicIcon,
     this.archivedAt,
     this.archivedBy,
     this.archivedReason,
@@ -337,19 +281,10 @@ class _$EquipmentTypeImpl implements _EquipmentType {
   @override
   final String? dimensions;
   @override
-  final String? powerRequirements;
-  @override
   @JsonKey()
   final bool isMobile;
   @override
-  final String? exerciseTypeId;
-  @override
-  final String? photoUrl;
-  @override
-  final String? manualUrl;
-  @override
-  @JsonKey()
-  final bool isActive;
+  final String? schematicIcon;
   @override
   final DateTime? archivedAt;
   @override
@@ -359,7 +294,7 @@ class _$EquipmentTypeImpl implements _EquipmentType {
 
   @override
   String toString() {
-    return 'EquipmentType(id: $id, name: $name, description: $description, category: $category, weightRange: $weightRange, dimensions: $dimensions, powerRequirements: $powerRequirements, isMobile: $isMobile, exerciseTypeId: $exerciseTypeId, photoUrl: $photoUrl, manualUrl: $manualUrl, isActive: $isActive, archivedAt: $archivedAt, archivedBy: $archivedBy, archivedReason: $archivedReason)';
+    return 'EquipmentType(id: $id, name: $name, description: $description, category: $category, weightRange: $weightRange, dimensions: $dimensions, isMobile: $isMobile, schematicIcon: $schematicIcon, archivedAt: $archivedAt, archivedBy: $archivedBy, archivedReason: $archivedReason)';
   }
 
   @override
@@ -377,18 +312,10 @@ class _$EquipmentTypeImpl implements _EquipmentType {
                 other.weightRange == weightRange) &&
             (identical(other.dimensions, dimensions) ||
                 other.dimensions == dimensions) &&
-            (identical(other.powerRequirements, powerRequirements) ||
-                other.powerRequirements == powerRequirements) &&
             (identical(other.isMobile, isMobile) ||
                 other.isMobile == isMobile) &&
-            (identical(other.exerciseTypeId, exerciseTypeId) ||
-                other.exerciseTypeId == exerciseTypeId) &&
-            (identical(other.photoUrl, photoUrl) ||
-                other.photoUrl == photoUrl) &&
-            (identical(other.manualUrl, manualUrl) ||
-                other.manualUrl == manualUrl) &&
-            (identical(other.isActive, isActive) ||
-                other.isActive == isActive) &&
+            (identical(other.schematicIcon, schematicIcon) ||
+                other.schematicIcon == schematicIcon) &&
             (identical(other.archivedAt, archivedAt) ||
                 other.archivedAt == archivedAt) &&
             (identical(other.archivedBy, archivedBy) ||
@@ -407,12 +334,8 @@ class _$EquipmentTypeImpl implements _EquipmentType {
     category,
     weightRange,
     dimensions,
-    powerRequirements,
     isMobile,
-    exerciseTypeId,
-    photoUrl,
-    manualUrl,
-    isActive,
+    schematicIcon,
     archivedAt,
     archivedBy,
     archivedReason,
@@ -440,12 +363,8 @@ abstract class _EquipmentType implements EquipmentType {
     @EquipmentCategoryConverter() required final EquipmentCategory category,
     final String? weightRange,
     final String? dimensions,
-    final String? powerRequirements,
     final bool isMobile,
-    final String? exerciseTypeId,
-    final String? photoUrl,
-    final String? manualUrl,
-    final bool isActive,
+    final String? schematicIcon,
     final DateTime? archivedAt,
     final String? archivedBy,
     final String? archivedReason,
@@ -468,17 +387,9 @@ abstract class _EquipmentType implements EquipmentType {
   @override
   String? get dimensions;
   @override
-  String? get powerRequirements;
-  @override
   bool get isMobile;
   @override
-  String? get exerciseTypeId;
-  @override
-  String? get photoUrl;
-  @override
-  String? get manualUrl;
-  @override
-  bool get isActive;
+  String? get schematicIcon;
   @override
   DateTime? get archivedAt;
   @override

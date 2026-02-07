@@ -120,6 +120,11 @@ class ApiService {
   static Future<void> unarchiveEquipmentItem(String id) =>
       _infrastructureApi.unarchiveEquipmentItem(id);
 
+  static Future<EquipmentItem> createEquipmentItem(EquipmentItem equipmentItem) =>
+      _infrastructureApi.createEquipmentItem(equipmentItem);
+  static Future<EquipmentItem> updateEquipmentItem(String id, EquipmentItem equipmentItem) =>
+      _infrastructureApi.updateEquipmentItem(id, equipmentItem);
+
   static Future<List<EquipmentType>> getAllEquipmentTypes(
           {EquipmentCategory? category, bool? isArchived}) =>
       _infrastructureApi.getAllEquipmentTypes(

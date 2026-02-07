@@ -102,6 +102,16 @@ class InfrastructureApiService extends BaseApiService {
     await put('/api/equipment/items/$id/unarchive', body: {});
   }
 
+  Future<EquipmentItem> createEquipmentItem(EquipmentItem equipmentItem) async {
+    final data = await post('/api/equipment/items', body: equipmentItem.toJson());
+    return EquipmentItem.fromJson(data);
+  }
+
+  Future<EquipmentItem> updateEquipmentItem(String id, EquipmentItem equipmentItem) async {
+    final data = await put('/api/equipment/items/$id', body: equipmentItem.toJson());
+    return EquipmentItem.fromJson(data);
+  }
+
   // --- Equipment Type Methods ---
 
   Future<List<EquipmentType>> getAllEquipmentTypes(

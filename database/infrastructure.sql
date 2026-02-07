@@ -150,17 +150,14 @@ CREATE TABLE equipment_types (
   -- Характеристики
   weight_range VARCHAR(50),
   dimensions VARCHAR(100),
-  power_requirements VARCHAR(100),
+
   is_mobile BOOLEAN DEFAULT true,
   
-  -- Медиа
-  photo_url TEXT,
-  manual_url TEXT,
+    -- Медиа
   
-  -- Статус
-  is_active BOOLEAN DEFAULT true,
-  
-  -- Системные поля
+
+  schematic_icon VARCHAR(50),
+    -- Системные поля
   company_id BIGINT DEFAULT -1,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -570,7 +567,7 @@ CREATE INDEX idx_kinds_exercis_name ON kinds_exercis(name);
 CREATE INDEX idx_kinds_exercis_active ON kinds_exercis(company_id) WHERE archived_at IS NULL;
 
 -- Индексы для equipment_types
-CREATE INDEX idx_equipment_types_category ON equipment_types(category) WHERE is_active = true;
+CREATE INDEX idx_equipment_types_category ON equipment_types(category);
 CREATE INDEX idx_equipment_types_active ON equipment_types(company_id) WHERE archived_at IS NULL;
 
 -- Индексы для types_exercis
@@ -692,17 +689,17 @@ INSERT INTO kinds_exercis (name, note) VALUES
 ('Изометрика', 'Статические упражнения без движения в суставах');
 
 -- 5.6. Заполняем типы оборудования
-INSERT INTO equipment_types (name, description, category, sub_type, weight_range, dimensions, is_mobile, photo_url, note) VALUES
-('Беговая дорожка', 'Кардио тренажер для бега и ходьбы', 0, 0, NULL, '180x80x140 см', false, '/equipment/treadmill.jpg', 'Электрическая, с наклоном'),
-('Эллиптический тренажер', 'Кардио тренажер для низкоударной тренировки', 0, 1, NULL, '160x70x170 см', true, '/equipment/elliptical.jpg', 'Орбитрек'),
-('Велотренажер', 'Кардио тренажер для тренировки ног', 0, 2, NULL, '120x60x140 см', true, '/equipment/bike.jpg', 'С вертикальной посадкой'),
-('Гантели', 'Свободные веса для силовых упражнений', 2, 0, '1-30 кг', NULL, true, '/equipment/dumbbells.jpg', 'Резиновое покрытие'),
-('Штанга', 'Свободный вес для базовых упражнений', 2, 1, '20 кг (гриф)', '220 см', false, '/equipment/barbell.jpg', 'Олимпийский гриф'),
-('Скамья для жима', 'Силовой тренажер для жима лежа', 1, 0, NULL, '120x30x45 см', true, '/equipment/bench.jpg', 'Регулируемый наклон'),
-('Тренажер для жима ногами', 'Силовой тренажер для ног', 1, 1, NULL, '200x120x150 см', false, '/equipment/leg_press.jpg', 'Под углом 45°'),
-('Фитбол', 'Мяч для функциональных упражнений', 3, 0, NULL, 'Диаметр 65 см', true, '/equipment/fitball.jpg', 'Антиразрывный'),
-('Коврик для йоги', 'Аксессуар для растяжки и йоги', 4, 0, NULL, '180x60x0.5 см', true, '/equipment/yoga_mat.jpg', 'ПВХ, 5 мм'),
-('Весы напольные', 'Измерительное оборудование', 5, 0, NULL, '30x30x3 см', true, '/equipment/scales.jpg', 'Электронные, до 200 кг');
+INSERT INTO equipment_types (name, description, category, sub_type, weight_range, dimensions, is_mobile, schematic_icon, note) VALUES
+('Беговая дорожка', 'Кардио тренажер для бега и ходьбы', 0, 0, NULL, '180x80x140 см', false, 'treadmill', 'Электрическая, с наклоном'),
+('Эллиптический тренажер', 'Кардио тренажер для низкоударной тренировки', 0, 1, NULL, '160x70x170 см', true, 'elliptical', 'Орбитрек'),
+('Велотренажер', 'Кардио тренажер для тренировки ног', 0, 2, NULL, '120x60x140 см', true, 'bike', 'С вертикальной посадкой'),
+('Гантели', 'Свободные веса для силовых упражнений', 2, 0, '1-30 кг', NULL, true, 'dumbbell', 'Резиновое покрытие'),
+('Штанга', 'Свободный вес для базовых упражнений', 2, 1, '20 кг (гриф)', '220 см', false, 'barbell', 'Олимпийский гриф'),
+('Скамья для жима', 'Силовой тренажер для жима лежа', 1, 0, NULL, '120x30x45 см', true, 'bench', 'Регулируемый наклон'),
+('Тренажер для жима ногами', 'Силовой тренажер для ног', 1, 1, NULL, '200x120x150 см', false, 'leg_press', 'Под углом 45°'),
+('Фитбол', 'Мяч для функциональных упражнений', 3, 0, NULL, 'Диаметр 65 см', true, 'fitball', 'Антиразрывный'),
+('Коврик для йоги', 'Аксессуар для растяжки и йоги', 4, 0, NULL, '180x60x0.5 см', true, 'yoga_mat', 'ПВХ, 5 мм'),
+('Весы напольные', 'Измерительное оборудование', 5, 0, NULL, '30x30x3 см', true, 'scales', 'Электронные, до 200 кг');
 
 -- 5.7. Заполняем типы упражнений
 INSERT INTO types_exercis (name, kind_exercis_id, equipment_type_id, note) VALUES

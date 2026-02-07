@@ -8,6 +8,9 @@ class EquipmentItemController {
   EquipmentItemController(this._db) {
     _router
       ..get('/', _getAllEquipmentItems)
+      ..post('/', _createEquipmentItem)
+      ..get('/<id>', _getById) // Adding a GET by ID route for consistency
+      ..put('/<id>', _updateEquipmentItem)
       ..put('/<id>/archive', _archive)
       ..put('/<id>/unarchive', _unarchive);
   }
@@ -15,7 +18,17 @@ class EquipmentItemController {
   final Database _db;
   final _router = Router();
 
-  Handler get handler => _router;
+  Handler get handler => _router.call;
+
+  Future<Response> _getById(Request request, String id) async {
+    try {
+      final equipmentItem = await _db.equipmentItems.getById(id);
+      return Response.ok(jsonEncode(equipmentItem.toJson()));
+    } catch (e) {
+      return Response.internalServerError(
+          body: '{"error": "Error fetching equipment item: $e"}');
+    }
+  }
 
   Future<Response> _getAllEquipmentItems(Request request) async {
     try {
@@ -39,6 +52,54 @@ class EquipmentItemController {
     } catch (e) {
       return Response.internalServerError(
           body: '{"error": "Error fetching equipment items: $e"}');
+    }
+  }
+
+  Future<Response> _createEquipmentItem(Request request) async {
+    try {
+      final body = await request.readAsString();
+      final Map<String, dynamic> jsonBody = jsonDecode(body) as Map<String, dynamic>;
+      
+      // Get userId from request context
+      final userPayload = request.context['user'] as Map<String, dynamic>?;
+      if (userPayload == null) {
+        return Response.unauthorized('{"error": "Authentication required"}');
+      }
+      final userId = userPayload['userId']?.toString();
+      if (userId == null) {
+        return Response.internalServerError(body: '{"error": "User ID not found in token payload"}');
+      }
+
+      final equipmentItem = EquipmentItem.fromJson(jsonBody);
+      final createdEquipmentItem = await _db.equipmentItems.create(equipmentItem, userId);
+
+      return Response.ok(jsonEncode(createdEquipmentItem.toJson()), headers: {'Content-Type': 'application/json'});
+    } catch (e) {
+      return Response.internalServerError(body: '{"error": "Error creating equipment item: $e"}');
+    }
+  }
+
+  Future<Response> _updateEquipmentItem(Request request, String id) async {
+    try {
+      final body = await request.readAsString();
+      final Map<String, dynamic> jsonBody = jsonDecode(body) as Map<String, dynamic>;
+
+      // Get userId from request context
+      final userPayload = request.context['user'] as Map<String, dynamic>?;
+      if (userPayload == null) {
+        return Response.unauthorized('{"error": "Authentication required"}');
+      }
+      final userId = userPayload['userId']?.toString();
+      if (userId == null) {
+        return Response.internalServerError(body: '{"error": "User ID not found in token payload"}');
+      }
+      
+      final equipmentItem = EquipmentItem.fromJson(jsonBody);
+      final updatedEquipmentItem = await _db.equipmentItems.update(id, equipmentItem, userId);
+
+      return Response.ok(jsonEncode(updatedEquipmentItem.toJson()), headers: {'Content-Type': 'application/json'});
+    } catch (e) {
+      return Response.internalServerError(body: '{"error": "Error updating equipment item: $e"}');
     }
   }
 

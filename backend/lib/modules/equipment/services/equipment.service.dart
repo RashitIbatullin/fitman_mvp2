@@ -7,15 +7,15 @@ import 'package:fitman_backend/modules/equipment/repositories/equipment_type.rep
 abstract class EquipmentService {
   Future<EquipmentType> getTypeById(String id);
   Future<List<EquipmentType>> getAllTypes();
-  Future<EquipmentType> createType(EquipmentType equipmentType);
-  Future<EquipmentType> updateType(EquipmentType equipmentType);
+  Future<EquipmentType> createType(EquipmentType equipmentType, String userId);
+  Future<EquipmentType> updateType(String id, EquipmentType equipmentType, String userId);
   Future<void> deleteType(String id);
 
   Future<EquipmentItem> getItemById(String id);
   Future<List<EquipmentItem>> getAllItems();
   Future<List<EquipmentItem>> getItemsByRoomId(String roomId);
-  Future<EquipmentItem> createItem(EquipmentItem equipmentItem);
-  Future<EquipmentItem> updateItem(EquipmentItem equipmentItem);
+  Future<EquipmentItem> createItem(EquipmentItem equipmentItem, String userId);
+  Future<EquipmentItem> updateItem(String id, EquipmentItem equipmentItem, String userId);
   Future<void> deleteItem(String id);
 }
 
@@ -26,8 +26,8 @@ class EquipmentServiceImpl implements EquipmentService {
   final EquipmentItemRepository _itemRepository;
 
   @override
-  Future<EquipmentType> createType(EquipmentType equipmentType) {
-    return _typeRepository.create(equipmentType);
+  Future<EquipmentType> createType(EquipmentType equipmentType, String userId) {
+    return _typeRepository.create(equipmentType, userId);
   }
 
   @override
@@ -46,13 +46,13 @@ class EquipmentServiceImpl implements EquipmentService {
   }
 
   @override
-  Future<EquipmentType> updateType(EquipmentType equipmentType) {
-    return _typeRepository.update(equipmentType);
+  Future<EquipmentType> updateType(String id, EquipmentType equipmentType, String userId) {
+    return _typeRepository.update(id, equipmentType, userId);
   }
 
   @override
-  Future<EquipmentItem> createItem(EquipmentItem equipmentItem) {
-    return _itemRepository.create(equipmentItem);
+  Future<EquipmentItem> createItem(EquipmentItem equipmentItem, String userId) {
+    return _itemRepository.create(equipmentItem, userId);
   }
 
   @override
@@ -76,7 +76,7 @@ class EquipmentServiceImpl implements EquipmentService {
   }
 
   @override
-  Future<EquipmentItem> updateItem(EquipmentItem equipmentItem) {
-    return _itemRepository.update(equipmentItem);
+  Future<EquipmentItem> updateItem(String id, EquipmentItem equipmentItem, String userId) {
+    return _itemRepository.update(id, equipmentItem, userId);
   }
 }

@@ -1,18 +1,18 @@
 import 'package:fitman_backend/config/database.dart';
 import 'package:fitman_backend/modules/equipment/models/equipment/equipment_item.model.dart';
 import 'package:postgres/postgres.dart';
+import 'dart:convert';
 
 abstract class EquipmentItemRepository {
   Future<EquipmentItem> getById(String id);
   Future<List<EquipmentItem>> getAll({bool includeArchived = false});
   Future<List<EquipmentItem>> getByRoomId(String roomId, {bool includeArchived = false});
-  Future<EquipmentItem> create(EquipmentItem equipmentItem);
-  Future<EquipmentItem> update(EquipmentItem equipmentItem);
+  Future<EquipmentItem> create(EquipmentItem equipmentItem, String userId);
+  Future<EquipmentItem> update(String id, EquipmentItem equipmentItem, String userId);
   Future<void> delete(String id);
   Future<void> archive(String id, String reason, String userId);
   Future<void> unarchive(String id);
 }
-
 class EquipmentItemRepositoryImpl implements EquipmentItemRepository {
   EquipmentItemRepositoryImpl(this._db);
 
@@ -45,9 +45,52 @@ class EquipmentItemRepositoryImpl implements EquipmentItemRepository {
   }
 
   @override
-  Future<EquipmentItem> create(EquipmentItem equipmentItem) {
-    // TODO: implement create
-    throw UnimplementedError();
+  Future<EquipmentItem> create(EquipmentItem equipmentItem, String userId) async {
+    final conn = await _db.connection;
+    final result = await conn.execute(
+      Sql.named('''
+        INSERT INTO equipment_items (
+          type_id, inventory_number, serial_number, model, manufacturer, room_id, placement_note,
+          status, condition_rating, condition_notes, last_maintenance_date, next_maintenance_date,
+          maintenance_notes, purchase_date, purchase_price, supplier, warranty_months, usage_hours,
+          last_used_date, photo_urls,
+          company_id, created_at, updated_at, created_by, updated_by
+        ) VALUES (
+          @typeId, @inventoryNumber, @serialNumber, @model, @manufacturer, @roomId, @placementNote,
+          @status, @conditionRating, @conditionNotes, @lastMaintenanceDate, @nextMaintenanceDate,
+          @maintenanceNotes, @purchaseDate, @purchasePrice, @supplier, @warrantyMonths, @usageHours,
+          @lastUsedDate, @photoUrls,
+          -1, NOW(), NOW(), @createdBy, @updatedBy
+        ) RETURNING id;
+      '''),
+      parameters: {
+        'typeId': equipmentItem.typeId,
+        'inventoryNumber': equipmentItem.inventoryNumber,
+        'serialNumber': equipmentItem.serialNumber,
+        'model': equipmentItem.model,
+        'manufacturer': equipmentItem.manufacturer,
+        'roomId': equipmentItem.roomId,
+        'placementNote': equipmentItem.placementNote,
+        'status': equipmentItem.status.index, // Enum to int
+        'conditionRating': equipmentItem.conditionRating,
+        'conditionNotes': equipmentItem.conditionNotes,
+        'lastMaintenanceDate': equipmentItem.lastMaintenanceDate,
+        'nextMaintenanceDate': equipmentItem.nextMaintenanceDate,
+        'maintenanceNotes': equipmentItem.maintenanceNotes,
+        'purchaseDate': equipmentItem.purchaseDate,
+        'purchasePrice': equipmentItem.purchasePrice,
+        'supplier': equipmentItem.supplier,
+        'warrantyMonths': equipmentItem.warrantyMonths,
+        'usageHours': equipmentItem.usageHours,
+        'lastUsedDate': equipmentItem.lastUsedDate,
+        'photoUrls': jsonEncode(equipmentItem.photoUrls), // List to JSON string
+        'createdBy': userId,
+        'updatedBy': userId,
+      },
+    );
+
+    final newId = result.first.first as int;
+    return await getById(newId.toString());
   }
 
   @override
@@ -121,8 +164,66 @@ class EquipmentItemRepositoryImpl implements EquipmentItemRepository {
   }
 
   @override
-  Future<EquipmentItem> update(EquipmentItem equipmentItem) {
-    // TODO: implement update
-    throw UnimplementedError();
+  Future<EquipmentItem> update(String id, EquipmentItem equipmentItem, String userId) async {
+    final conn = await _db.connection;
+    await conn.execute(
+      Sql.named('''
+        UPDATE equipment_items SET
+          type_id = @typeId,
+          inventory_number = @inventoryNumber,
+          serial_number = @serialNumber,
+          model = @model,
+          manufacturer = @manufacturer,
+          room_id = @roomId,
+          placement_note = @placementNote,
+          status = @status,
+          condition_rating = @conditionRating,
+          condition_notes = @conditionNotes,
+          last_maintenance_date = @lastMaintenanceDate,
+          next_maintenance_date = @nextMaintenanceDate,
+          maintenance_notes = @maintenanceNotes,
+          purchase_date = @purchaseDate,
+          purchase_price = @purchasePrice,
+          supplier = @supplier,
+          warranty_months = @warrantyMonths,
+          usage_hours = @usageHours,
+          last_used_date = @lastUsedDate,
+          photo_urls = @photoUrls,
+          updated_at = NOW(),
+          updated_by = @updatedBy,
+          archived_at = @archivedAt,
+          archived_by = @archivedBy,
+          archived_reason = @archivedReason
+        WHERE id = @id;
+      '''),
+      parameters: {
+        'id': id,
+        'typeId': equipmentItem.typeId,
+        'inventoryNumber': equipmentItem.inventoryNumber,
+        'serialNumber': equipmentItem.serialNumber,
+        'model': equipmentItem.model,
+        'manufacturer': equipmentItem.manufacturer,
+        'roomId': equipmentItem.roomId,
+        'placementNote': equipmentItem.placementNote,
+        'status': equipmentItem.status.index, // Enum to int
+        'conditionRating': equipmentItem.conditionRating,
+        'conditionNotes': equipmentItem.conditionNotes,
+        'lastMaintenanceDate': equipmentItem.lastMaintenanceDate,
+        'nextMaintenanceDate': equipmentItem.nextMaintenanceDate,
+        'maintenanceNotes': equipmentItem.maintenanceNotes,
+        'purchaseDate': equipmentItem.purchaseDate,
+        'purchasePrice': equipmentItem.purchasePrice,
+        'supplier': equipmentItem.supplier,
+        'warrantyMonths': equipmentItem.warrantyMonths,
+        'usageHours': equipmentItem.usageHours,
+        'lastUsedDate': equipmentItem.lastUsedDate,
+        'photoUrls': jsonEncode(equipmentItem.photoUrls), // List to JSON string
+        'updatedBy': userId,
+        'archivedAt': equipmentItem.archivedAt,
+        'archivedBy': equipmentItem.archivedBy,
+        'archivedReason': equipmentItem.archivedReason,
+      },
+    );
+    return await getById(id);
   }
 }

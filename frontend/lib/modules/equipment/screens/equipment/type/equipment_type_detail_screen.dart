@@ -52,14 +52,15 @@ class EquipmentTypeDetailScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (equipmentType.photoUrl != null && equipmentType.photoUrl!.isNotEmpty)
+
+                if (equipmentType.schematicIcon != null && equipmentType.schematicIcon!.isNotEmpty)
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Image.network(
-                        equipmentType.photoUrl!,
-                        height: 200,
-                        fit: BoxFit.cover,
+                      child: Icon(
+                        _getSchematicIcon(equipmentType.schematicIcon!),
+                        size: 100, // Adjust size as needed
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ),
@@ -86,30 +87,14 @@ class EquipmentTypeDetailScreen extends ConsumerWidget {
                     label: 'Габариты:',
                     value: equipmentType.dimensions!,
                   ),
-                if (equipmentType.powerRequirements != null && equipmentType.powerRequirements!.isNotEmpty)
-                  _buildDetailRow(
-                    label: 'Требования к питанию:',
-                    value: equipmentType.powerRequirements!,
-                  ),
+
                 _buildDetailRow(
                   label: 'Мобильное:',
                   value: equipmentType.isMobile ? 'Да' : 'Нет',
                 ),
-                if (equipmentType.exerciseTypeId != null && equipmentType.exerciseTypeId!.isNotEmpty)
-                  _buildDetailRow(
-                    label: 'ID типа упражнения:',
-                    value: equipmentType.exerciseTypeId!,
-                  ),
-                if (equipmentType.manualUrl != null && equipmentType.manualUrl!.isNotEmpty)
-                  _buildDetailRow(
-                    label: 'Ссылка на руководство:',
-                    value: equipmentType.manualUrl!,
-                  ),
-                _buildDetailRow(
-                  label: 'Активно:',
-                  value: equipmentType.isActive ? 'Да' : 'Нет',
-                  valueColor: equipmentType.isActive ? Colors.green : Colors.red,
-                ),
+
+
+
               ],
             ),
           );
@@ -119,6 +104,36 @@ class EquipmentTypeDetailScreen extends ConsumerWidget {
       ),
     );
   }
+
+
+IconData _getSchematicIcon(String iconName) {
+  // This is a placeholder. In a real app, you would have a map
+  // or a way to dynamically resolve string names to actual IconData.
+  switch (iconName) {
+    case 'dumbbell':
+      return Icons.fitness_center;
+    case 'treadmill':
+      return Icons.directions_run;
+    case 'bike':
+      return Icons.pedal_bike;
+    case 'elliptical':
+      return Icons.directions_walk;
+    case 'barbell':
+      return Icons.sports_gymnastics;
+    case 'bench':
+      return Icons.chair; // Placeholder
+    case 'leg_press':
+      return Icons.view_sidebar; // Placeholder
+    case 'fitball':
+      return Icons.sports_basketball; // Placeholder
+    case 'yoga_mat':
+      return Icons.spa; // Placeholder
+    case 'scales':
+      return Icons.scale;
+    default:
+      return Icons.category; // Default icon if not found
+  }
+}
 
   Widget _buildDetailRow({
     required String label,

@@ -105,6 +105,9 @@ class EquipmentItem {
     );
   }
 
+  factory EquipmentItem.fromJson(Map<String, dynamic> json) =>
+      EquipmentItem.fromMap(json);
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
