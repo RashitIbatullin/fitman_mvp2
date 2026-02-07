@@ -84,13 +84,14 @@ class BaseApiService {
   }
 
   /// Helper method to perform a DELETE request.
-  Future<void> delete(String endpoint) async {
+  Future<void> delete(String endpoint, {Map<String, dynamic>? body}) async { // MODIFIED to accept body
     final response = await client.delete(
       Uri.parse('$baseUrl$endpoint'),
       headers: BaseApiService.headers,
+      body: body != null ? jsonEncode(body) : null, // ADDED body encoding
     );
-    if (response.statusCode != 204) {
-      _handleResponse(response); // To throw an exception if deletion fails
+    if (response.statusCode > 204) { // Changed from != 204 to > 204 for more robust check
+      _handleResponse(response);
     }
   }
   

@@ -26,6 +26,7 @@ import '../modules/groups/models/analytic_group.model.dart';
 import '../modules/groups/models/group_schedule.model.dart';
 import 'package:fitman_app/modules/equipment/models/equipment/equipment_category.enum.dart';
 import '../modules/groups/models/training_group_type.model.dart';
+import '../modules/equipment/models/equipment_maintenance_history.model.dart';
 
 
 class ApiService {
@@ -143,6 +144,18 @@ class ApiService {
       _infrastructureApi.archiveEquipmentType(id, reason);
   static Future<void> unarchiveEquipmentType(String id) =>
       _infrastructureApi.unarchiveEquipmentType(id);
+
+  // --- Maintenance History Methods ---
+  static Future<List<EquipmentMaintenanceHistory>> getMaintenanceHistory(String itemId) =>
+      _infrastructureApi.getMaintenanceHistory(itemId);
+  static Future<EquipmentMaintenanceHistory> createMaintenanceHistory(
+          EquipmentMaintenanceHistory history) =>
+      _infrastructureApi.createMaintenanceHistory(history);
+  static Future<EquipmentMaintenanceHistory> updateMaintenanceHistory(
+          String historyId, EquipmentMaintenanceHistory history) =>
+      _infrastructureApi.updateMaintenanceHistory(historyId, history);
+  static Future<void> archiveMaintenanceHistory(String historyId, String reason) =>
+      _infrastructureApi.archiveMaintenanceHistory(historyId, reason);
 
 
   // --- Group Methods ---

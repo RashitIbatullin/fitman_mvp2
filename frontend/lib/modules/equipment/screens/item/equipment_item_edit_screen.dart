@@ -140,7 +140,7 @@ class _EquipmentItemEditScreenState
       final item = await ref.read(equipmentItemByIdProvider(widget.itemId!).future);
       _populateForm(item);
     } catch (e) {
-       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ош2ибка: $e'), backgroundColor: Colors.red));
+       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red));
     } finally {
       setState(() => _isLoading = false);
     }

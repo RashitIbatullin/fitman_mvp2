@@ -25,11 +25,13 @@ import '../modules/groups/controllers/training_group_types_controller.dart';
 import '../modules/rooms/controllers/room.controller.dart';
 import '../modules/equipment/controllers/equipment_item.controller.dart';
 import '../modules/equipment/controllers/equipment_type.controller.dart';
+import '../modules/equipment/controllers/equipment_maintenance_history.controller.dart';
 import '../modules/rooms/controllers/building_controller.dart';
 import '../config/database.dart'; // Add this import
 import '../modules/equipment/services/equipment.service.dart';
 import '../modules/equipment/repositories/equipment_type.repository.dart';
 import '../modules/equipment/repositories/equipment_item.repository.dart';
+import '../modules/equipment/repositories/equipment_maintenance_history.repository.dart';
 import '../modules/roles/controllers/manager_controller.dart'; // New manager controller
 import '../modules/roles/controllers/instructor_controller.dart'; // New instructor controller
 
@@ -39,9 +41,11 @@ final Database _db = Database(); // Instantiate Database once
 // Repositories for Equipment Service
 final _equipmentTypeRepository = EquipmentTypeRepositoryImpl(_db);
 final _equipmentItemRepository = EquipmentItemRepositoryImpl(_db);
+final _equipmentMaintenanceHistoryRepository = EquipmentMaintenanceHistoryRepositoryImpl(_db);
+
 
 // Equipment Service
-final _equipmentService = EquipmentServiceImpl(_equipmentTypeRepository, _equipmentItemRepository);
+final _equipmentService = EquipmentServiceImpl(_equipmentTypeRepository, _equipmentItemRepository, _equipmentMaintenanceHistoryRepository);
 
 // Group-related controllers
 final _trainingGroupsController = TrainingGroupsController(_db);
@@ -54,6 +58,7 @@ final _trainingGroupTypesController = TrainingGroupTypesController(_db);
 final _roomController = RoomController(_db);
 final _equipmentItemController = EquipmentItemController(_db);
 final _equipmentTypeController = EquipmentTypeController(_db, _equipmentService); // Inject _equipmentService
+final _equipmentMaintenanceHistoryController = EquipmentMaintenanceHistoryController(_equipmentService);
 final _buildingController = BuildingController(_db);
 
 // Создаем обертки для protected routes
@@ -235,4 +240,5 @@ final Router router = Router()
   ..mount('/api/rooms', _adminHandler(_roomController.router.call))
   ..mount('/api/equipment/items', _adminHandler(_equipmentItemController.handler))
   ..mount('/api/equipment/types', _adminHandler(_equipmentTypeController.handler))
+  ..mount('/api/equipment/maintenance', _adminHandler(_equipmentMaintenanceHistoryController.handler))
   ..mount('/api/buildings', _adminHandler(_buildingController.router.call));

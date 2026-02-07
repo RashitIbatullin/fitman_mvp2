@@ -11,6 +11,7 @@
 
 -- Таблицы бронирования и оборудования
 DROP TABLE IF EXISTS equipment_bookings CASCADE;
+DROP TABLE IF EXISTS equipment_maintenance_history CASCADE; -- ADDED
 DROP TABLE IF EXISTS equipment_items CASCADE;
 DROP TABLE IF EXISTS rooms CASCADE;
 DROP TABLE IF EXISTS buildings CASCADE;
@@ -542,6 +543,32 @@ CREATE TABLE equipment_bookings (
   CONSTRAINT valid_booking_time CHECK (end_time > start_time)
 );
 
+-- История обслуживания оборудования
+CREATE TABLE equipment_maintenance_history (
+  id BIGSERIAL PRIMARY KEY,
+  equipment_item_id BIGINT NOT NULL REFERENCES equipment_items(id) ON DELETE CASCADE,
+  
+  date_sent DATE NOT NULL,
+  date_returned DATE,
+  
+  description_of_work TEXT NOT NULL,
+  cost DECIMAL(10, 2),
+  performed_by VARCHAR(255),
+  
+  photos JSONB, -- Массив объектов: [{"url": "...", "note": "..."}, ...]
+
+  -- Системные поля
+  company_id BIGINT DEFAULT -1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by BIGINT REFERENCES users(id),
+  updated_by BIGINT REFERENCES users(id),
+  archived_at TIMESTAMPTZ,
+  archived_by BIGINT REFERENCES users(id),
+  archived_reason TEXT,
+  note VARCHAR(100)
+);
+
 -- ============================================
 -- 4. СОЗДАНИЕ ИНДЕКСОВ ДЛЯ ПРОИЗВОДИТЕЛЬНОСТИ
 -- ============================================
@@ -631,6 +658,10 @@ CREATE INDEX idx_equipment_bookings_user ON equipment_bookings(booked_by);
 CREATE INDEX idx_equipment_bookings_time ON equipment_bookings(equipment_item_id, start_time, end_time) WHERE status IN (0, 1);
 CREATE INDEX idx_equipment_bookings_active ON equipment_bookings(company_id) WHERE archived_at IS NULL;
 CREATE INDEX idx_equipment_bookings_time_status ON equipment_bookings(equipment_item_id, start_time, end_time, status);
+
+-- Индексы для equipment_maintenance_history
+CREATE INDEX idx_equip_maint_hist_item ON equipment_maintenance_history(equipment_item_id);
+CREATE INDEX idx_equip_maint_hist_dates ON equipment_maintenance_history(date_sent, date_returned);
 
 -- Индексы для таблиц связей
 CREATE INDEX idx_set_exercises_link_set ON set_exercises_templates_exercis_templates(set_exercises_template_id);
