@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,6 +46,8 @@ class _EquipmentItemEditScreenState
   late TextEditingController _usageHoursController;
   late TextEditingController _lastUsedDateController;
 
+  String? _initialEquipmentTypeId;
+  String? _initialRoomId;
   EquipmentType? _selectedEquipmentType;
   Room? _selectedRoom;
 
@@ -74,6 +77,8 @@ class _EquipmentItemEditScreenState
 
     if (widget.equipmentItem != null) {
       _populateForm(widget.equipmentItem!);
+      _selectedEquipmentType = null; // Will be set by Dropdown's initial value
+      _selectedRoom = null; // Will be set by Dropdown's initial value
     } else if (widget.itemId != null) {
       _loadEquipmentItem();
     }
@@ -122,40 +127,11 @@ class _EquipmentItemEditScreenState
     _lastUsedDateController.text =
         item.lastUsedDate?.toLocal().toIso8601String().substring(0, 10) ?? '';
 
-    // Set selected type and room
+    // Store only the IDs for initial selection
+    _initialEquipmentTypeId = item.typeId;
+    _initialRoomId = item.roomId;
+    
     print('--- Frontend Logging: Populating form for item ID: ${item.id}, Type ID: ${item.typeId} ---');
-    ref.read(equipmentTypeByIdProvider(item.typeId)).when(
-      data: (type) {
-        setState(() {
-          _selectedEquipmentType = type;
-        });
-        print('--- Frontend Logging: Successfully fetched type: ${type.name} ---');
-      },
-      loading: () => print('--- Frontend Logging: Loading type for ID: ${item.typeId} ---'),
-      error: (error, stack) {
-        print('--- Frontend Logging: Error fetching type for ID: ${item.typeId}: $error ---');
-        setState(() {
-          _errorMessage = 'Ошибка загрузки типа оборудования: $error';
-        });
-      },
-    );
-    if (item.roomId != null) {
-      ref.read(roomByIdProvider(item.roomId!)).when( // Changed to .when for logging errors
-        data: (room) {
-          setState(() {
-            _selectedRoom = room;
-          });
-          print('--- Frontend Logging: Successfully fetched room: ${room.name} ---');
-        },
-        loading: () => print('--- Frontend Logging: Loading room for ID: ${item.roomId!} ---'),
-        error: (error, stack) {
-          print('--- Frontend Logging: Error fetching room for ID: ${item.roomId!}: $error ---');
-          setState(() {
-            _errorMessage = (_errorMessage ?? '') + '\nОшибка загрузки помещения: $error';
-          });
-        },
-      );
-    }
   }
 
   Future<void> _loadEquipmentItem() async {
@@ -303,35 +279,40 @@ class _EquipmentItemEditScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     equipmentTypesAsync.when(
-                      data: (types) => DropdownButtonFormField<EquipmentType>(
-                        decoration: const InputDecoration(
-                          labelText: 'Тип оборудования',
-                          border: OutlineInputBorder(),
-                        ),
-                        initialValue: _selectedEquipmentType,
-                        items: [
-                          ...types
-                              .map(
-                                (type) => DropdownMenuItem(
-                                  value: type,
-                                  child: Text(type.name),
+                      data: (types) {
+                        // Find the initial selected type from the loaded list
+                        if (_selectedEquipmentType == null && _initialEquipmentTypeId != null) {
+                          _selectedEquipmentType = types.firstWhereOrNull((type) => type.id == _initialEquipmentTypeId);
+                        }
+                        return DropdownButtonFormField<EquipmentType>(
+                          decoration: const InputDecoration(
+                            labelText: 'Тип оборудования',
+                            border: OutlineInputBorder(),
+                          ),
+                          initialValue: _selectedEquipmentType,
+                          items: [
+                            ...types.map(
+                                  (type) => DropdownMenuItem(
+                                    value: type,
+                                    child: Text(type.name),
+                                  ),
                                 ),
-                              ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedEquipmentType = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Пожалуйста, выберите тип оборудования';
-                          }
-                          return null;
-                        },
-                      ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedEquipmentType = value;
+                            });
+                          },
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Пожалуйста, выберите тип оборудования';
+                            }
+                            return null;
+                          },
+                        );
+                      },
                       loading: () => const CircularProgressIndicator(),
-                      error: (error, stack) => Text('Ошибка: $error'),
+                      error: (error, stack) => Text('Ошибка загрузки типов: $error'),
                     ),
                     const SizedBox(height: 16.0),
                     TextFormField(
@@ -373,29 +354,35 @@ class _EquipmentItemEditScreenState
                     ),
                     const SizedBox(height: 16.0),
                     roomsAsync.when(
-                      data: (rooms) => DropdownButtonFormField<Room>(
-                        decoration: const InputDecoration(
-                          labelText: 'Помещение',
-                          border: OutlineInputBorder(),
-                        ),
-                        initialValue: _selectedRoom,
-                        items: [
-                          const DropdownMenuItem(value: null, child: Text('Не назначено')),
-                          ...rooms.map(
-                                (room) => DropdownMenuItem(
-                              value: room,
-                              child: Text(room.name),
-                            ),
+                      data: (rooms) {
+                        // Find the initial selected room from the loaded list
+                        if (_selectedRoom == null && _initialRoomId != null) {
+                          _selectedRoom = rooms.firstWhereOrNull((room) => room.id == _initialRoomId);
+                        }
+                        return DropdownButtonFormField<Room>(
+                          decoration: const InputDecoration(
+                            labelText: 'Помещение',
+                            border: OutlineInputBorder(),
                           ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedRoom = value;
-                          });
-                        },
-                      ),
+                          initialValue: _selectedRoom,
+                          items: [
+                            const DropdownMenuItem(value: null, child: Text('Не назначено')),
+                            ...rooms.map(
+                                  (room) => DropdownMenuItem(
+                                value: room,
+                                child: Text(room.name),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedRoom = value;
+                            });
+                          },
+                        );
+                      },
                       loading: () => const CircularProgressIndicator(),
-                      error: (error, stack) => Text('Ошибка: $error'),
+                      error: (error, stack) => Text('Ошибка загрузки помещений: $error'),
                     ),
                     const SizedBox(height: 16.0),
                     TextFormField(
