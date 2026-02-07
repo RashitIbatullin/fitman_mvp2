@@ -16,8 +16,9 @@ class EquipmentMaintenanceHistoryController {
     router.get('/item/<itemId>', (Request request, String itemId) async {
       try {
         final history = await _equipmentService.getMaintenanceHistory(itemId);
+        final jsonResponse = jsonEncode(history.map((h) => h.toJson()).toList());
         return Response.ok(
-          jsonEncode(history.map((h) => h.toJson()).toList()),
+          jsonResponse,
           headers: {'Content-Type': 'application/json'},
         );
       } catch (e) {

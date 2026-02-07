@@ -15,9 +15,6 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
-MaintenancePhoto _$MaintenancePhotoFromJson(Map<String, dynamic> json) {
-  return _MaintenancePhoto.fromJson(json);
-}
 
 /// @nodoc
 mixin _$MaintenancePhoto {
@@ -186,11 +183,6 @@ abstract class _MaintenancePhoto implements MaintenancePhoto {
       throw _privateConstructorUsedError;
 }
 
-EquipmentMaintenanceHistory _$EquipmentMaintenanceHistoryFromJson(
-  Map<String, dynamic> json,
-) {
-  return _EquipmentMaintenanceHistory.fromJson(json);
-}
 
 /// @nodoc
 mixin _$EquipmentMaintenanceHistory {

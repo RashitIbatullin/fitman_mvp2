@@ -72,7 +72,11 @@ class EquipmentMaintenanceHistoryRepositoryImpl implements EquipmentMaintenanceH
       parameters: {'equipmentItemId': equipmentItemId},
     );
 
-    return result.map((row) => EquipmentMaintenanceHistory.fromMap(row.toColumnMap())).toList();
+    return result.map((row) {
+      final rowMap = row.toColumnMap();
+      print('Repository: Raw row from DB: $rowMap'); // Add this line
+      return EquipmentMaintenanceHistory.fromMap(rowMap);
+    }).toList();
   }
 
   @override

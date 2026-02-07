@@ -42,8 +42,8 @@ class _EquipmentMaintenanceHistoryEditScreenState
     _costController = TextEditingController(text: record?.cost?.toString() ?? '');
     _performedByController = TextEditingController(text: record?.performedBy ?? '');
 
-    if (record?.photos != null) {
-      for (var photo in record.photos ?? []) { // Fixed null check here
+    if (record != null && record.photos != null) {
+      for (var photo in record.photos!) { 
         _photoUrlControllers.add(TextEditingController(text: photo.url));
         _photoNoteControllers.add(TextEditingController(text: photo.note));
       }

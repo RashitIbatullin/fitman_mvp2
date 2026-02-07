@@ -140,15 +140,19 @@ class _EquipmentItemEditScreenState
       final item = await ref.read(equipmentItemByIdProvider(widget.itemId!).future);
       _populateForm(item);
     } catch (e) {
+      if (!mounted) return;
        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _saveForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedEquipmentType == null) {
+       if (!mounted) return;
        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Пожалуйста, выберите тип оборудования.'), backgroundColor: Colors.red));
       return;
     }

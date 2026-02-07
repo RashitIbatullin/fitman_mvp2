@@ -6,10 +6,10 @@ import 'package:fitman_app/modules/equipment/providers/equipment/equipment_provi
 import 'package:fitman_app/modules/equipment/models/equipment/equipment_item.model.dart';
 import 'package:fitman_app/modules/equipment/models/equipment/equipment_status.enum.dart';
 import 'package:fitman_app/modules/rooms/providers/room/room_provider.dart';
-import 'package:fitman_app/modules/rooms/models/room/room.model.dart';
-import 'package:fitman_app/modules/equipment/models/equipment/equipment_type.model.dart';
 import 'package:fitman_app/modules/equipment/models/equipment_maintenance_history.model.dart';
 import 'equipment_maintenance_history_edit_screen.dart';
+import 'package:fitman_app/modules/rooms/models/room/room.model.dart';
+import 'package:fitman_app/modules/equipment/models/equipment/equipment_type.model.dart';
 
 class EquipmentItemEditScreen extends ConsumerStatefulWidget {
   final String? itemId; // For existing item
@@ -138,17 +138,23 @@ class _EquipmentItemEditScreenState
     setState(() => _isLoading = true);
     try {
       final item = await ref.read(equipmentItemByIdProvider(widget.itemId!).future);
-      _populateForm(item);
+       if(mounted) {
+        _populateForm(item);
+       }
     } catch (e) {
-       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ош2ибка: $e'), backgroundColor: Colors.red));
+      if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _saveForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedEquipmentType == null) {
+      if (!mounted) return;
        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Пожалуйста, выберите тип оборудования.'), backgroundColor: Colors.red));
       return;
     }
@@ -198,7 +204,9 @@ class _EquipmentItemEditScreenState
       if (!mounted) return;
        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
   
@@ -224,7 +232,7 @@ class _EquipmentItemEditScreenState
         ),
       ),
     );
-    if (result == true) {
+    if (result == true && mounted) {
       ref.invalidate(maintenanceHistoryProvider(widget.itemId!));
     }
   }
