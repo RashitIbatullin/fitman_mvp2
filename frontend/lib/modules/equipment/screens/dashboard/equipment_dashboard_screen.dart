@@ -262,6 +262,7 @@ class _EquipmentDashboardScreenState
                 }
 
                 return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 80.0), // Add padding for FAB
                   itemCount: filteredItems.length,
                   itemBuilder: (context, index) {
                     final item = filteredItems[index];
@@ -432,11 +433,13 @@ class EquipmentItemCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildInfoRow(context, 'Тип:', equipmentTypeName ?? 'N/A'),
-                  _buildInfoRow(context, 'Модель:', item.model ?? 'N/A'),
+                  _buildInfoRow(
+                    context,
+                    'Модель/Производитель:',
+                    '${item.model ?? 'N/A'}${item.manufacturer != null && item.manufacturer!.isNotEmpty ? ' (${item.manufacturer})' : ''}',
+                  ),
                   _buildInfoRow(
                       context, 'Помещение:', roomName ?? 'Не назначено'),
-                  _buildInfoRow(
-                      context, 'Производитель:', item.manufacturer ?? 'N/A'),
                 ],
               ),
             ),

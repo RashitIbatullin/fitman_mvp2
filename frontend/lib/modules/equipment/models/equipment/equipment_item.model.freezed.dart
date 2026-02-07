@@ -29,6 +29,7 @@ mixin _$EquipmentItem {
   String? get manufacturer => throw _privateConstructorUsedError;
   String? get roomId => throw _privateConstructorUsedError;
   String? get placementNote => throw _privateConstructorUsedError;
+  @EquipmentStatusConverter()
   EquipmentStatus get status => throw _privateConstructorUsedError;
   int get conditionRating => throw _privateConstructorUsedError;
   String? get conditionNotes => throw _privateConstructorUsedError;
@@ -72,7 +73,7 @@ abstract class $EquipmentItemCopyWith<$Res> {
     String? manufacturer,
     String? roomId,
     String? placementNote,
-    EquipmentStatus status,
+    @EquipmentStatusConverter() EquipmentStatus status,
     int conditionRating,
     String? conditionNotes,
     DateTime? lastMaintenanceDate,
@@ -253,7 +254,7 @@ abstract class _$$EquipmentItemImplCopyWith<$Res>
     String? manufacturer,
     String? roomId,
     String? placementNote,
-    EquipmentStatus status,
+    @EquipmentStatusConverter() EquipmentStatus status,
     int conditionRating,
     String? conditionNotes,
     DateTime? lastMaintenanceDate,
@@ -426,7 +427,7 @@ class _$EquipmentItemImpl implements _EquipmentItem {
     this.manufacturer,
     this.roomId,
     this.placementNote,
-    required this.status,
+    @EquipmentStatusConverter() required this.status,
     required this.conditionRating,
     this.conditionNotes,
     this.lastMaintenanceDate,
@@ -464,6 +465,7 @@ class _$EquipmentItemImpl implements _EquipmentItem {
   @override
   final String? placementNote;
   @override
+  @EquipmentStatusConverter()
   final EquipmentStatus status;
   @override
   final int conditionRating;
@@ -615,7 +617,7 @@ abstract class _EquipmentItem implements EquipmentItem {
     final String? manufacturer,
     final String? roomId,
     final String? placementNote,
-    required final EquipmentStatus status,
+    @EquipmentStatusConverter() required final EquipmentStatus status,
     required final int conditionRating,
     final String? conditionNotes,
     final DateTime? lastMaintenanceDate,
@@ -653,6 +655,7 @@ abstract class _EquipmentItem implements EquipmentItem {
   @override
   String? get placementNote;
   @override
+  @EquipmentStatusConverter()
   EquipmentStatus get status;
   @override
   int get conditionRating;

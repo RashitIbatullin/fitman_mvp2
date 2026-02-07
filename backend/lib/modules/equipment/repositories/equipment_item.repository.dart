@@ -103,9 +103,13 @@ class EquipmentItemRepositoryImpl implements EquipmentItemRepository {
   Future<List<EquipmentItem>> getAll({bool includeArchived = false}) async {
     try {
       final conn = await _db.connection;
-      final whereClause = includeArchived ? 'WHERE archived_at IS NOT NULL' : 'WHERE archived_at IS NULL';
-      final result =
-          await conn.execute(Sql.named('SELECT * FROM equipment_items $whereClause'));
+      final whereClause = includeArchived ? 'ei.archived_at IS NOT NULL' : 'ei.archived_at IS NULL';
+      final result = await conn.execute(Sql.named('''
+        SELECT ei.* FROM equipment_items ei
+        JOIN equipment_types et ON ei.type_id = et.id
+        WHERE $whereClause
+        ORDER BY et.name ASC, ei.inventory_number ASC
+      '''));
 
       return result
           .map(

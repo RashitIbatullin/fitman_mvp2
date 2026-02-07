@@ -82,24 +82,24 @@ class EquipmentItem {
       status: EquipmentStatus.values[map['status'] as int],
       conditionRating: map['condition_rating'] as int,
       conditionNotes: map['condition_notes'] as String?,
-      lastMaintenanceDate: map['last_maintenance_date'] as DateTime?,
-      nextMaintenanceDate: map['next_maintenance_date'] as DateTime?,
+      lastMaintenanceDate: _parseDateTime(map['last_maintenance_date']),
+      nextMaintenanceDate: _parseDateTime(map['next_maintenance_date']),
       maintenanceNotes: map['maintenance_notes'] as String?,
-      purchaseDate: map['purchase_date'] as DateTime?,
+      purchaseDate: _parseDateTime(map['purchase_date']),
       purchasePrice: purchasePriceValue is String
           ? double.tryParse(purchasePriceValue)
           : (purchasePriceValue as num?)?.toDouble(),
       supplier: map['supplier'] as String?,
       warrantyMonths: map['warranty_months'] as int?,
       usageHours: map['usage_hours'] as int,
-      lastUsedDate: map['last_used_date'] as DateTime?,
+      lastUsedDate: _parseDateTime(map['last_used_date']),
       photoUrls: (map['photo_urls'] is String
               ? (jsonDecode(map['photo_urls']) as List<dynamic>)
               : (map['photo_urls'] as List<dynamic>?))
           ?.map((e) => e.toString())
           .toList() ??
           const [],
-      archivedAt: map['archived_at'] as DateTime?,
+      archivedAt: _parseDateTime(map['archived_at']),
       archivedBy: map['archived_by']?.toString(),
       archivedReason: map['archived_reason'] as String?,
     );
@@ -118,7 +118,7 @@ class EquipmentItem {
       'manufacturer': manufacturer,
       'room_id': roomId,
       'placement_note': placementNote,
-      'status': status.name,
+      'status': status.index,
       'condition_rating': conditionRating,
       'condition_notes': conditionNotes,
       'last_maintenance_date': lastMaintenanceDate?.toIso8601String(),
@@ -137,3 +137,17 @@ class EquipmentItem {
     };
   }
 }
+
+DateTime? _parseDateTime(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.parse(value);
+  }
+  return null; // Or throw an error for unexpected types
+}
+

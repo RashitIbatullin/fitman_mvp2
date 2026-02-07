@@ -104,7 +104,7 @@ class EquipmentTypeRepositoryImpl implements EquipmentTypeRepository {
     final conn = await _db.connection;
     final result = await conn.execute(
       Sql.named('SELECT * FROM equipment_types WHERE id = @id'),
-      parameters: {'id': id},
+      parameters: {'id': int.parse(id)},
     );
 
     if (result.isEmpty) {

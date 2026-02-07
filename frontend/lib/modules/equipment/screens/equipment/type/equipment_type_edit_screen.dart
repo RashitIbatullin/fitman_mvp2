@@ -201,12 +201,13 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
                     DropdownButtonFormField<EquipmentCategory>(
                       initialValue: _selectedCategory,
                       decoration: const InputDecoration(labelText: 'Категория'),
-                      items: EquipmentCategory.values
-                          .map((category) => DropdownMenuItem(
-                                value: category,
-                                child: Text(category.displayName),
-                              ))
-                          .toList(),
+                      items: [
+                        ...EquipmentCategory.values
+                            .map((category) => DropdownMenuItem(
+                                  value: category,
+                                  child: Text(category.displayName),
+                                )),
+                      ],
                       onChanged: (value) {
                         setState(() {
                           _selectedCategory = value!;
@@ -249,7 +250,7 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
                               Text(iconName),
                             ],
                           ),
-                        )).toList(),
+                        )),
                       ],
                       onChanged: (value) {
                         setState(() {

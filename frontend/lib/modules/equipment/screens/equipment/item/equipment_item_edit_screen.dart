@@ -123,17 +123,38 @@ class _EquipmentItemEditScreenState
         item.lastUsedDate?.toLocal().toIso8601String().substring(0, 10) ?? '';
 
     // Set selected type and room
-    ref.read(equipmentTypeByIdProvider(item.typeId)).whenData((type) {
-      setState(() {
-        _selectedEquipmentType = type;
-      });
-    });
-    if (item.roomId != null) {
-      ref.read(roomByIdProvider(item.roomId!)).whenData((room) {
+    print('--- Frontend Logging: Populating form for item ID: ${item.id}, Type ID: ${item.typeId} ---');
+    ref.read(equipmentTypeByIdProvider(item.typeId)).when(
+      data: (type) {
         setState(() {
-          _selectedRoom = room;
+          _selectedEquipmentType = type;
         });
-      });
+        print('--- Frontend Logging: Successfully fetched type: ${type.name} ---');
+      },
+      loading: () => print('--- Frontend Logging: Loading type for ID: ${item.typeId} ---'),
+      error: (error, stack) {
+        print('--- Frontend Logging: Error fetching type for ID: ${item.typeId}: $error ---');
+        setState(() {
+          _errorMessage = 'Ошибка загрузки типа оборудования: $error';
+        });
+      },
+    );
+    if (item.roomId != null) {
+      ref.read(roomByIdProvider(item.roomId!)).when( // Changed to .when for logging errors
+        data: (room) {
+          setState(() {
+            _selectedRoom = room;
+          });
+          print('--- Frontend Logging: Successfully fetched room: ${room.name} ---');
+        },
+        loading: () => print('--- Frontend Logging: Loading room for ID: ${item.roomId!} ---'),
+        error: (error, stack) {
+          print('--- Frontend Logging: Error fetching room for ID: ${item.roomId!}: $error ---');
+          setState(() {
+            _errorMessage = (_errorMessage ?? '') + '\nОшибка загрузки помещения: $error';
+          });
+        },
+      );
     }
   }
 
@@ -182,10 +203,10 @@ class _EquipmentItemEditScreenState
       _errorMessage = null;
     });
 
-    final isCreating = widget.itemId == null && widget.equipmentItem == null;
+    final isCreating = widget.equipmentItem == null;
 
     final equipmentItem = EquipmentItem(
-      id: isCreating ? '' : widget.itemId!, // ID is empty for new, or existing for update
+      id: isCreating ? '' : widget.equipmentItem!.id,
       typeId: _selectedEquipmentType!.id,
       inventoryNumber: _inventoryNumberController.text,
       serialNumber: _serialNumberController.text.isEmpty ? null : _serialNumberController.text,
@@ -229,7 +250,7 @@ class _EquipmentItemEditScreenState
         await ApiService.createEquipmentItem(equipmentItem);
         message = 'Элемент оборудования успешно создан!';
       } else {
-        await ApiService.updateEquipmentItem(widget.itemId!, equipmentItem);
+        await ApiService.updateEquipmentItem(widget.equipmentItem!.id, equipmentItem);
         message = 'Элемент оборудования успешно обновлен!';
       }
       ref.invalidate(allEquipmentItemsProvider); // Refresh the list
@@ -288,14 +309,15 @@ class _EquipmentItemEditScreenState
                           border: OutlineInputBorder(),
                         ),
                         initialValue: _selectedEquipmentType,
-                        items: types
-                            .map(
-                              (type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(type.name),
+                        items: [
+                          ...types
+                              .map(
+                                (type) => DropdownMenuItem(
+                                  value: type,
+                                  child: Text(type.name),
+                                ),
                               ),
-                            )
-                            .toList(),
+                        ],
                         onChanged: (value) {
                           setState(() {
                             _selectedEquipmentType = value;
@@ -364,7 +386,7 @@ class _EquipmentItemEditScreenState
                               value: room,
                               child: Text(room.name),
                             ),
-                          ).toList(),
+                          ),
                         ],
                         onChanged: (value) {
                           setState(() {
@@ -390,14 +412,15 @@ class _EquipmentItemEditScreenState
                         border: OutlineInputBorder(),
                       ),
                       initialValue: _selectedStatus,
-                      items: EquipmentStatus.values
-                          .map(
-                            (status) => DropdownMenuItem(
-                              value: status,
-                              child: Text(status.displayName),
+                      items: [
+                        ...EquipmentStatus.values
+                            .map(
+                              (status) => DropdownMenuItem(
+                                value: status,
+                                child: Text(status.displayName),
+                              ),
                             ),
-                          )
-                          .toList(),
+                      ],
                       onChanged: (value) {
                         setState(() {
                           _selectedStatus = value!;
@@ -417,14 +440,15 @@ class _EquipmentItemEditScreenState
                         border: OutlineInputBorder(),
                       ),
                       initialValue: _conditionRating,
-                      items: List.generate(5, (index) => index + 1)
-                          .map(
-                            (rating) => DropdownMenuItem(
-                              value: rating,
-                              child: Text('$rating'),
+                      items: [
+                        ...List.generate(5, (index) => index + 1)
+                            .map(
+                              (rating) => DropdownMenuItem(
+                                value: rating,
+                                child: Text('$rating'),
+                              ),
                             ),
-                          )
-                          .toList(),
+                      ],
                       onChanged: (value) {
                         setState(() {
                           _conditionRating = value!;

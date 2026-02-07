@@ -46,6 +46,12 @@ class EquipmentItemController {
             await _db.equipmentItems.getAll(includeArchived: includeArchived);
       }
 
+      // --- START LOGGING ---
+      print('--- Equipment Item Status Logging (Backend) ---');
+      for (var item in equipmentItems) {
+        print('Item ID: ${item.id}, Inventory: ${item.inventoryNumber}, Status: ${item.status}, Status Index: ${item.status.index}');
+      }
+      print('--- END LOGGING ---');
       final equipmentItemsJson =
           equipmentItems.map((item) => item.toJson()).toList();
       return Response.ok(jsonEncode(equipmentItemsJson));

@@ -16,7 +16,9 @@ _$EquipmentItemImpl _$$EquipmentItemImplFromJson(Map<String, dynamic> json) =>
       manufacturer: json['manufacturer'] as String?,
       roomId: json['room_id'] as String?,
       placementNote: json['placement_note'] as String?,
-      status: $enumDecode(_$EquipmentStatusEnumMap, json['status']),
+      status: const EquipmentStatusConverter().fromJson(
+        (json['status'] as num).toInt(),
+      ),
       conditionRating: (json['condition_rating'] as num).toInt(),
       conditionNotes: json['condition_notes'] as String?,
       lastMaintenanceDate: json['last_maintenance_date'] == null
@@ -58,7 +60,7 @@ Map<String, dynamic> _$$EquipmentItemImplToJson(_$EquipmentItemImpl instance) =>
       'manufacturer': instance.manufacturer,
       'room_id': instance.roomId,
       'placement_note': instance.placementNote,
-      'status': _$EquipmentStatusEnumMap[instance.status]!,
+      'status': const EquipmentStatusConverter().toJson(instance.status),
       'condition_rating': instance.conditionRating,
       'condition_notes': instance.conditionNotes,
       'last_maintenance_date': instance.lastMaintenanceDate?.toIso8601String(),
@@ -75,12 +77,3 @@ Map<String, dynamic> _$$EquipmentItemImplToJson(_$EquipmentItemImpl instance) =>
       'archived_by': instance.archivedBy,
       'archived_reason': instance.archivedReason,
     };
-
-const _$EquipmentStatusEnumMap = {
-  EquipmentStatus.available: 'available',
-  EquipmentStatus.inUse: 'inUse',
-  EquipmentStatus.reserved: 'reserved',
-  EquipmentStatus.maintenance: 'maintenance',
-  EquipmentStatus.outOfOrder: 'outOfOrder',
-  EquipmentStatus.storage: 'storage',
-};
