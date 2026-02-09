@@ -34,6 +34,9 @@ import '../modules/equipment/repositories/equipment_item.repository.dart';
 import '../modules/equipment/repositories/equipment_maintenance_history.repository.dart';
 import '../modules/roles/controllers/manager_controller.dart'; // New manager controller
 import '../modules/roles/controllers/instructor_controller.dart'; // New instructor controller
+import '../modules/supportStaff/controllers/support_staff.controller.dart'; // New SupportStaff controller
+import '../modules/supportStaff/services/support_staff.service.dart'; // New SupportStaff service
+import '../modules/supportStaff/repositories/support_staff.repository.dart'; // New SupportStaff repository
 
 
 final Database _db = Database(); // Instantiate Database once
@@ -45,9 +48,47 @@ final _equipmentMaintenanceHistoryRepository = EquipmentMaintenanceHistoryReposi
 
 
 // Equipment Service
+
+
 final _equipmentService = EquipmentServiceImpl(_equipmentTypeRepository, _equipmentItemRepository, _equipmentMaintenanceHistoryRepository);
 
+
+
+
+
+// SupportStaff Repositories
+
+
+final _supportStaffRepository = SupportStaffRepositoryImpl(_db);
+
+
+
+
+
+// SupportStaff Service
+
+
+final _supportStaffService = SupportStaffService(_supportStaffRepository);
+
+
+
+
+
+// SupportStaff Controller
+
+
+final _supportStaffController = SupportStaffController(_supportStaffService);
+
+
+
+
+
+
+
+
 // Group-related controllers
+
+
 final _trainingGroupsController = TrainingGroupsController(_db);
 final _analyticGroupsController = AnalyticGroupsController(_db);
 final _groupScheduleController = GroupScheduleController(_db);
@@ -241,4 +282,31 @@ final Router router = Router()
   ..mount('/api/equipment/items', _adminHandler(_equipmentItemController.handler))
   ..mount('/api/equipment/types', _adminHandler(_equipmentTypeController.handler))
   ..mount('/api/equipment/maintenance', _adminHandler(_equipmentMaintenanceHistoryController.handler))
-  ..mount('/api/buildings', _adminHandler(_buildingController.router.call));
+  ..mount('/api/buildings', _adminHandler(_buildingController.router.call))
+
+// Support Staff routes (Admin access)
+  ..get('/api/support-staff', _adminHandler(_supportStaffController.getAll))
+  ..post('/api/support-staff', _adminHandler(_supportStaffController.create))
+  ..get('/api/support-staff/<id>', (Request request, String id) {
+    return _adminHandler((Request req) => _supportStaffController.getById(req, id))(request);
+  })
+  ..put('/api/support-staff/<id>', (Request request, String id) {
+    return _adminHandler((Request req) => _supportStaffController.update(req, id))(request);
+  })
+  ..delete('/api/support-staff/<id>', (Request request, String id) {
+    return _adminHandler((Request req) => _supportStaffController.archive(req, id))(request);
+  })
+  ..put('/api/support-staff/<id>/unarchive', (Request request, String id) {
+    return _adminHandler((Request req) => _supportStaffController.unarchive(req, id))(request);
+  })
+  ..get('/api/support-staff/<staffId>/competencies', (Request request, String staffId) {
+    return _adminHandler((Request req) => _supportStaffController.getCompetencies(req, staffId))(request);
+  })
+  ..post('/api/support-staff/<staffId>/competencies', (Request request, String staffId) {
+    return _adminHandler((Request req) => _supportStaffController.addCompetency(req, staffId))(request);
+  })
+  ..delete('/api/support-staff/<staffId>/competencies/<compId>', (Request request, String staffId, String compId) {
+    return _adminHandler((Request req) => _supportStaffController.deleteCompetency(req, staffId, compId))(request);
+  });
+
+

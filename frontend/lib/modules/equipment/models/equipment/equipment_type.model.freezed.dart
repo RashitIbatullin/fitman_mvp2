@@ -25,7 +25,7 @@ mixin _$EquipmentType {
   String get name => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   @EquipmentCategoryConverter()
-  EquipmentCategory get category => throw _privateConstructorUsedError; // EquipmentSubType? subType, // Commented out due to inconsistent DB values
+  EquipmentCategory get category => throw _privateConstructorUsedError;
   String? get weightRange => throw _privateConstructorUsedError;
   String? get dimensions => throw _privateConstructorUsedError;
   bool get isMobile => throw _privateConstructorUsedError;
@@ -275,7 +275,6 @@ class _$EquipmentTypeImpl implements _EquipmentType {
   @override
   @EquipmentCategoryConverter()
   final EquipmentCategory category;
-  // EquipmentSubType? subType, // Commented out due to inconsistent DB values
   @override
   final String? weightRange;
   @override
@@ -381,7 +380,7 @@ abstract class _EquipmentType implements EquipmentType {
   String? get description;
   @override
   @EquipmentCategoryConverter()
-  EquipmentCategory get category; // EquipmentSubType? subType, // Commented out due to inconsistent DB values
+  EquipmentCategory get category;
   @override
   String? get weightRange;
   @override

@@ -10,12 +10,15 @@ import 'api/instructor_api.dart';
 import 'api/manager_api.dart';
 import 'api/recommendation_api.dart';
 import 'api/schedule_api.dart';
+import 'api/support_staff_api.dart';
 import '../modules/equipment/models/equipment/equipment_item.model.dart';
 import '../modules/equipment/models/equipment/equipment_type.model.dart';
 import '../modules/roles/models/role.dart';
 import '../models/schedule_item.dart';
 import '../modules/rooms/models/building/building.model.dart';
 import '../modules/rooms/models/room/room.model.dart';
+import '../modules/supportStaff/models/competency.model.dart';
+import '../modules/supportStaff/models/support_staff.model.dart';
 import '../modules/users/models/user.dart';
 import '../modules/chat/models/chat_models.dart';
 import '../models/whtr_profiles.dart';
@@ -42,6 +45,7 @@ class ApiService {
   static final ScheduleApiService _scheduleApi = ScheduleApiService();
   static final AdminApiService _adminApi = AdminApiService();
   static final RecommendationApiService _recommendationApi = RecommendationApiService();
+  static final SupportStaffApiService _supportStaffApi = SupportStaffApiService();
 
 
   // --- Token and Session Management ---
@@ -350,4 +354,32 @@ class ApiService {
       fileName: fileName,
       type: type,
       photoDateTime: photoDateTime);
+
+  // --- Support Staff Methods ---
+  static Future<List<SupportStaff>> getAllSupportStaff({bool? isArchived}) =>
+      _supportStaffApi.getAllSupportStaff(isArchived: isArchived);
+
+  static Future<SupportStaff> getSupportStaffById(String id) =>
+      _supportStaffApi.getSupportStaffById(id);
+
+  static Future<SupportStaff> createSupportStaff(SupportStaff staff) =>
+      _supportStaffApi.createSupportStaff(staff);
+
+  static Future<SupportStaff> updateSupportStaff(String id, SupportStaff staff) =>
+      _supportStaffApi.updateSupportStaff(id, staff);
+
+  static Future<void> archiveSupportStaff(String id, String reason) =>
+      _supportStaffApi.archiveSupportStaff(id, reason);
+
+  static Future<void> unarchiveSupportStaff(String id) =>
+      _supportStaffApi.unarchiveSupportStaff(id);
+
+  static Future<List<Competency>> getCompetencies(String staffId) =>
+      _supportStaffApi.getCompetencies(staffId);
+
+  static Future<Competency> addCompetency(String staffId, Competency competency) =>
+      _supportStaffApi.addCompetency(staffId, competency);
+
+  static Future<void> deleteCompetency(String staffId, String competencyId) =>
+      _supportStaffApi.deleteCompetency(staffId, competencyId);
 }

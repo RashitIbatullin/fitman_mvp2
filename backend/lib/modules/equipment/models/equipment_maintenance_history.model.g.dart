@@ -9,9 +9,6 @@ part of 'equipment_maintenance_history.model.dart';
 MaintenancePhoto _$MaintenancePhotoFromJson(Map<String, dynamic> json) =>
     MaintenancePhoto(url: json['url'] as String, note: json['note'] as String);
 
-Map<String, dynamic> _$MaintenancePhotoToJson(MaintenancePhoto instance) =>
-    <String, dynamic>{'url': instance.url, 'note': instance.note};
-
 EquipmentMaintenanceHistory _$EquipmentMaintenanceHistoryFromJson(
   Map<String, dynamic> json,
 ) => EquipmentMaintenanceHistory(
@@ -43,26 +40,6 @@ EquipmentMaintenanceHistory _$EquipmentMaintenanceHistoryFromJson(
   note: json['note'] as String?,
 );
 
-Map<String, dynamic> _$EquipmentMaintenanceHistoryToJson(
-  EquipmentMaintenanceHistory instance,
-) => <String, dynamic>{
-  'id': instance.id,
-  'equipmentItemId': instance.equipmentItemId,
-  'dateSent': instance.dateSent.toIso8601String(),
-  'dateReturned': instance.dateReturned?.toIso8601String(),
-  'descriptionOfWork': instance.descriptionOfWork,
-  'cost': instance.cost,
-  'performedBy': instance.performedBy,
-  'photos': instance.photos?.map((e) => e.toJson()).toList(),
-  'createdAt': instance.createdAt?.toIso8601String(),
-  'updatedAt': instance.updatedAt?.toIso8601String(),
-  'createdBy': instance.createdBy,
-  'updatedBy': instance.updatedBy,
-  'archivedAt': instance.archivedAt?.toIso8601String(),
-  'archivedBy': instance.archivedBy,
-  'archivedReason': instance.archivedReason,
-  'note': instance.note,
-};
 
 _$MaintenancePhotoImpl _$$MaintenancePhotoImplFromJson(
   Map<String, dynamic> json,
