@@ -143,8 +143,10 @@ class _EquipmentTypeEditScreenState extends ConsumerState<EquipmentTypeEditScree
         // Update existing
         await ApiService.updateEquipmentType(widget.equipmentTypeId!, newEquipmentType);
         message = 'Тип оборудования успешно обновлен!';
+        ref.invalidate(equipmentTypeByIdProvider(widget.equipmentTypeId!));
       }
-      // No need to invalidate here, the list screen will do it.
+      ref.invalidate(allEquipmentTypesProvider); // Invalidate all types to refresh the list
+
       if (!mounted) return; // Guard against BuildContext across async gaps
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), backgroundColor: Colors.green),

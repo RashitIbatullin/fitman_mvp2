@@ -1,5 +1,4 @@
 import 'package:fitman_backend/modules/equipment/models/equipment/equipment_category.enum.dart';
-import 'package:fitman_backend/modules/equipment/models/equipment/equipment_sub_type.enum.dart';
 
 class EquipmentType {
   EquipmentType({
@@ -7,7 +6,6 @@ class EquipmentType {
     required this.name,
     this.description,
     required this.category,
-    this.subType,
     this.weightRange,
     this.dimensions,
 
@@ -28,7 +26,6 @@ class EquipmentType {
 
   // Классификация
   final EquipmentCategory category;
-  final EquipmentSubType? subType;
 
   // Базовые характеристики
   final String? weightRange;
@@ -54,57 +51,12 @@ class EquipmentType {
 
   factory EquipmentType.fromMap(Map<String, dynamic> map) {
     final category = EquipmentCategory.values[map['category'] as int];
-    EquipmentSubType? subType;
-    final subTypeValue = map['sub_type'] as int?;
-
-    if (subTypeValue != null) {
-      switch (category) {
-        case EquipmentCategory.cardio:
-          const mapping = {
-            0: EquipmentSubType.treadmill,
-            1: EquipmentSubType.elliptical,
-            2: EquipmentSubType.bike,
-          };
-          subType = mapping[subTypeValue];
-          break;
-        case EquipmentCategory.strength:
-          const mapping = {
-            0: EquipmentSubType.bench,
-            1: EquipmentSubType.legPress,
-          };
-          subType = mapping[subTypeValue];
-          break;
-        case EquipmentCategory.freeWeights:
-          const mapping = {
-            0: EquipmentSubType.dumbbell,
-            1: EquipmentSubType.barbell,
-          };
-          subType = mapping[subTypeValue];
-          break;
-        case EquipmentCategory.functional:
-          const mapping = {0: EquipmentSubType.fitball};
-          subType = mapping[subTypeValue];
-          break;
-        case EquipmentCategory.accessories:
-          const mapping = {0: EquipmentSubType.yogaMat};
-          subType = mapping[subTypeValue];
-          break;
-        case EquipmentCategory.measurement:
-          const mapping = {0: EquipmentSubType.scales};
-          subType = mapping[subTypeValue];
-          break;
-        case EquipmentCategory.other:
-          subType = EquipmentSubType.none;
-          break;
-      }
-    }
 
     return EquipmentType(
       id: map['id'].toString(),
       name: map['name'] as String,
       description: map['description'] as String?,
       category: category,
-      subType: subType,
       weightRange: map['weight_range'] as String?,
       dimensions: map['dimensions'] as String?,
 
@@ -129,7 +81,6 @@ class EquipmentType {
       'name': name,
       'description': description,
       'category': category.index,
-      'sub_type': subType?.index,
       'weight_range': weightRange,
       'dimensions': dimensions,
 
