@@ -49,10 +49,10 @@ class EquipmentTypeRepositoryImpl implements EquipmentTypeRepository {
     final result = await conn.execute(
       Sql.named('''
         INSERT INTO equipment_types (
-          name, description, category, sub_type, weight_range, dimensions, is_mobile, schematic_icon,
+          name, description, category, weight_range, dimensions, is_mobile, schematic_icon,
           company_id, created_at, updated_at, created_by, updated_by
         ) VALUES (
-          @name, @description, @category, @subType, @weightRange, @dimensions, @isMobile, @schematicIcon,
+          @name, @description, @category, @weightRange, @dimensions, @isMobile, @schematicIcon,
           -1, NOW(), NOW(), @createdBy, @updatedBy
         ) RETURNING id;
       '''),
@@ -60,7 +60,6 @@ class EquipmentTypeRepositoryImpl implements EquipmentTypeRepository {
         'name': equipmentType.name,
         'description': equipmentType.description,
         'category': equipmentType.category.index,
-        'subType': equipmentType.subType?.index,
         'weightRange': equipmentType.weightRange,
         'dimensions': equipmentType.dimensions,
         'isMobile': equipmentType.isMobile,
@@ -123,7 +122,6 @@ class EquipmentTypeRepositoryImpl implements EquipmentTypeRepository {
           name = @name,
           description = @description,
           category = @category,
-          sub_type = @subType,
           weight_range = @weightRange,
           dimensions = @dimensions,
           is_mobile = @isMobile,
@@ -140,7 +138,6 @@ class EquipmentTypeRepositoryImpl implements EquipmentTypeRepository {
         'name': equipmentType.name,
         'description': equipmentType.description,
         'category': equipmentType.category.index,
-        'subType': equipmentType.subType?.index,
         'weightRange': equipmentType.weightRange,
         'dimensions': equipmentType.dimensions,
         'isMobile': equipmentType.isMobile,
