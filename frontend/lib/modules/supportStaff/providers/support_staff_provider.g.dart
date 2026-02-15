@@ -6,7 +6,7 @@ part of 'support_staff_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$allSupportStaffHash() => r'4ffdb9a6781a66a2910d61ba528914555b562a96';
+String _$allSupportStaffHash() => r'bd3f64e9d41281b6aab9f7badf76a998847471cd';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -153,7 +153,7 @@ class _AllSupportStaffProviderElement
       (origin as AllSupportStaffProvider).includeArchived;
 }
 
-String _$supportStaffByIdHash() => r'646626ad9f894a39d4491f67776fea04fad1ed90';
+String _$supportStaffByIdHash() => r'fbcc5c6ad8711ddb530f88e67367490d9f62cc36';
 
 /// See also [supportStaffById].
 @ProviderFor(supportStaffById)

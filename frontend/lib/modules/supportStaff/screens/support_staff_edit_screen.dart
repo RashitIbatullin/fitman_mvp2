@@ -31,8 +31,10 @@ class _SupportStaffEditScreenState
   late EmploymentType _employmentType;
   late StaffCategory _staffCategory;
   late bool _canMaintainEquipment;
-  late bool _isActive;
   DateTime? _contractExpiryDate;
+
+  bool _isLoading = false; // Added
+  String? _errorMessage; // Added
 
   @override
   void initState() {
@@ -55,7 +57,6 @@ class _SupportStaffEditScreenState
         widget.staff?.employmentType ?? EmploymentType.fullTime;
     _staffCategory = widget.staff?.category ?? StaffCategory.technician;
     _canMaintainEquipment = widget.staff?.canMaintainEquipment ?? false;
-    _isActive = widget.staff?.isActive ?? true;
     _contractExpiryDate = widget.staff?.contractExpiryDate;
   }
 
@@ -74,6 +75,11 @@ class _SupportStaffEditScreenState
 
   Future<void> _saveForm() async {
     if (_formKey.currentState!.validate()) {
+      setState(() { // Added
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
       final newStaff = SupportStaff(
         id: widget.staff?.id ?? '', // handled by backend
         firstName: _firstNameController.text,
@@ -84,7 +90,6 @@ class _SupportStaffEditScreenState
         employmentType: _employmentType,
         category: _staffCategory,
         canMaintainEquipment: _canMaintainEquipment,
-        isActive: _isActive,
         companyName: _companyNameController.text,
         contractNumber: _contractNumberController.text,
         contractExpiryDate: _contractExpiryDate,
@@ -103,10 +108,28 @@ class _SupportStaffEditScreenState
         if (widget.staff != null) {
           ref.invalidate(supportStaffByIdProvider(widget.staff!.id));
         }
-        if (mounted) Navigator.of(context).pop();
+
+        String message = widget.staff == null ? 'Сотрудник успешно создан!' : 'Данные сотрудника успешно обновлены!'; // Added
+        if (mounted) { // Added
+          ScaffoldMessenger.of(context).showSnackBar( // Added
+            SnackBar(content: Text(message), backgroundColor: Colors.green), // Added
+          ); // Added
+          Navigator.of(context).pop(); // Moved into mounted check
+        } // Added
       } catch (e) {
-        // Handle error
-      }
+        setState(() { // Added
+          _errorMessage = e.toString();
+        }); // Added
+        if (mounted) { // Added
+          ScaffoldMessenger.of(context).showSnackBar( // Added
+            SnackBar(content: Text('Ошибка: $_errorMessage'), backgroundColor: Colors.red), // Added
+          ); // Added
+        } // Added
+      } finally { // Added
+        setState(() { // Added
+          _isLoading = false;
+        }); // Added
+      } // Added
     }
   }
 
@@ -194,11 +217,6 @@ class _SupportStaffEditScreenState
                 onChanged: (value) =>
                     setState(() => _canMaintainEquipment = value),
               ),
-              SwitchListTile(
-                title: const Text('Активен'),
-                value: _isActive,
-                onChanged: (value) => setState(() => _isActive = value),
-              ),
               TextFormField(
                 controller: _companyNameController,
                 decoration: const InputDecoration(labelText: 'Компания'),
@@ -229,9 +247,20 @@ class _SupportStaffEditScreenState
                 decoration: const InputDecoration(labelText: 'Заметки'),
                 maxLines: 3,
               ),
+              if (_errorMessage != null) // Added
+                Padding( // Added
+                  padding: const EdgeInsets.all(8.0), // Added
+                  child: Text( // Added
+                    _errorMessage!, // Added
+                    style: const TextStyle(color: Colors.red), // Added
+                  ), // Added
+                ), // Added
+              const SizedBox(height: 20), // Added
               ElevatedButton(
-                onPressed: _saveForm,
-                child: const Text('Сохранить'),
+                onPressed: _isLoading ? null : _saveForm, // Modified
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Сохранить'), // Modified
               )
             ],
           ),

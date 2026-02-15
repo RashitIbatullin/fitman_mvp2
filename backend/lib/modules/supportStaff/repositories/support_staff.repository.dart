@@ -1,20 +1,25 @@
 import 'package:fitman_backend/config/database.dart';
-import 'package:fitman_backend/modules/supportStaff/models/competency.model.dart';
-import 'package:fitman_backend/modules/supportStaff/models/support_staff.model.dart';
-import 'package:fitman_backend/modules/supportStaff/models/work_schedule.model.dart';
+import 'package:fitman_backend/modules/supportStaff/models/competency.dart';
+import 'package:fitman_backend/modules/supportStaff/models/support_staff.dart';
+import 'dart:convert';
 import 'package:postgres/postgres.dart';
+import 'package:fitman_backend/modules/supportStaff/models/work_schedule.dart';
+import 'package:fitman_backend/modules/supportStaff/models/employment_type.dart';
+import 'package:fitman_backend/modules/supportStaff/models/staff_category.dart';
+
 
 abstract class SupportStaffRepository {
-  Future<SupportStaff> getById(String id);
+  Future<SupportStaff> getById(int id);
   Future<List<SupportStaff>> getAll({bool includeArchived = false});
   Future<SupportStaff> create(SupportStaff supportStaff, String userId);
-  Future<SupportStaff> update(String id, SupportStaff supportStaff, String userId);
-  Future<void> archive(String id, String userId);
-  Future<void> unarchive(String id);
-  Future<List<Competency>> getCompetencies(String staffId);
+  Future<SupportStaff> update(int id, SupportStaff supportStaff, String userId);
+  Future<void> archive(int id, String userId, String reason);
+  Future<void> unarchive(int id);
+  Future<List<Competency>> getCompetencies(int staffId);
   Future<Competency> addCompetency(Competency competency);
-  Future<void> deleteCompetency(String competencyId);
-  Future<WorkSchedule?> getSchedule(String staffId);
+  Future<void> deleteCompetency(int competencyId);
+  Future<Competency> getCompetencyById(int id);
+  Future<WorkSchedule?> getSchedule(int staffId);
   Future<WorkSchedule> updateSchedule(WorkSchedule schedule);
 }
 
@@ -24,14 +29,15 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
   final Database _db;
 
   @override
-  Future<void> archive(String id, String userId) async {
+  Future<void> archive(int id, String userId, String reason) async {
     final conn = await _db.connection;
     await conn.execute(
       Sql.named(
-          'UPDATE support_staff SET archived_at = NOW(), archived_by = @userId WHERE id = @id'),
+          'UPDATE support_staff SET archived_at = NOW(), archived_by = @userId, archived_reason = @reason WHERE id = @id'),
       parameters: {
         'id': id,
         'userId': userId,
+        'reason': reason,
       },
     );
   }
@@ -44,12 +50,12 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
         INSERT INTO support_staff (
           first_name, last_name, middle_name, phone, email, employment_type, category,
           can_maintain_equipment, accessible_equipment_types, company_name, contract_number,
-          contract_expiry_date, is_active, notes, company_id, created_at, updated_at,
+          contract_expiry_date, notes, company_id, created_at, updated_at,
           created_by, updated_by
         ) VALUES (
           @firstName, @lastName, @middleName, @phone, @email, @employmentType, @category,
           @canMaintainEquipment, @accessibleEquipmentTypes, @companyName, @contractNumber,
-          @contractExpiryDate, @isActive, @notes, -1, NOW(), NOW(), @createdBy, @updatedBy
+          @contractExpiryDate, @notes, -1, NOW(), NOW(), @createdBy, @updatedBy
         ) RETURNING id;
       '''),
       parameters: {
@@ -61,11 +67,12 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
         'employmentType': supportStaff.employmentType.index,
         'category': supportStaff.category.index,
         'canMaintainEquipment': supportStaff.canMaintainEquipment,
-        'accessibleEquipmentTypes': supportStaff.accessibleEquipmentTypes,
+        'accessibleEquipmentTypes': supportStaff.accessibleEquipmentTypes != null && supportStaff.accessibleEquipmentTypes!.isNotEmpty
+          ? jsonEncode(supportStaff.accessibleEquipmentTypes)
+          : null,
         'companyName': supportStaff.companyName,
         'contractNumber': supportStaff.contractNumber,
-        'contractExpiryDate': supportStaff.contractExpiryDate,
-        'isActive': supportStaff.isActive,
+        'contractExpiryDate': supportStaff.contractExpiryDate?.toIso8601String().split('T')[0],
         'notes': supportStaff.notes,
         'createdBy': userId,
         'updatedBy': userId,
@@ -73,7 +80,7 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
     );
 
     final newId = result.first.first as int;
-    return await getById(newId.toString());
+    return await getById(newId);
   }
 
   @override
@@ -85,13 +92,37 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
 
     final staffList = <SupportStaff>[];
     for (final row in result) {
-      final staff = SupportStaff.fromMap(row.toColumnMap());
-      final competencies = await getCompetencies(staff.id);
-      final schedule = await getSchedule(staff.id);
+      final staffData = row.toColumnMap();
+      final staffId = staffData['id'] as int;
+      final competencies = await getCompetencies(staffId);
+      final schedule = await getSchedule(staffId);
+
+      // Create a new SupportStaff object with all fetched data
       staffList.add(
-        staff.copyWith(
-          competencies: competencies,
-          schedule: schedule,
+        SupportStaff(
+          id: staffData['id'] as int,
+          firstName: staffData['first_name'] as String,
+          lastName: staffData['last_name'] as String,
+          middleName: staffData['middle_name'] as String?,
+          phone: staffData['phone'] as String?,
+          email: staffData['email'] as String?,
+          employmentType: EmploymentType.values[staffData['employment_type'] as int],
+          category: StaffCategory.values[staffData['category'] as int],
+          canMaintainEquipment: staffData['can_maintain_equipment'] as bool,
+          accessibleEquipmentTypes: (staffData['accessible_equipment_types'] != null && staffData['accessible_equipment_types'] is String)
+            ? (jsonDecode(staffData['accessible_equipment_types']) as List<dynamic>).cast<String>()
+            : (staffData['accessible_equipment_types'] as List<dynamic>?)?.cast<String>(),
+          companyName: staffData['company_name'] as String?,
+          contractNumber: staffData['contract_number'] as String?,
+          contractExpiryDate: (staffData['contract_expiry_date'] as DateTime?)?.toLocal(),
+          notes: staffData['notes'] as String?,
+          createdAt: (staffData['created_at'] as DateTime).toLocal(),
+          updatedAt: (staffData['updated_at'] as DateTime).toLocal(),
+          archivedAt: (staffData['archived_at'] as DateTime?)?.toLocal(),
+          archivedBy: staffData['archived_by'] as int?,
+          archivedReason: staffData['archived_reason'] as String?,
+          competencies: competencies, // Add fetched competencies
+          schedule: schedule, // Add fetched schedule
         ),
       );
     }
@@ -99,39 +130,61 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
   }
 
   @override
-  Future<SupportStaff> getById(String id) async {
+  Future<SupportStaff> getById(int id) async {
     final conn = await _db.connection;
     final result = await conn.execute(
       Sql.named('SELECT * FROM support_staff WHERE id = @id'),
-      parameters: {'id': int.parse(id)},
+      parameters: {'id': id},
     );
 
     if (result.isEmpty) {
       throw Exception('SupportStaff with id $id not found');
     }
 
-    final staff = SupportStaff.fromMap(result.first.toColumnMap());
-    final competencies = await getCompetencies(staff.id);
-    final schedule = await getSchedule(staff.id);
+    final staffData = result.first.toColumnMap();
+    final staffId = staffData['id'] as int;
+    final competencies = await getCompetencies(staffId);
+    final schedule = await getSchedule(staffId);
 
-    return staff.copyWith(
+    return SupportStaff(
+      id: staffData['id'] as int,
+      firstName: staffData['first_name'] as String,
+      lastName: staffData['last_name'] as String,
+      middleName: staffData['middle_name'] as String?,
+      phone: staffData['phone'] as String?,
+      email: staffData['email'] as String?,
+      employmentType: EmploymentType.values[staffData['employment_type'] as int],
+      category: StaffCategory.values[staffData['category'] as int],
+      canMaintainEquipment: staffData['can_maintain_equipment'] as bool,
+      accessibleEquipmentTypes: (staffData['accessible_equipment_types'] != null && staffData['accessible_equipment_types'] is String)
+        ? (jsonDecode(staffData['accessible_equipment_types']) as List<dynamic>).cast<String>()
+        : (staffData['accessible_equipment_types'] as List<dynamic>?)?.cast<String>(),
+      companyName: staffData['company_name'] as String?,
+      contractNumber: staffData['contract_number'] as String?,
+      contractExpiryDate: (staffData['contract_expiry_date'] as DateTime?)?.toLocal(),
+      notes: staffData['notes'] as String?,
+      createdAt: (staffData['created_at'] as DateTime).toLocal(),
+      updatedAt: (staffData['updated_at'] as DateTime).toLocal(),
+      archivedAt: (staffData['archived_at'] as DateTime?)?.toLocal(),
+      archivedBy: staffData['archived_by'] as int?,
+      archivedReason: staffData['archived_reason'] as String?,
       competencies: competencies,
       schedule: schedule,
     );
   }
 
   @override
-  Future<void> unarchive(String id) async {
+  Future<void> unarchive(int id) async {
     final conn = await _db.connection;
     await conn.execute(
       Sql.named(
-          'UPDATE support_staff SET archived_at = NULL, archived_by = NULL WHERE id = @id'),
+          'UPDATE support_staff SET archived_at = NULL, archived_by = NULL, archived_reason = NULL WHERE id = @id'),
       parameters: {'id': id},
     );
   }
 
   @override
-  Future<SupportStaff> update(String id, SupportStaff supportStaff, String userId) async {
+  Future<SupportStaff> update(int id, SupportStaff supportStaff, String userId) async {
     final conn = await _db.connection;
     await conn.execute(
       Sql.named('''
@@ -148,7 +201,6 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
           company_name = @companyName,
           contract_number = @contractNumber,
           contract_expiry_date = @contractExpiryDate,
-          is_active = @isActive,
           notes = @notes,
           updated_at = NOW(),
           updated_by = @updatedBy
@@ -164,11 +216,12 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
         'employmentType': supportStaff.employmentType.index,
         'category': supportStaff.category.index,
         'canMaintainEquipment': supportStaff.canMaintainEquipment,
-        'accessibleEquipmentTypes': supportStaff.accessibleEquipmentTypes,
+        'accessibleEquipmentTypes': supportStaff.accessibleEquipmentTypes != null && supportStaff.accessibleEquipmentTypes!.isNotEmpty
+          ? jsonEncode(supportStaff.accessibleEquipmentTypes)
+          : null,
         'companyName': supportStaff.companyName,
         'contractNumber': supportStaff.contractNumber,
-        'contractExpiryDate': supportStaff.contractExpiryDate,
-        'isActive': supportStaff.isActive,
+        'contractExpiryDate': supportStaff.contractExpiryDate?.toIso8601String().split('T')[0],
         'notes': supportStaff.notes,
         'updatedBy': userId,
       },
@@ -197,39 +250,39 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
       },
     );
     final newId = result.first.first as int;
-    return competency.copyWith(id: newId.toString());
+    return await getCompetencyById(newId);
   }
 
   @override
-  Future<void> deleteCompetency(String competencyId) async {
+  Future<void> deleteCompetency(int competencyId) async {
     final conn = await _db.connection;
     await conn.execute(
       Sql.named('DELETE FROM support_staff_competencies WHERE id = @id'),
-      parameters: {'id': int.parse(competencyId)},
+      parameters: {'id': competencyId},
     );
   }
 
   @override
-  Future<List<Competency>> getCompetencies(String staffId) async {
+  Future<List<Competency>> getCompetencies(int staffId) async {
     final conn = await _db.connection;
     final result = await conn.execute(
       Sql.named('SELECT * FROM support_staff_competencies WHERE staff_id = @staffId'),
-      parameters: {'staffId': int.parse(staffId)},
+      parameters: {'staffId': staffId},
     );
-    return result.map((row) => Competency.fromMap(row.toColumnMap())).toList();
+    return result.map((row) => Competency.fromJson(row.toColumnMap())).toList();
   }
 
   @override
-  Future<WorkSchedule?> getSchedule(String staffId) async {
+  Future<WorkSchedule?> getSchedule(int staffId) async {
     final conn = await _db.connection;
     final result = await conn.execute(
       Sql.named('SELECT * FROM support_staff_schedules WHERE staff_id = @staffId'),
-      parameters: {'staffId': int.parse(staffId)},
+      parameters: {'staffId': staffId},
     );
     if (result.isEmpty) {
       return null;
     }
-    return WorkSchedule.fromMap(result.first.toColumnMap());
+    return WorkSchedule.fromJson(result.first.toColumnMap());
   }
 
   @override
@@ -238,22 +291,35 @@ class SupportStaffRepositoryImpl implements SupportStaffRepository {
     await conn.execute(
       Sql.named('''
         INSERT INTO support_staff_schedules (
-          staff_id, day_of_week, start_time, end_time, is_active
+          staff_id, day_of_week, start_time, end_time
         ) VALUES (
-          @staffId, @dayOfWeek, @startTime, @endTime, @isActive
+          @staffId, @dayOfWeek, @startTime, @endTime
         ) ON CONFLICT (staff_id, day_of_week) DO UPDATE SET
           start_time = @startTime,
-          end_time = @endTime,
-          is_active = @isActive;
+          end_time = @endTime;
       '''),
       parameters: {
         'staffId': schedule.staffId,
         'dayOfWeek': schedule.dayOfWeek,
         'startTime': schedule.startTime,
         'endTime': schedule.endTime,
-        'isActive': schedule.isActive,
       },
     );
     return schedule;
+  }
+
+  @override
+  Future<Competency> getCompetencyById(int id) async {
+    final conn = await _db.connection;
+    final result = await conn.execute(
+      Sql.named('SELECT * FROM support_staff_competencies WHERE id = @id'),
+      parameters: {'id': id},
+    );
+
+    if (result.isEmpty) {
+      throw Exception('Competency with id $id not found');
+    }
+
+    return Competency.fromJson(result.first.toColumnMap());
   }
 }

@@ -47,7 +47,6 @@ class SupportStaffDetailScreen extends ConsumerWidget {
                 _buildDetailRow('Тип занятости:', staff.employmentType.localizedName),
                 _buildDetailRow('Категория:', staff.category.localizedName),
                 _buildDetailRow('Может обслуживать:', staff.canMaintainEquipment ? 'Да' : 'Нет'),
-                _buildDetailRow('Активен:', staff.isActive ? 'Да' : 'Нет'),
                 if (staff.companyName != null)
                   _buildDetailRow('Компания:', staff.companyName!),
                 if (staff.contractNumber != null)

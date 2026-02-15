@@ -20,15 +20,17 @@ class SupportStaff with _$SupportStaff {
     required StaffCategory category,
     List<Competency>? competencies,
     List<String>? accessibleEquipmentTypes,
-    required bool canMaintainEquipment,
+    @Default(false) bool canMaintainEquipment, // Modified here
     WorkSchedule? schedule,
     String? companyName,
     String? contractNumber,
     DateTime? contractExpiryDate,
-    required bool isActive,
     String? notes,
     required DateTime createdAt,
     required DateTime updatedAt,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   }) = _SupportStaff;
 
   factory SupportStaff.fromJson(Map<String, dynamic> json) =>

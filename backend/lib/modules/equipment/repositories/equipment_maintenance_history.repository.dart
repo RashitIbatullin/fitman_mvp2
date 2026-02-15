@@ -61,7 +61,7 @@ class EquipmentMaintenanceHistoryRepositoryImpl implements EquipmentMaintenanceH
       throw Exception('EquipmentMaintenanceHistory with id $id not found');
     }
 
-    return EquipmentMaintenanceHistory.fromMap(result.first.toColumnMap());
+    return EquipmentMaintenanceHistory.fromJson(result.first.toColumnMap());
   }
 
   @override
@@ -75,7 +75,7 @@ class EquipmentMaintenanceHistoryRepositoryImpl implements EquipmentMaintenanceH
     return result.map((row) {
       final rowMap = row.toColumnMap();
       print('Repository: Raw row from DB: $rowMap'); // Add this line
-      return EquipmentMaintenanceHistory.fromMap(rowMap);
+      return EquipmentMaintenanceHistory.fromJson(rowMap);
     }).toList();
   }
 

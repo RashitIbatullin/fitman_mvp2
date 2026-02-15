@@ -593,7 +593,6 @@ CREATE TABLE support_staff (
   company_name VARCHAR(255),
   contract_number VARCHAR(100),
   contract_expiry_date DATE,
-  is_active BOOLEAN DEFAULT true,
   notes TEXT,
   company_id BIGINT DEFAULT -1,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -601,7 +600,8 @@ CREATE TABLE support_staff (
   created_by BIGINT REFERENCES users(id),
   updated_by BIGINT REFERENCES users(id),
   archived_at TIMESTAMPTZ,
-  archived_by BIGINT REFERENCES users(id)
+  archived_by BIGINT REFERENCES users(id),
+  archived_reason TEXT
 );
 
 -- Компетенции вспомогательного персонала
@@ -622,8 +622,7 @@ CREATE TABLE support_staff_schedules (
   staff_id BIGINT NOT NULL REFERENCES support_staff(id) ON DELETE CASCADE,
   day_of_week SMALLINT NOT NULL,
   start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  is_active BOOLEAN DEFAULT true
+  end_time TIME NOT NULL
 );
 
 -- ============================================
@@ -908,11 +907,11 @@ INSERT INTO equipment_bookings (equipment_item_id, booked_by, start_time, end_ti
 
 
 -- 5.20. Заполняем вспомогательный персонал
-INSERT INTO support_staff (first_name, last_name, middle_name, phone, email, employment_type, category, can_maintain_equipment, accessible_equipment_types, company_name, contract_number, contract_expiry_date, is_active, notes, created_by, updated_by) VALUES
-('Александр', 'Иванов', 'Петрович', '+79001234567', 'a.ivanov@fitman.com', 0, 0, TRUE, '["1","2"]', 'ООО "ФитнесСервис"', 'FS-2023-001', '2024-12-31', TRUE, 'Отвечает за обслуживание кардио-оборудования', 1, 1),
-('Мария', 'Смирнова', 'Александровна', '+79007654321', 'm.smirnova@fitman.com', 1, 1, FALSE, NULL, NULL, NULL, NULL, TRUE, 'Администратор зала, встречает клиентов', 1, 1),
-('Дмитрий', 'Кузнецов', 'Сергеевич', '+79001112233', 'd.kuznetsov@fitman.com', 0, 2, TRUE, '["4","5","6","7"]', 'ИП "ТехСервис"', 'TS-2023-005', '2025-06-30', TRUE, 'Обслуживание силовых тренажеров и гантелей', 1, 1),
-('Елена', 'Петрова', 'Игоревна', '+79004445566', 'e.petrova@fitman.com', 1, 3, FALSE, NULL, NULL, NULL, NULL, TRUE, 'Уборка помещений, дезинфекция оборудования', 1, 1);
+INSERT INTO support_staff (first_name, last_name, middle_name, phone, email, employment_type, category, can_maintain_equipment, accessible_equipment_types, company_name, contract_number, contract_expiry_date, notes, created_by, updated_by) VALUES
+('Александр', 'Иванов', 'Петрович', '+79001234567', 'a.ivanov@fitman.com', 0, 0, TRUE, '["1","2"]', 'ООО "ФитнесСервис"', 'FS-2023-001', '2024-12-31', 'Отвечает за обслуживание кардио-оборудования', 1, 1),
+('Мария', 'Смирнова', 'Александровна', '+79007654321', 'm.smirnova@fitman.com', 1, 1, FALSE, NULL, NULL, NULL, NULL, 'Администратор зала, встречает клиентов', 1, 1),
+('Дмитрий', 'Кузнецов', 'Сергеевич', '+79001112233', 'd.kuznetsov@fitman.com', 0, 2, TRUE, '["4","5","6","7"]', 'ИП "ТехСервис"', 'TS-2023-005', '2025-06-30', 'Обслуживание силовых тренажеров и гантелей', 1, 1),
+('Елена', 'Петрова', 'Игоревна', '+79004445566', 'e.petrova@fitman.com', 1, 3, FALSE, NULL, NULL, NULL, NULL, 'Уборка помещений, дезинфекция оборудования', 1, 1);
 
 -- 5.21. Заполняем компетенции вспомогательного персонала
 INSERT INTO support_staff_competencies (staff_id, name, level, certificate_url, verified_at, verified_by) VALUES
@@ -922,21 +921,21 @@ INSERT INTO support_staff_competencies (staff_id, name, level, certificate_url, 
 (3, 'Сварка металлоконструкций', 2, NULL, NULL, NULL);
 
 -- 5.22. Заполняем расписание работы вспомогательного персонала
-INSERT INTO support_staff_schedules (staff_id, day_of_week, start_time, end_time, is_active) VALUES
-(1, 1, '09:00:00', '18:00:00', TRUE), -- Пн
-(1, 3, '09:00:00', '18:00:00', TRUE), -- Ср
-(1, 5, '09:00:00', '18:00:00', TRUE), -- Пт
-(2, 2, '08:00:00', '16:00:00', TRUE), -- Вт
-(2, 4, '08:00:00', '16:00:00', TRUE), -- Чт
-(2, 6, '10:00:00', '14:00:00', TRUE), -- Сб
-(3, 1, '10:00:00', '19:00:00', TRUE), -- Пн
-(3, 2, '10:00:00', '19:00:00', TRUE), -- Вт
-(3, 3, '10:00:00', '19:00:00', TRUE), -- Ср
-(4, 1, '07:00:00', '15:00:00', TRUE), -- Пн
-(4, 2, '07:00:00', '15:00:00', TRUE), -- Вт
-(4, 3, '07:00:00', '15:00:00', TRUE), -- Ср
-(4, 4, '07:00:00', '15:00:00', TRUE), -- Чт
-(4, 5, '07:00:00', '15:00:00', TRUE); -- Пт
+INSERT INTO support_staff_schedules (staff_id, day_of_week, start_time, end_time) VALUES
+(1, 1, '09:00:00', '18:00:00'), -- Пн
+(1, 3, '09:00:00', '18:00:00'), -- Ср
+(1, 5, '09:00:00', '18:00:00'), -- Пт
+(2, 2, '08:00:00', '16:00:00'), -- Вт
+(2, 4, '08:00:00', '16:00:00'), -- Чт
+(2, 6, '10:00:00', '14:00:00'), -- Сб
+(3, 1, '10:00:00', '19:00:00'), -- Пн
+(3, 2, '10:00:00', '19:00:00'), -- Вт
+(3, 3, '10:00:00', '19:00:00'), -- Ср
+(4, 1, '07:00:00', '15:00:00'), -- Пн
+(4, 2, '07:00:00', '15:00:00'), -- Вт
+(4, 3, '07:00:00', '15:00:00'), -- Ср
+(4, 4, '07:00:00', '15:00:00'), -- Чт
+(4, 5, '07:00:00', '15:00:00'); -- Пт
 
 
 -- ============================================

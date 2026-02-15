@@ -26,7 +26,7 @@ _$SupportStaffImpl _$$SupportStaffImplFromJson(Map<String, dynamic> json) =>
           (json['accessible_equipment_types'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList(),
-      canMaintainEquipment: json['can_maintain_equipment'] as bool,
+      canMaintainEquipment: json['can_maintain_equipment'] as bool? ?? false,
       schedule: json['schedule'] == null
           ? null
           : WorkSchedule.fromJson(json['schedule'] as Map<String, dynamic>),
@@ -35,10 +35,14 @@ _$SupportStaffImpl _$$SupportStaffImplFromJson(Map<String, dynamic> json) =>
       contractExpiryDate: json['contract_expiry_date'] == null
           ? null
           : DateTime.parse(json['contract_expiry_date'] as String),
-      isActive: json['is_active'] as bool,
       notes: json['notes'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      archivedAt: json['archived_at'] == null
+          ? null
+          : DateTime.parse(json['archived_at'] as String),
+      archivedBy: json['archived_by'] as String?,
+      archivedReason: json['archived_reason'] as String?,
     );
 
 Map<String, dynamic> _$$SupportStaffImplToJson(_$SupportStaffImpl instance) =>
@@ -58,10 +62,12 @@ Map<String, dynamic> _$$SupportStaffImplToJson(_$SupportStaffImpl instance) =>
       'company_name': instance.companyName,
       'contract_number': instance.contractNumber,
       'contract_expiry_date': instance.contractExpiryDate?.toIso8601String(),
-      'is_active': instance.isActive,
       'notes': instance.notes,
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
+      'archived_at': instance.archivedAt?.toIso8601String(),
+      'archived_by': instance.archivedBy,
+      'archived_reason': instance.archivedReason,
     };
 
 const _$EmploymentTypeEnumMap = {

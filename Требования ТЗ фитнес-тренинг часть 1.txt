@@ -410,7 +410,6 @@ class SupportStaff {
   String? companyName; // Для подрядчиков
   String? contractNumber;
   DateTime? contractExpiryDate;
-  bool isActive;
   String? notes;
   DateTime createdAt;
   DateTime updatedAt;
@@ -450,7 +449,6 @@ CREATE TABLE support_staff (
   company_name VARCHAR(255),
   contract_number VARCHAR(100),
   contract_expiry_date DATE,
-  is_active BOOLEAN DEFAULT true,
   notes TEXT,
   company_id BIGINT DEFAULT -1,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -480,7 +478,6 @@ CREATE TABLE support_staff_schedules (
   day_of_week SMALLINT NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
-  is_active BOOLEAN DEFAULT true
 );
 
 3.5 API endpoints
@@ -2005,6 +2002,6 @@ frontend/lib/modules/booking/
 • **Снижение конфликтов при слиянии:** Разработка в разных модулях снижает вероятность конфликтов при работе нескольких разработчиков.
 
 
-35
+19
 
 

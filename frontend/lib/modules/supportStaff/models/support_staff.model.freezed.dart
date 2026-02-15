@@ -32,15 +32,18 @@ mixin _$SupportStaff {
   List<Competency>? get competencies => throw _privateConstructorUsedError;
   List<String>? get accessibleEquipmentTypes =>
       throw _privateConstructorUsedError;
-  bool get canMaintainEquipment => throw _privateConstructorUsedError;
+  bool get canMaintainEquipment =>
+      throw _privateConstructorUsedError; // Modified here
   WorkSchedule? get schedule => throw _privateConstructorUsedError;
   String? get companyName => throw _privateConstructorUsedError;
   String? get contractNumber => throw _privateConstructorUsedError;
   DateTime? get contractExpiryDate => throw _privateConstructorUsedError;
-  bool get isActive => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
+  DateTime? get archivedAt => throw _privateConstructorUsedError;
+  String? get archivedBy => throw _privateConstructorUsedError;
+  String? get archivedReason => throw _privateConstructorUsedError;
 
   /// Serializes this SupportStaff to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -75,10 +78,12 @@ abstract class $SupportStaffCopyWith<$Res> {
     String? companyName,
     String? contractNumber,
     DateTime? contractExpiryDate,
-    bool isActive,
     String? notes,
     DateTime createdAt,
     DateTime updatedAt,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   });
 
   $WorkScheduleCopyWith<$Res>? get schedule;
@@ -114,10 +119,12 @@ class _$SupportStaffCopyWithImpl<$Res, $Val extends SupportStaff>
     Object? companyName = freezed,
     Object? contractNumber = freezed,
     Object? contractExpiryDate = freezed,
-    Object? isActive = null,
     Object? notes = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? archivedAt = freezed,
+    Object? archivedBy = freezed,
+    Object? archivedReason = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -181,10 +188,6 @@ class _$SupportStaffCopyWithImpl<$Res, $Val extends SupportStaff>
                 ? _value.contractExpiryDate
                 : contractExpiryDate // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
-            isActive: null == isActive
-                ? _value.isActive
-                : isActive // ignore: cast_nullable_to_non_nullable
-                      as bool,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
@@ -197,6 +200,18 @@ class _$SupportStaffCopyWithImpl<$Res, $Val extends SupportStaff>
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
+            archivedAt: freezed == archivedAt
+                ? _value.archivedAt
+                : archivedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            archivedBy: freezed == archivedBy
+                ? _value.archivedBy
+                : archivedBy // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            archivedReason: freezed == archivedReason
+                ? _value.archivedReason
+                : archivedReason // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -242,10 +257,12 @@ abstract class _$$SupportStaffImplCopyWith<$Res>
     String? companyName,
     String? contractNumber,
     DateTime? contractExpiryDate,
-    bool isActive,
     String? notes,
     DateTime createdAt,
     DateTime updatedAt,
+    DateTime? archivedAt,
+    String? archivedBy,
+    String? archivedReason,
   });
 
   @override
@@ -281,10 +298,12 @@ class __$$SupportStaffImplCopyWithImpl<$Res>
     Object? companyName = freezed,
     Object? contractNumber = freezed,
     Object? contractExpiryDate = freezed,
-    Object? isActive = null,
     Object? notes = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? archivedAt = freezed,
+    Object? archivedBy = freezed,
+    Object? archivedReason = freezed,
   }) {
     return _then(
       _$SupportStaffImpl(
@@ -348,10 +367,6 @@ class __$$SupportStaffImplCopyWithImpl<$Res>
             ? _value.contractExpiryDate
             : contractExpiryDate // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
-        isActive: null == isActive
-            ? _value.isActive
-            : isActive // ignore: cast_nullable_to_non_nullable
-                  as bool,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
@@ -364,6 +379,18 @@ class __$$SupportStaffImplCopyWithImpl<$Res>
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
+        archivedAt: freezed == archivedAt
+            ? _value.archivedAt
+            : archivedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        archivedBy: freezed == archivedBy
+            ? _value.archivedBy
+            : archivedBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        archivedReason: freezed == archivedReason
+            ? _value.archivedReason
+            : archivedReason // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -383,15 +410,17 @@ class _$SupportStaffImpl implements _SupportStaff {
     required this.category,
     final List<Competency>? competencies,
     final List<String>? accessibleEquipmentTypes,
-    required this.canMaintainEquipment,
+    this.canMaintainEquipment = false,
     this.schedule,
     this.companyName,
     this.contractNumber,
     this.contractExpiryDate,
-    required this.isActive,
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.archivedAt,
+    this.archivedBy,
+    this.archivedReason,
   }) : _competencies = competencies,
        _accessibleEquipmentTypes = accessibleEquipmentTypes;
 
@@ -436,7 +465,9 @@ class _$SupportStaffImpl implements _SupportStaff {
   }
 
   @override
+  @JsonKey()
   final bool canMaintainEquipment;
+  // Modified here
   @override
   final WorkSchedule? schedule;
   @override
@@ -446,17 +477,21 @@ class _$SupportStaffImpl implements _SupportStaff {
   @override
   final DateTime? contractExpiryDate;
   @override
-  final bool isActive;
-  @override
   final String? notes;
   @override
   final DateTime createdAt;
   @override
   final DateTime updatedAt;
+  @override
+  final DateTime? archivedAt;
+  @override
+  final String? archivedBy;
+  @override
+  final String? archivedReason;
 
   @override
   String toString() {
-    return 'SupportStaff(id: $id, firstName: $firstName, lastName: $lastName, middleName: $middleName, phone: $phone, email: $email, employmentType: $employmentType, category: $category, competencies: $competencies, accessibleEquipmentTypes: $accessibleEquipmentTypes, canMaintainEquipment: $canMaintainEquipment, schedule: $schedule, companyName: $companyName, contractNumber: $contractNumber, contractExpiryDate: $contractExpiryDate, isActive: $isActive, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'SupportStaff(id: $id, firstName: $firstName, lastName: $lastName, middleName: $middleName, phone: $phone, email: $email, employmentType: $employmentType, category: $category, competencies: $competencies, accessibleEquipmentTypes: $accessibleEquipmentTypes, canMaintainEquipment: $canMaintainEquipment, schedule: $schedule, companyName: $companyName, contractNumber: $contractNumber, contractExpiryDate: $contractExpiryDate, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt, archivedAt: $archivedAt, archivedBy: $archivedBy, archivedReason: $archivedReason)';
   }
 
   @override
@@ -495,13 +530,17 @@ class _$SupportStaffImpl implements _SupportStaff {
                 other.contractNumber == contractNumber) &&
             (identical(other.contractExpiryDate, contractExpiryDate) ||
                 other.contractExpiryDate == contractExpiryDate) &&
-            (identical(other.isActive, isActive) ||
-                other.isActive == isActive) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt));
+                other.updatedAt == updatedAt) &&
+            (identical(other.archivedAt, archivedAt) ||
+                other.archivedAt == archivedAt) &&
+            (identical(other.archivedBy, archivedBy) ||
+                other.archivedBy == archivedBy) &&
+            (identical(other.archivedReason, archivedReason) ||
+                other.archivedReason == archivedReason));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -523,10 +562,12 @@ class _$SupportStaffImpl implements _SupportStaff {
     companyName,
     contractNumber,
     contractExpiryDate,
-    isActive,
     notes,
     createdAt,
     updatedAt,
+    archivedAt,
+    archivedBy,
+    archivedReason,
   ]);
 
   /// Create a copy of SupportStaff
@@ -555,15 +596,17 @@ abstract class _SupportStaff implements SupportStaff {
     required final StaffCategory category,
     final List<Competency>? competencies,
     final List<String>? accessibleEquipmentTypes,
-    required final bool canMaintainEquipment,
+    final bool canMaintainEquipment,
     final WorkSchedule? schedule,
     final String? companyName,
     final String? contractNumber,
     final DateTime? contractExpiryDate,
-    required final bool isActive,
     final String? notes,
     required final DateTime createdAt,
     required final DateTime updatedAt,
+    final DateTime? archivedAt,
+    final String? archivedBy,
+    final String? archivedReason,
   }) = _$SupportStaffImpl;
 
   factory _SupportStaff.fromJson(Map<String, dynamic> json) =
@@ -590,7 +633,7 @@ abstract class _SupportStaff implements SupportStaff {
   @override
   List<String>? get accessibleEquipmentTypes;
   @override
-  bool get canMaintainEquipment;
+  bool get canMaintainEquipment; // Modified here
   @override
   WorkSchedule? get schedule;
   @override
@@ -600,13 +643,17 @@ abstract class _SupportStaff implements SupportStaff {
   @override
   DateTime? get contractExpiryDate;
   @override
-  bool get isActive;
-  @override
   String? get notes;
   @override
   DateTime get createdAt;
   @override
   DateTime get updatedAt;
+  @override
+  DateTime? get archivedAt;
+  @override
+  String? get archivedBy;
+  @override
+  String? get archivedReason;
 
   /// Create a copy of SupportStaff
   /// with the given fields replaced by the non-null parameter values.
